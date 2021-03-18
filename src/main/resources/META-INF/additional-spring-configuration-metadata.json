@@ -1,0 +1,49 @@
+{
+    "properties": [
+        {
+            "name": "spring.sms-datasource.driverClassName",
+            "type": "java.lang.String",
+            "description": "Description for sms.datasource.driverClassName."
+        }, {
+            "name": "spring.sms-datasource.jdbcUrl",
+            "type": "java.lang.String",
+            "description": "Description for sms.datasource.url."
+        }, {
+            "name": "spring.sms-datasource.username",
+            "type": "java.lang.String",
+            "description": "Description for sms.datasource.username."
+        }, {
+            "name": "spring.sms-datasource.password",
+            "type": "java.lang.String",
+            "description": "Description for sms.datasource.password."
+        }, {
+            "name": "vtag.storage.location",
+            "type": "java.lang.String",
+            "description": "Description for vtag.storage.location."
+        }, {
+            "name": "vtag.otp.length",
+            "type": "java.lang.String",
+            "description": "Description for vtag.otp.length."
+        }, {
+            "name": "vtag.platform.address",
+            "type": "java.lang.String",
+            "description": "Description for vtag.platform.address."
+        }, {
+            "name": "vtag.platform.client_id",
+            "type": "java.lang.String",
+            "description": "Description for vtag.platform.client_id."
+        }, {
+            "name": "vtag.platform.client_secret",
+            "type": "java.lang.String",
+            "description": "Description for vtag.platform.client_secret."
+        }, {
+            "name": "vtag.platform.grant_type",
+            "type": "java.lang.String",
+            "description": "Description for vtag.platform.grant_type."
+        }, {
+            "name": "spring.datasource.jdbcUrl",
+            "type": "java.lang.String",
+            "description": "Description for spring.datasource.jdbcUrl."
+        }
+    ]
+}

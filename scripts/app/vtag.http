@@ -1,0 +1,53 @@
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}:8080/vtag/user/otp
+Content-Type: application/json
+
+{"type": "email", "value": "duclm22@viettel.com.vn"}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}:8080/vtag/user/otp
+Content-Type: application/json
+
+{"type": "phone", "value": "0365819777"}
+
+
+
+### Register new account -----------------------------------------------------------------------------------------------
+POST http://{{host}}:8080/vtag/user/register
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="avatar"; filename="avatar.png"
+
+< ./avatar.png
+--WebAppBoundary--
+Content-Disposition: form-data; name="avatar"
+
+--WebAppBoundary--
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}:8080/vtag/user/token
+Content-Type: application/json
+
+{"username": "duclm22", "password": "test"}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}:8080/vtag/user/token
+Content-Type: application/json
+
+{"username": "duclm22", "password": "invalid password"}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}:8080/vtag/user/token
+Authorization: Bearer 87816489-e763-4902-a7e9-1fcc5472f5bc
+Content-Type: application/json
+
+
