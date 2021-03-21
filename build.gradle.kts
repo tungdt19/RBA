@@ -9,6 +9,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://maven.google.com/") }
 }
 
 group = "com.viettel"
@@ -52,6 +53,11 @@ dependencies {
 
     implementation("org.postgresql:postgresql:42.2.19")
     implementation("mysql:mysql-connector-java:5.1.49")
+
+    implementation("com.google.auth:google-auth-library-oauth2-http:0.25.2")
+    implementation("com.google.firebase:firebase-admin:7.1.1")
+
+    testImplementation("com.github.javafaker:javafaker:1.0.2")
 
     testCompileOnly("org.projectlombok:lombok:1.18.18")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.18")

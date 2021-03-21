@@ -51,4 +51,10 @@ public class DeviceController {
                 .body(Map.of("code", 1, "message", "Couldn't add user as viewer", "data", map));
         }
     }
+
+    // gateway to IoT platform is from here on
+    @PostMapping("/device/")
+    public ResponseEntity<String> get(@RequestBody String body) {
+        return iotService.post("/device/", body).block();
+    }
 }

@@ -1,7 +1,7 @@
 package com.viettel.vtag.service.impl;
 
+import com.viettel.vtag.model.request.OtpRequest;
 import com.viettel.vtag.service.CommunicationService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -13,17 +13,37 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 @Slf4j
-@Service("sms-service")
-public class SmsService implements CommunicationService {
+@Service
+public class CommunicationServiceImpl implements CommunicationService {
 
     private final JdbcTemplate jdbc;
 
-    public SmsService(@Qualifier("sms-jdbc") JdbcTemplate jdbc) {
+    public CommunicationServiceImpl(@Qualifier("sms-jdbc") JdbcTemplate jdbc) {
         this.jdbc = jdbc;
     }
 
     @Override
-    public void send(String content, String... recipients) {
+    public void send(OtpRequest request, String content) {
+        switch (request.type()) {
+            case "phone":
+                sendSms(request.value(), content);
+                break;
+            case "email":
+                sendEmail(request.value(), content);
+                break;
+        }
+    }
+
+    private void sendSms(String recipient, String content) {
+        var sql = "INSERT INTO sms (phone, content, sent) VALUES (?, ?, ?)";
+        jdbc.update(sql, recipient, content, 0);
+    }
+
+    private void sendEmail(String recipient, String content) {
+
+    }
+
+    private void sendSms(String[] recipients, String content) {
         var sql = "INSERT INTO sms (phone, content, sent) VALUES (?, ?, ?)";
         jdbc.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override

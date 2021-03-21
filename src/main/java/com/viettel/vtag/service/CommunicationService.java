@@ -1,5 +1,7 @@
 package com.viettel.vtag.service;
 
+import com.viettel.vtag.model.request.OtpRequest;
+
 public interface CommunicationService {
-    void send(String content, String... recipients);
+    void send(OtpRequest request, String content);
 }

@@ -46,8 +46,8 @@ Content-Type: application/json
 
 
 ### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/user/token
-Authorization: Bearer 87816489-e763-4902-a7e9-1fcc5472f5bc
+POST http://{{host}}:8080/vtag/device
+Authorization: Bearer c5b430b2-db82-42e0-9c8b-4ed5c97817d9
 Content-Type: application/json
 
 

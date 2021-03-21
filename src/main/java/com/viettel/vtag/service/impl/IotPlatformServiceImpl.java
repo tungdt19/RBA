@@ -44,17 +44,16 @@ public class IotPlatformServiceImpl implements IotPlatformService {
                 log.error("Couldn't get token from platform");
                 return;
             }
-            // synchronized (platformToken) {
-                platformToken.update(entity.getBody());
-                taskScheduler.schedule(() -> {
-                    var response = fetchToken().block();
-                    if (response == null || response.getBody() == null) {
-                        log.error("Couldn't get token from platform!");
-                        return;
-                    }
-                    platformToken.update(response.getBody());
-                }, new PeriodicTrigger(platformToken.expiresIn() * 1000));
-            // }
+
+            platformToken.update(entity.getBody());
+            taskScheduler.schedule(() -> {
+                var response = fetchToken().block();
+                if (response == null || response.getBody() == null) {
+                    log.error("Couldn't get token from platform!");
+                    return;
+                }
+                platformToken.update(response.getBody());
+            }, new PeriodicTrigger(platformToken.expiresIn() * 1000));
         });
     }
 
@@ -73,6 +72,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
         return client.post().uri("/token").body(body).retrieve().toEntity(PlatformToken.class);
     }
 
+    @Override
     public Mono<ResponseEntity<String>> get(String endpoint) {
         var client = webClientBuilder().build();
         return client.get()
@@ -82,6 +82,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
             .toEntity(String.class);
     }
 
+    @Override
     public Mono<ResponseEntity<String>> put(String endpoint, String body) {
         var client = webClientBuilder().defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build();
@@ -94,6 +95,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
             .toEntity(String.class);
     }
 
+    @Override
     public Mono<ResponseEntity<String>> post(String endpoint, String body) {
         var client = webClientBuilder().defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build();

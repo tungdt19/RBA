@@ -6,11 +6,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.InMemoryTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import reactor.netty.http.client.HttpClient;
 
 import javax.net.ssl.SSLException;
@@ -20,21 +24,33 @@ import javax.net.ssl.SSLException;
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
+    private final ServerAuthenticationConverter authenticationConverter;
+
+    @Bean
+    public SecurityWebFilterChain configure(ServerHttpSecurity http) {
+        //@formatter:off
+        return http.authorizeExchange().anyExchange().permitAll()
+            // .authorizeExchange().pathMatchers("/", "/login", "/user/token").permitAll()
+            // .and().authorizeExchange().pathMatchers("/device").hasAnyRole("ROLE_USER", "ROLE_ADMIN")
+            // .and().authorizeExchange().pathMatchers("/admin").hasRole("ROLE_ADMIN")
+            // .and().logout().logoutUrl("/logout")
+            .and().addFilterAt(deviceAuthenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
+            .csrf().disable().build();
+        //@formatter:on
+    }
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public SecurityWebFilterChain configure(ServerHttpSecurity http) {
-        //@formatter:off
-        return http.csrf().disable().authorizeExchange().anyExchange().permitAll()
-            // .authorizeExchange().pathMatchers("/", "/login", "/user/token").permitAll()
-            // .and().authorizeExchange().pathMatchers("/device").hasAnyRole("ROLE_USER", "ROLE_ADMIN")
-            // .and().authorizeExchange().pathMatchers("/admin").hasRole("ROLE_ADMIN")
-            // .and().logout().logoutUrl("/logout")
-            .and().build();
-        //@formatter:on
+    private AuthenticationWebFilter deviceAuthenticationFilter() {
+        var filter = new AuthenticationWebFilter(new BearerTokenAuthenticationManager());
+
+        filter.setServerAuthenticationConverter(authenticationConverter);
+        filter.setRequiresAuthenticationMatcher(ServerWebExchangeMatchers.pathMatchers("/device/**"));
+
+        return filter;
     }
 
     @Bean
@@ -42,7 +58,7 @@ public class WebSecurityConfig {
         return new InMemoryTokenRepositoryImpl();
     }
 
-    @Bean
+    @Bean("insecure-httpclient")
     public HttpClient httpClient() throws SSLException {
         var sslContext = SslContextBuilder.forClient()
             .trustManager(InsecureTrustManagerFactory.INSTANCE)

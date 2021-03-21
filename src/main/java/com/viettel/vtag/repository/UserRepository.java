@@ -6,6 +6,10 @@ public interface UserRepository {
 
     User find(String token);
 
+    User findByPhone(String phone);
+
+    User findByEmail(String email);
+
     int save(User user);
 
     int update(User user);

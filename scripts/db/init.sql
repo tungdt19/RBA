@@ -39,3 +39,20 @@ CREATE TABLE token (
 CREATE TABLE otp (
 
 );
+
+CREATE table cell_id (
+    radio
+        mcc
+        net
+        area
+        cell
+        unit
+        lon
+        lat
+        range
+        samples
+        changeablemesa
+        created
+        updated
+        averageSignal
+);

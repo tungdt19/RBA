@@ -5,15 +5,12 @@ import com.viettel.vtag.model.request.ChangePasswordRequest;
 import com.viettel.vtag.model.request.OtpRequest;
 import com.viettel.vtag.model.request.TokenRequest;
 import com.viettel.vtag.service.*;
-import com.viettel.vtag.utils.TokenUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -25,27 +22,16 @@ public class UserController {
 
     private final OtpService otpService;
     private final UserService userService;
-
-    @Qualifier("sms-service")
-    private final CommunicationService smsService;
-
-    // @Qualifier("email-service")
-    // private final CommunicationService emailService;
+    private final CommunicationService communicationService;
 
     @PostMapping("/otp")
     public ResponseEntity<Map<String, Object>> otp(@RequestBody OtpRequest request) {
         try {
             var otp = otpService.generate();
             log.info("request {} -> otp {}", request, otp);
+            otpService.sendOtp(request, otp);
+
             var data = Map.of("otp", otp);
-            switch (request.type())  {
-                case "phone":
-                    smsService.send("Your OTP for VTAG is " + otp, request.value());
-                    break;
-                case "email":
-                    // emailService.send("Your OTP for VTAG is " + otp, request.value());
-                    break;
-            }
             return ResponseEntity.status(HttpStatus.OK)
                 .body(Map.of("code", 0, "message", "Created OTP successfully!", "data", data));
         } catch (Exception e) {

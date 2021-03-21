@@ -9,6 +9,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 @Slf4j
 @Repository
 @RequiredArgsConstructor
@@ -22,19 +25,43 @@ public class UserRepositoryImpl implements UserRepository {
         try {
             var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar FROM \"user\" "
                 + "WHERE username = ? OR email = ? OR phone_no = ?";
-
-            return jdbc.queryForObject(sql, new Object[] {token, token, token},
-                (rs, num) -> new User().id(rs.getInt("id"))
-                    .username(rs.getString("username"))
-                    .encryptedPassword(rs.getString("password"))
-                    .firstName(rs.getString("first_name"))
-                    .lastName(rs.getString("last_name"))
-                    .email(rs.getString("email"))
-                    .phoneNo(rs.getString("phone_no"))
-                    .avatar(rs.getString("avatar")));
+            return jdbc.queryForObject(sql, new Object[] {token, token, token}, (rs, num) -> mapUser(rs));
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
         }
+    }
+
+    @Override
+    public User findByPhone(String phone) {
+        try {
+            var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar FROM \"user\" "
+                + "WHERE phone_no = ?";
+            return jdbc.queryForObject(sql, new Object[] {phone}, (rs, num) -> mapUser(rs));
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        try {
+            var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar FROM \"user\" "
+                + "WHERE email = ?";
+            return jdbc.queryForObject(sql, new Object[] {email}, (rs, num) -> mapUser(rs));
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return null;
+        }
+    }
+
+    private User mapUser(ResultSet rs) throws SQLException {
+        return new User().id(rs.getInt("id"))
+            .username(rs.getString("username"))
+            .encryptedPassword(rs.getString("password"))
+            .firstName(rs.getString("first_name"))
+            .lastName(rs.getString("last_name"))
+            .email(rs.getString("email"))
+            .phoneNo(rs.getString("phone_no"))
+            .avatar(rs.getString("avatar"));
     }
 
     @Override
