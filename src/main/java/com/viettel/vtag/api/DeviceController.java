@@ -1,17 +1,22 @@
-package com.viettel.vtag.controller;
+package com.viettel.vtag.api;
 
-import com.viettel.vtag.model.entity.Device;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.viettel.vtag.model.request.AddViewerRequest;
-import com.viettel.vtag.service.DeviceService;
-import com.viettel.vtag.service.IotPlatformService;
-import com.viettel.vtag.service.UserService;
+import com.viettel.vtag.service.interfaces.DeviceService;
+import com.viettel.vtag.service.interfaces.IotPlatformService;
+import com.viettel.vtag.service.interfaces.UserService;
 import com.viettel.vtag.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
 import java.util.Map;
 
@@ -21,13 +26,35 @@ import java.util.Map;
 @RequestMapping("/device")
 public class DeviceController {
 
+    private final ObjectMapper mapper = new ObjectMapper();
+
     private final UserService userService;
     private final DeviceService deviceService;
     private final IotPlatformService iotService;
+    private final HttpClient httpClient;
 
-    @GetMapping
-    public ResponseEntity<Device> getInfo(ServerHttpRequest request) {
-        return null;
+    {
+        mapper.registerModule(new SimpleModule().addSerializer(PlatformData.class, new CellIdSerializer()));
+    }
+
+    @PostMapping("/test")
+    public Mono<ResponseEntity<String>> getInfo(@RequestBody String request) throws JsonProcessingException {
+        // var request = iotService.post("/")
+
+        var data = mapper.readValue(request, PlatformData.class);
+        var json = mapper.writeValueAsString(data);
+
+        return WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .baseUrl("https://us1.unwiredlabs.com")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+            .build()
+            .post()
+            .uri("/v2/process.php")
+            .bodyValue(json)
+            .retrieve()
+            .bodyToMono(String.class)
+            .map(entity -> ResponseEntity.status(HttpStatus.OK).body(entity));
     }
 
     @PostMapping("/viewer/add")

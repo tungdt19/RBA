@@ -7,7 +7,6 @@ spring:
 server:
   port: 8080
 
-
 vtag:
   otp:
     length: 6
@@ -18,6 +17,10 @@ vtag:
     client_secret: PBfya2HCR_MiWZPJXenpADKhtp
   storage:
     location: ~/storage/
+  mqtt:
+    qos: 1
+    client-id: vtag-backend
+    timeout: 5000
 
 ---
 spring:
@@ -32,6 +35,12 @@ spring:
     driverClassName: com.mysql.jdbc.Driver
     username: root
     password: 1
+vtag:
+  mqtt:
+    url: tcp://localhost:1883
+    topic: test
+    username: test
+    password: test
 
 ---
 spring:

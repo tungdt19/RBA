@@ -3,6 +3,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
     java
+    distribution
     id("org.springframework.boot") version "2.3.4.RELEASE"
     id("io.spring.dependency-management") version "1.0.10.RELEASE"
 }
@@ -57,13 +58,24 @@ dependencies {
     implementation("com.google.auth:google-auth-library-oauth2-http:0.25.2")
     implementation("com.google.firebase:firebase-admin:7.1.1")
 
-    testImplementation("com.github.javafaker:javafaker:1.0.2")
-
+    implementation("org.springframework.integration:spring-integration-jmx:5.4.5")
+    implementation("org.springframework.integration:spring-integration-mqtt:5.4.5")
     testCompileOnly("org.projectlombok:lombok:1.18.18")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.18")
+
     testImplementation(spring("boot", "-starter-test"))
+    testImplementation("com.github.javafaker:javafaker:1.0.2")
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+distributions {
+    main {
+        distributionBaseName.set(rootProject.name)
+        contents {
+            from("src/", "scripts/")
+        }
+    }
 }

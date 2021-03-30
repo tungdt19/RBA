@@ -1,4 +1,4 @@
-package com.viettel.vtag.service;
+package com.viettel.vtag.service.interfaces;
 
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;

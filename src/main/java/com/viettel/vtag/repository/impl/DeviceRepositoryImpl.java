@@ -1,7 +1,7 @@
 package com.viettel.vtag.repository.impl;
 
 import com.viettel.vtag.model.entity.Device;
-import com.viettel.vtag.repository.DeviceRepository;
+import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;

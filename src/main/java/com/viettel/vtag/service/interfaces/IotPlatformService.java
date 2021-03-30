@@ -1,4 +1,4 @@
-package com.viettel.vtag.service;
+package com.viettel.vtag.service.interfaces;
 
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;

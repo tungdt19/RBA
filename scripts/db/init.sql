@@ -51,7 +51,7 @@ CREATE table cell_id (
         lat
         range
         samples
-        changeablemesa
+        changeablemesage
         created
         updated
         averageSignal

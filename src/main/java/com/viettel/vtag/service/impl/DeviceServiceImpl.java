@@ -2,7 +2,7 @@ package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.AddViewerRequest;
-import com.viettel.vtag.service.DeviceService;
+import com.viettel.vtag.service.interfaces.DeviceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;

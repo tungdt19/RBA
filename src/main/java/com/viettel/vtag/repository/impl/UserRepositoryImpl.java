@@ -1,7 +1,7 @@
 package com.viettel.vtag.repository.impl;
 
 import com.viettel.vtag.model.entity.User;
-import com.viettel.vtag.repository.UserRepository;
+import com.viettel.vtag.repository.interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;

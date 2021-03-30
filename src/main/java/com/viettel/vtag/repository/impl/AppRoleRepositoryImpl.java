@@ -1,7 +1,7 @@
 package com.viettel.vtag.repository.impl;
 
 import com.viettel.vtag.model.entity.AppRole;
-import com.viettel.vtag.repository.RoleRepository;
+import com.viettel.vtag.repository.interfaces.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;

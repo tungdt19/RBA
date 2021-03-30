@@ -22,7 +22,7 @@
             "description": "Description for vtag.storage.location."
         }, {
             "name": "vtag.otp.length",
-            "type": "java.lang.String",
+            "type": "java.lang.Integer",
             "description": "Description for vtag.otp.length."
         }, {
             "name": "vtag.platform.address",
@@ -44,6 +44,34 @@
             "name": "spring.datasource.jdbcUrl",
             "type": "java.lang.String",
             "description": "Description for spring.datasource.jdbcUrl."
+        }, {
+            "name": "vtag.mqtt.url",
+            "type": "java.lang.String",
+            "description": "Description for vtag.mqtt.url."
+        }, {
+            "name": "vtag.mqtt.qos",
+            "type": "java.lang.Integer",
+            "description": "Description for vtag.mqtt.qos."
+        }, {
+            "name": "vtag.mqtt.username",
+            "type": "java.lang.String",
+            "description": "Description for vtag.mqtt.username."
+        }, {
+            "name": "vtag.mqtt.password",
+            "type": "java.lang.String",
+            "description": "Description for vtag.mqtt.password."
+        }, {
+            "name": "vtag.mqtt.client-id",
+            "type": "java.lang.String",
+            "description": "Description for vtag.mqtt.client-id."
+        }, {
+            "name": "vtag.mqtt.topic",
+            "type": "java.lang.String",
+            "description": "Description for vtag.mqtt.topic."
+        }, {
+            "name": "vtag.mqtt.timeout",
+            "type": "java.lang.Integer",
+            "description": "Description for vtag.mqtt.timeout."
         }
     ]
 }

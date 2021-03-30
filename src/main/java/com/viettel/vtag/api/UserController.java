@@ -1,10 +1,12 @@
-package com.viettel.vtag.controller;
+package com.viettel.vtag.api;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.ChangePasswordRequest;
 import com.viettel.vtag.model.request.OtpRequest;
 import com.viettel.vtag.model.request.TokenRequest;
-import com.viettel.vtag.service.*;
+import com.viettel.vtag.service.interfaces.CommunicationService;
+import com.viettel.vtag.service.interfaces.OtpService;
+import com.viettel.vtag.service.interfaces.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

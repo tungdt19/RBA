@@ -1,11 +1,10 @@
 package com.viettel.vtag.service.impl;
 
-import ch.qos.logback.core.subst.Token;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.ChangePasswordRequest;
 import com.viettel.vtag.model.request.TokenRequest;
-import com.viettel.vtag.repository.UserRepository;
-import com.viettel.vtag.service.UserService;
+import com.viettel.vtag.repository.interfaces.UserRepository;
+import com.viettel.vtag.service.interfaces.UserService;
 import com.viettel.vtag.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

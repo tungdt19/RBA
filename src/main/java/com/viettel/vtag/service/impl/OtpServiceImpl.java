@@ -1,8 +1,8 @@
 package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.request.OtpRequest;
-import com.viettel.vtag.service.CommunicationService;
-import com.viettel.vtag.service.OtpService;
+import com.viettel.vtag.service.interfaces.CommunicationService;
+import com.viettel.vtag.service.interfaces.OtpService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package com.viettel.vtag.repository;
+package com.viettel.vtag.repository.interfaces;
 
 import com.viettel.vtag.model.entity.Device;
 

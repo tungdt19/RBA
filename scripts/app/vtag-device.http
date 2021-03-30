@@ -1,0 +1,37 @@
+###
+POST http://localhost:8080/vtag/device/test
+Content-Type: application/json
+
+{
+    "Conn": "nbiot",
+    "Type": "DWFC",
+    "Cell": [
+        {"CID": 75430933, "LAC": 43300, "MCC": 452, "MNC": 4, "SS": -93},
+        {"CID": 75430933, "LAC": 43300, "MCC": 452, "MNC": 4, "SS": -93}
+    ],
+    "APs": [
+        {"SS": -59, "MAC": "E6:A6:B2:0F:82:73"},
+        {"SS": -66, "MAC": "3C:7C:3F:40:B4:68"},
+        {"SS": -70, "MAC": "C0:4A:00:0C:8B:A2"},
+        {"SS": -78, "MAC": "7C:8B:CA:DF:9D:E4"},
+        {"SS": -83, "MAC": "D4:2C:3D:29:18:0D"},
+        {"SS": -89, "MAC": "3C:15:FB:42:DE:0C"},
+        {"SS": -91, "MAC": "10:2F:6B:BB:1C:33"}
+    ]
+}
+
+###
+POST http://localhost:8080/vtag/device/test
+Content-Type: application/json
+
+{
+    "token": "284a3628cddb31",
+    "radio": "nbiot",
+    "address": 1,
+    "mcc": 452,
+    "mnc": 4,
+    "cells": [
+        {"lac": 43300, "cid": 75430933, "psc": 0}
+    ],
+    "wifi": []
+}

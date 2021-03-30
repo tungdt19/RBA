@@ -1,7 +1,7 @@
 package com.viettel.vtag.service.impl;
 
-import com.viettel.vtag.model.response.PlatformToken;
-import com.viettel.vtag.service.IotPlatformService;
+import com.viettel.vtag.model.transfer.PlatformToken;
+import com.viettel.vtag.service.interfaces.IotPlatformService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

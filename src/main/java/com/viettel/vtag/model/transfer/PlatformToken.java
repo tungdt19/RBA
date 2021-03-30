@@ -1,4 +1,4 @@
-package com.viettel.vtag.model.response;
+package com.viettel.vtag.model.transfer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

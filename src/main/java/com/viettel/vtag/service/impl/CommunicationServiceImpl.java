@@ -1,7 +1,7 @@
 package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.request.OtpRequest;
-import com.viettel.vtag.service.CommunicationService;
+import com.viettel.vtag.service.interfaces.CommunicationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
