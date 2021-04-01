@@ -4,7 +4,6 @@ import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.ChangePasswordRequest;
 import com.viettel.vtag.model.request.OtpRequest;
 import com.viettel.vtag.model.request.TokenRequest;
-import com.viettel.vtag.service.interfaces.CommunicationService;
 import com.viettel.vtag.service.interfaces.OtpService;
 import com.viettel.vtag.service.interfaces.UserService;
 import lombok.AllArgsConstructor;
@@ -16,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.ResponseEntity.*;
+
 @Slf4j
 @RestController
 @AllArgsConstructor
@@ -24,20 +26,21 @@ public class UserController {
 
     private final OtpService otpService;
     private final UserService userService;
-    private final CommunicationService communicationService;
+    // private final User userService;
 
-    @PostMapping("/otp")
+    @PostMapping("/register/otp")
     public ResponseEntity<Map<String, Object>> otp(@RequestBody OtpRequest request) {
         try {
-            var otp = otpService.generate();
+
+            var otp = otpService.generate(request);
             log.info("request {} -> otp {}", request, otp);
             otpService.sendOtp(request, otp);
 
-            var data = Map.of("otp", otp);
-            return ResponseEntity.status(HttpStatus.OK)
+            var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
+            return status(OK)
                 .body(Map.of("code", 0, "message", "Created OTP successfully!", "data", data));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return status(INTERNAL_SERVER_ERROR)
                 .body(Map.of("code", 1, "message", String.valueOf(e.getMessage())));
         }
     }
@@ -48,13 +51,13 @@ public class UserController {
             // var avatarLink = storageService.store(user.username(), avatar);
             var inserted = userService.save(user);
             if (inserted > 0) {
-                return ResponseEntity.ok(Map.of("code", 0, "message", "Created user successfully!"));
+                return ok(Map.of("code", 0, "message", "Created user successfully!"));
             } else {
-                return ResponseEntity.ok(Map.of("code", 1, "message", "Couldn't create user!"));
+                return ok(Map.of("code", 1, "message", "Couldn't create user!"));
             }
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return status(INTERNAL_SERVER_ERROR)
                 .body(Map.of("code", 1, "message", "Couldn't create user!", "data", detail));
         }
     }
@@ -64,10 +67,10 @@ public class UserController {
         var token = userService.createToken(request);
         if (token != null) {
             var data = Map.of("token", token);
-            return ResponseEntity.status(HttpStatus.OK)
+            return status(OK)
                 .body(Map.of("code", 0, "message", "Get token successfully!", "data", data));
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return status(UNAUTHORIZED)
                 .body(Map.of("code", 1, "message", "Invalid username or password!"));
         }
     }
@@ -80,15 +83,13 @@ public class UserController {
             var user = userService.checkToken(request);
             var changed = userService.changePassword(user, passwordRequest);
             if (changed > 0) {
-                return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("code", 0, "message", "Changed password successfully!"));
+                return status(OK).body(Map.of("code", 0, "message", "Changed password successfully!"));
             } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("code", 1, "message", "Couldn't change password!"));
+                return status(INTERNAL_SERVER_ERROR).body(Map.of("code", 1, "message", "Couldn't change password!"));
             }
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return status(INTERNAL_SERVER_ERROR)
                 .body(Map.of("code", 1, "message", "Couldn't change password!", "data", detail));
         }
     }
@@ -99,14 +100,14 @@ public class UserController {
             var user = userService.checkToken(request);
             var deleted = userService.delete(user);
             if (deleted > 0) {
-                return ResponseEntity.status(HttpStatus.OK)
+                return status(OK)
                     .body(Map.of("code", 0, "message", "Delete user successfully!"));
             } else {
-                return ResponseEntity.status(HttpStatus.OK).body(Map.of("code", 1, "message", "Couldn't delete user!"));
+                return status(OK).body(Map.of("code", 1, "message", "Couldn't delete user!"));
             }
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return status(INTERNAL_SERVER_ERROR)
                 .body(Map.of("code", 1, "message", "Couldn't delete user!", "detail", detail));
         }
     }

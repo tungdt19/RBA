@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -17,25 +20,17 @@ import java.util.List;
 public class FirebaseServiceImpl implements FirebaseService {
 
     @Override
-    public void message(String content) {
+    public void message(List<String> topicTokens, Map<String, String> data) {
         try {
-            var registrationTokens = List.of("YOUR_REGISTRATION_TOKEN_1", "YOUR_REGISTRATION_TOKEN_n");
-
-            MulticastMessage message = MulticastMessage.builder()
-                .putData("score", "850")
-                .putData("time", "2:45")
-                .addAllTokens(registrationTokens)
-                .build();
+            var message = MulticastMessage.builder().putAllData(data).addAllTokens(topicTokens).build();
             var response = FirebaseMessaging.getInstance().sendMulticast(message);
             if (response.getFailureCount() <= 0) {return;}
             var responses = response.getResponses();
-            var failedTokens = new ArrayList<>();
-            for (int i = 0; i < responses.size(); i++) {
-                if (!responses.get(i).isSuccessful()) {
-                    // The order of responses corresponds to the order of the registration tokens.
-                    failedTokens.add(registrationTokens.get(i));
-                }
-            }
+
+            var failedTokens = IntStream.range(0, responses.size())
+                .filter(i -> !responses.get(i).isSuccessful())
+                .mapToObj(topicTokens::get)
+                .collect(Collectors.toCollection(ArrayList::new));
 
             System.out.println("List of tokens that caused failures: " + failedTokens);
         } catch (FirebaseMessagingException e) {

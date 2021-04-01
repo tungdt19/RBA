@@ -36,23 +36,35 @@ CREATE TABLE token (
     expired_instant TIMESTAMP
 );
 
+CREATE TABLE a (
+
+);
+
+CREATE TABLE location_history (
+    device_id       INT,
+    insert_instant  TIMESTAMP,
+    trigger_instant TIMESTAMP,
+    latitude        FLOAT8,
+    longitude       FLOAT8
+);
+
 CREATE TABLE otp (
 
 );
 
-CREATE table cell_id (
-    radio
-        mcc
-        net
-        area
-        cell
-        unit
-        lon
-        lat
-        range
-        samples
-        changeablemesage
-        created
-        updated
-        averageSignal
+CREATE TABLE cell_id (
+    radio              VARCHAR,
+    mcc                INT,
+    net                INT,
+    area               INT,
+    cell               INT,
+    unit               INT,
+    lon                DECIMAL,
+    lat                DECIMAL,
+    range              DECIMAL,
+    samples            DECIMAL,
+    changeable_message DECIMAL,
+    created            DECIMAL,
+    updated            DECIMAL,
+    averagesignal      DECIMAL
 );

@@ -26,11 +26,11 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Value("${vtag.platform.address}")
     private String address;
-    @Value("${vtag.platform.grant_type}")
+    @Value("${vtag.platform.grant-type}")
     private String grantType;
-    @Value("${vtag.platform.client_id}")
+    @Value("${vtag.platform.client-id}")
     private String clientId;
-    @Value("${vtag.platform.client_secret}")
+    @Value("${vtag.platform.client-secret}")
     private String clientSecret;
 
     private final ThreadPoolTaskScheduler taskScheduler;

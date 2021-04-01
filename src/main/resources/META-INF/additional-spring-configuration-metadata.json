@@ -25,21 +25,25 @@
             "type": "java.lang.Integer",
             "description": "Description for vtag.otp.length."
         }, {
+            "name": "vtag.otp.allowed-chars",
+            "type": "java.lang.String",
+            "description": "Description for vtag.otp.allow-chars."
+        }, {
             "name": "vtag.platform.address",
             "type": "java.lang.String",
             "description": "Description for vtag.platform.address."
         }, {
-            "name": "vtag.platform.client_id",
+            "name": "vtag.platform.client-id",
             "type": "java.lang.String",
-            "description": "Description for vtag.platform.client_id."
+            "description": "Description for vtag.platform.client-id."
         }, {
-            "name": "vtag.platform.client_secret",
+            "name": "vtag.platform.client-secret",
             "type": "java.lang.String",
-            "description": "Description for vtag.platform.client_secret."
+            "description": "Description for vtag.platform.client-secret."
         }, {
-            "name": "vtag.platform.grant_type",
+            "name": "vtag.platform.grant-type",
             "type": "java.lang.String",
-            "description": "Description for vtag.platform.grant_type."
+            "description": "Description for vtag.platform.grant-type."
         }, {
             "name": "spring.datasource.jdbcUrl",
             "type": "java.lang.String",
@@ -72,6 +76,10 @@
             "name": "vtag.mqtt.timeout",
             "type": "java.lang.Integer",
             "description": "Description for vtag.mqtt.timeout."
+        }, {
+            "name": "vtag.unwired.token",
+            "type": "java.lang.String",
+            "description": "Description for vtag.unwired.token."
         }
     ]
 }
