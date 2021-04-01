@@ -10,7 +10,7 @@ public interface UserRepository {
 
     User findByEmail(String email);
 
-    int save(User user);
+    int register(User user);
 
     int update(User user);
 

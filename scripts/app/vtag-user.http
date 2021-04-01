@@ -1,54 +1,36 @@
 ### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/user/otp
-Content-Type: application/json
-
-{"type": "email", "value": "duclm22@viettel.com.vn"}
-
-
-
-### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/user/otp
+POST http://{{host}}/vtag/user/register/otp
 Content-Type: application/json
 
 {"type": "phone", "value": "0365819777"}
 
+### {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31 12:59:59"}}
+### {"code": 1, "message": "Some error!"}
 
 
 ### Register new account -----------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/user/register
-Content-Type: multipart/form-data; boundary=WebAppBoundary
+POST http://{{host}}/vtag/user/register
+Content-Type: application/json
 
---WebAppBoundary
-Content-Disposition: form-data; name="avatar"; filename="avatar.png"
+{"phone": "0365819777", "password": "test"}
 
-< ./avatar.png
---WebAppBoundary--
-Content-Disposition: form-data; name="avatar"
-
---WebAppBoundary--
-
+### {"code": 0, "message": "Created user successfully!"}
+### {"code": 1, "message": "Some error!"}
 
 
 ### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/user/token
+POST http://{{host}}/vtag/user/token
 Content-Type: application/json
 
 {"username": "duclm22", "password": "test"}
 
+### {"code": 0, "message": "Get token successfully!", "data": {"token": "13143534-1231423-1425"}}
 
 
 ### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/user/token
+POST http://{{host}}/vtag/user/token
 Content-Type: application/json
 
 {"username": "duclm22", "password": "invalid password"}
 
-
-
-### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/device
-Authorization: Bearer c5b430b2-db82-42e0-9c8b-4ed5c97817d9
-Content-Type: application/json
-
-
-
+### {"code": 1, "message": "Some error!"}

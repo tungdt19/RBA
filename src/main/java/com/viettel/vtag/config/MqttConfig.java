@@ -40,10 +40,10 @@ public class MqttConfig {
     }
 
     @Bean
-    public IMqttAsyncClient mqttClient(MqttCallback callback) throws MqttException {
-        var client = new MqttAsyncClient(url, clientId, new MemoryPersistence());
-        client.setCallback(callback);
+    public MqttClient mqttClient(MqttCallback callback) throws MqttException {
+        var client = new MqttClient(url, clientId, new MemoryPersistence());
         client.connect(connectOptions());
+        client.setCallback(callback);
         client.subscribe(this.topic, qos);
         return client;
     }

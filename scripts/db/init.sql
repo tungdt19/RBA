@@ -36,8 +36,24 @@ CREATE TABLE token (
     expired_instant TIMESTAMP
 );
 
-CREATE TABLE a (
+CREATE TABLE otp (
+    otp            VARCHAR(6),
+    phone          VARCHAR(15),
+    expire_instant TIMESTAMP,
+    PRIMARY KEY (otp, phone, expire_instant)
+);
 
+CREATE TABLE cell_id (
+    mcc      INT,
+    mnc      INT,
+    lac      INT,
+    cell_id  INT,
+    unit     INT,
+    lon      FLOAT8,
+    lat      FLOAT8,
+    accuracy DECIMAL,
+    address  TEXT,
+    PRIMARY KEY (mcc, mnc, cell_id, lac)
 );
 
 CREATE TABLE location_history (
@@ -46,25 +62,4 @@ CREATE TABLE location_history (
     trigger_instant TIMESTAMP,
     latitude        FLOAT8,
     longitude       FLOAT8
-);
-
-CREATE TABLE otp (
-
-);
-
-CREATE TABLE cell_id (
-    radio              VARCHAR,
-    mcc                INT,
-    net                INT,
-    area               INT,
-    cell               INT,
-    unit               INT,
-    lon                DECIMAL,
-    lat                DECIMAL,
-    range              DECIMAL,
-    samples            DECIMAL,
-    changeable_message DECIMAL,
-    created            DECIMAL,
-    updated            DECIMAL,
-    averagesignal      DECIMAL
 );

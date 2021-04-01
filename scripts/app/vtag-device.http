@@ -1,9 +1,9 @@
 ###
-POST http://localhost:8080/vtag/device/test
+POST http://{{host}}}/vtag/device/test
 Content-Type: application/json
 
 {
-    "token": "284a3628cddb31",
+    "token": "{{token}}",
     "radio": "nbiot",
     "address": 1,
     "mcc": 452,
@@ -23,7 +23,6 @@ Content-Type: application/json
     "Type": "DWFC",
     "Conn": "nbiot",
     "Cell": [
-        {"CID": 75430933, "LAC": 43300, "MCC": 452, "MNC": 4, "SS": -93},
         {"CID": 75430933, "LAC": 43300, "MCC": 452, "MNC": 4, "SS": -93}
     ],
     "APs": [

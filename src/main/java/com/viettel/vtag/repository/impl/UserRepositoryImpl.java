@@ -65,7 +65,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public int save(User user) {
+    public int register(User user) {
         var sql = "INSERT INTO \"user\" (username, password, first_name, last_name, email, phone_no, avatar) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         var password = bCrypt.encode(user.password());

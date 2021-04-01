@@ -3,6 +3,10 @@ spring:
     web-application-type: reactive
   webflux:
     base-path: /vtag
+  datasource:
+    driverClassName: org.postgresql.Driver
+  sms-datasource:
+    driverClassName: com.mysql.jdbc.Driver
 
 server:
   port: 8080
@@ -30,32 +34,28 @@ spring:
   profiles: dev
   datasource:
     jdbcUrl: jdbc:postgresql://127.0.0.1:5432/postgres?useSSL=false
-    driverClassName: org.postgresql.Driver
     username: postgres
-    password: 123456
+    password: 1
   sms-datasource:
     jdbcUrl: jdbc:mysql://127.0.0.1:3306/smssupport?useSSL=false
-    driverClassName: com.mysql.jdbc.Driver
     username: root
     password: 1
 vtag:
   mqtt:
-    url: tcp://localhost:1883
+    url: tcp://127.0.0.1:1883
     topic: test
-    username: test
-    password: test
+    username: username
+    password: password
 
 ---
 spring:
   profiles: test
   datasource:
     jdbcUrl: jdbc:mysql://127.0.0.1:30306/fm?useSSL=false
-    driverClassName: org.postgresql.Driver
     username: root
     password: 1
   sms-datasource:
     jdbcUrl: jdbc:mysql://127.0.0.1:3306/smssupport?useSSL=false
-    driverClassName: com.mysql.jdbc.Driver
     username: root
     password: 1
 
@@ -63,12 +63,10 @@ spring:
 spring:
   profiles: production
   datasource:
-    jdbcUrl: jdbc:mysql://10.60.88.22:9999/fm?useSSL=false
-    driverClassName: org.postgresql.Driver
-    username: ems
-    password: 123456aA@
+    jdbcUrl: jdbc:mysql://10.55.121.73:5432/fm?useSSL=false
+    username: postgres
+    password: 1
   sms-datasource:
-    url: jdbc:mysql://10.60.19.18:3306/smssupport?useSSL=false
-    driverClassName: com.mysql.jdbc.Driver
+    jdbcUrl: jdbc:mysql://10.60.19.18:3306/smssupport?useSSL=false
     username: hrmuser
     password: 123456a@

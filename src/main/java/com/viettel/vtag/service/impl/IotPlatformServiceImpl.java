@@ -5,8 +5,6 @@ import com.viettel.vtag.service.interfaces.IotPlatformService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -18,6 +16,10 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import javax.annotation.PostConstruct;
+
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Slf4j
 @Component
@@ -62,8 +64,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
     }
 
     private Mono<ResponseEntity<PlatformToken>> fetchToken() {
-        var client = webClientBuilder().defaultHeader(HttpHeaders.CONTENT_TYPE,
-            MediaType.APPLICATION_FORM_URLENCODED_VALUE).build();
+        var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_FORM_URLENCODED_VALUE).build();
 
         var body = BodyInserters.fromFormData("grant_type", grantType)
             .with("client_id", clientId)
@@ -84,8 +85,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Override
     public Mono<ResponseEntity<String>> put(String endpoint, String body) {
-        var client = webClientBuilder().defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build();
+        var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
 
         return client.put()
             .uri(endpoint)
@@ -97,8 +97,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Override
     public Mono<ResponseEntity<String>> post(String endpoint, String body) {
-        var client = webClientBuilder().defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build();
+        var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
 
         return client.post()
             .uri(endpoint)

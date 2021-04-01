@@ -24,8 +24,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public int save(User user) {
-        var user1 = userRepository.find(user.phoneNo());
-        return userRepository.save(user);
+        return userRepository.register(user);
     }
 
     @Override

@@ -1,0 +1,14 @@
+POST https://us1.unwiredlabs.com/v2/process.php
+Content-Type: application/json
+
+{
+    "token": "{{token}}",
+    "radio": "nbiot",
+    "address": 1,
+    "mcc": 452,
+    "mnc": 4,
+    "cells": [
+        {"lac": 43300, "cid": 75430933, "psc": 0}
+    ],
+    "wifi": []
+}

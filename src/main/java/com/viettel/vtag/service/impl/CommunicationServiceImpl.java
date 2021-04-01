@@ -34,12 +34,14 @@ public class CommunicationServiceImpl implements CommunicationService {
         }
     }
 
-    private void sendSms(String recipient, String content) {
+    @Override
+    public void sendSms(String recipient, String content) {
         var sql = "INSERT INTO sms (phone, content, sent) VALUES (?, ?, ?)";
         jdbc.update(sql, recipient, content, 0);
     }
 
-    private void sendEmail(String recipient, String content) {
+    @Override
+    public void sendEmail(String recipient, String content) {
 
     }
 

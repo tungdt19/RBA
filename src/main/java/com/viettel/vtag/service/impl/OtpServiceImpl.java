@@ -2,21 +2,26 @@ package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.entity.OTP;
 import com.viettel.vtag.model.request.OtpRequest;
+import com.viettel.vtag.repository.interfaces.OtpRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.CommunicationService;
 import com.viettel.vtag.service.interfaces.OtpService;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OtpServiceImpl implements OtpService {
@@ -26,18 +31,18 @@ public class OtpServiceImpl implements OtpService {
     @Value("${vtag.otp.allowed-chars}")
     private String allowedChars;
 
-    private static final Logger log = LoggerFactory.getLogger(OtpServiceImpl.class);
-    private final CommunicationService communicationService;
     private final MessageSource messageSource;
+    private final OtpRepository otpRepository;
+    private final UserRepository userRepository;
+    private final ThreadPoolTaskScheduler scheduler;
+    private final CommunicationService communicationService;
+
     private SecureRandom secureRandom;
-    private UserRepository userRepository;
 
     {
         try {
             secureRandom = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e) {
-            log.error("");
-        }
+        } catch (NoSuchAlgorithmException ignored) { }
     }
 
     @Override
@@ -46,10 +51,10 @@ public class OtpServiceImpl implements OtpService {
             return null;
         }
 
-        return generate0();
+        return generateOtp();
     }
 
-    private OTP generate0() {
+    private OTP generateOtp() {
         var characters = allowedChars.toCharArray();
         var randomBytes = new byte[length];
         secureRandom.nextBytes(randomBytes);
@@ -66,5 +71,10 @@ public class OtpServiceImpl implements OtpService {
             Locale.ENGLISH);
         log.info("message {}", message);
         communicationService.send(request, message);
+    }
+
+    @PostConstruct
+    public void clearOldOtp() {
+        scheduler.schedule(otpRepository::clearOldOtp, new PeriodicTrigger(5, TimeUnit.MINUTES));
     }
 }

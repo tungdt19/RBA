@@ -1,4 +1,16 @@
 POST https://fcm.googleapis.com/v1/projects/{{project}}}/messages:send
 Content-Type: application/json
+Authorization: Bearer
 
-
+{
+    "message": {
+        "topic": "{{topic}}",
+        "notification": {
+            "title": "",
+            "body": ""
+        },
+        "data": {
+            "some name": "some value"
+        }
+    }
+}

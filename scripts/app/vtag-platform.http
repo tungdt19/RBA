@@ -1,0 +1,6 @@
+###
+POST https://api.iotcloud.com.vn:4438/token
+Host: api.iotcloud.com.vn:4438
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=28e1ffc5-029c-4fa4-b688-6309593d68f0&client_secret=PBfya2HCR_MiWZPJXenpADKhtp

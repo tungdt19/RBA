@@ -13,20 +13,15 @@ import com.viettel.vtag.utils.CellIdSerializer;
 import com.viettel.vtag.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
 
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
 @Slf4j
@@ -40,7 +35,7 @@ public class DeviceController {
     private final UserService userService;
     private final DeviceService deviceService;
     private final IotPlatformService iotService;
-    private final HttpClient httpClient;
+
 
     {
         mapper.registerModule(new SimpleModule().addSerializer(PlatformData.class, new CellIdSerializer()));
@@ -48,18 +43,7 @@ public class DeviceController {
 
     @PostMapping("/test")
     public Mono<ResponseEntity<String>> getInfo(@RequestBody PlatformData data) throws JsonProcessingException {
-        var json = mapper.writeValueAsString(data);
-        return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(httpClient))
-            .baseUrl("https://us1.unwiredlabs.com")
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-            .build()
-            .post()
-            .uri("/v2/process.php")
-            .bodyValue(json)
-            .retrieve()
-            .bodyToMono(String.class)
-            .map(entity -> status(OK).body(entity));
+        return deviceService.convert(mapper.writeValueAsString(data));
     }
 
     @GetMapping("/list")
@@ -68,7 +52,7 @@ public class DeviceController {
             var token = TokenUtils.getToken(request);
             var user = userService.checkToken(token);
             var deviceList = deviceService.getList(user);
-            return status(OK).body(Map.of("code", 0, "message", "Couldn't add user as viewer", "data", deviceList));
+            return ok(Map.of("code", 0, "message", "Couldn't add user as viewer", "data", deviceList));
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
             return status(INTERNAL_SERVER_ERROR).body(
@@ -85,9 +69,9 @@ public class DeviceController {
             var user = userService.checkToken(token);
             var inserted = deviceService.addViewer(user, detail);
             if (inserted > 0) {
-                return status(OK).body(Map.of("code", 0, "message", "Add viewer successfully!"));
+                return ok(Map.of("code", 0, "message", "Add viewer successfully!"));
             } else {
-                return status(OK).body(Map.of("code", 1, "message", "Couldn't add user as viewer"));
+                return ok(Map.of("code", 1, "message", "Couldn't add user as viewer"));
             }
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
@@ -105,9 +89,9 @@ public class DeviceController {
             var user = userService.checkToken(token);
             var removed = deviceService.remove(user, detail);
             if (removed > 0) {
-                return status(OK).body(Map.of("code", 0, "message", "Add viewer successfully!"));
+                return ok(Map.of("code", 0, "message", "Add viewer successfully!"));
             } else {
-                return status(OK).body(Map.of("code", 1, "message", "Couldn't remove viewer"));
+                return ok(Map.of("code", 1, "message", "Couldn't remove viewer"));
             }
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
