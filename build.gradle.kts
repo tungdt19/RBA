@@ -58,7 +58,6 @@ dependencies {
     implementation("com.google.auth:google-auth-library-oauth2-http:0.25.2")
     implementation("com.google.firebase:firebase-admin:7.1.1")
 
-    implementation("org.springframework.integration:spring-integration-jmx:5.4.5")
     implementation("org.springframework.integration:spring-integration-mqtt:5.4.5")
     testCompileOnly("org.projectlombok:lombok:1.18.18")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.18")

@@ -1,57 +1,65 @@
 package com.viettel.vtag.service.impl.mqtt;
 
+import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
+@Service
+@RequiredArgsConstructor
 public class MqttService implements MqttCallback {
 
-    private final int qos = 1;
-    private String topic = "test";
+    @Value("${vtag.mqtt.url}")
+    private String url;
+
+    @Value("${vtag.mqtt.client-id}")
+    private String clientId;
+
+    @Value("${vtag.mqtt.topic}")
+    private String topic;
+
+    @Value("${vtag.mqtt.username}")
+    private String username;
+
+    @Value("${vtag.mqtt.password}")
+    private String password;
+
+    @Value("${vtag.mqtt.qos}")
+    private int qos;
+
+    @Value("${vtag.mqtt.timeout}")
+    private int timeout;
+
     private final MqttClient client;
-
-    public MqttService(String uri) throws MqttException, URISyntaxException {
-        this(new URI(uri));
-    }
-
-    public MqttService(URI uri) throws MqttException {
-        String host = String.format("tcp://%s:%d", uri.getHost(), uri.getPort());
-        String[] auth = getAuth(uri);
-        String username = auth[0];
-        String password = auth[1];
-        String clientId = "MQTT-Java-Example";
-        if (!uri.getPath().isEmpty()) {
-            this.topic = uri.getPath().substring(1);
-        }
-
-        MqttConnectOptions conOpt = new MqttConnectOptions();
-        conOpt.setCleanSession(true);
-        conOpt.setUserName(username);
-        conOpt.setPassword(password.toCharArray());
-
-        this.client = new MqttClient(host, clientId, new MemoryPersistence());
-        this.client.setCallback(this);
-        this.client.connect(conOpt);
-        this.client.subscribe(this.topic, qos);
-    }
-
-    private static String[] getAuth(URI uri) {
-        String[] first = uri.getAuthority().split("@");
-        return first[0].split(":");
-    }
-
-    public static void main(String[] args) throws MqttException, URISyntaxException {
-        MqttService s = new MqttService("tcp://localhost:1883");
-        s.sendMessage("Hello");
-        s.sendMessage("Hello 2");
-    }
 
     public void sendMessage(String payload) throws MqttException {
         MqttMessage message = new MqttMessage(payload.getBytes());
         message.setQos(qos);
-        this.client.publish(this.topic, message); // Blocking publish
+        this.client.publish(this.topic, message);
+    }
+
+    @Bean
+    public MqttClient mqttClient(MqttConnectOptions connectOptions) throws MqttException {
+        var client = new MqttClient(url, clientId, new MemoryPersistence());
+        client.setCallback(this);
+        client.connect(connectOptions);
+        client.subscribe(this.topic, qos);
+        return client;
+    }
+
+    @Bean
+    public MqttConnectOptions connectOptions() {
+        var options = new MqttConnectOptions();
+        options.setCleanSession(true);
+        options.setUserName(username);
+        options.setPassword(password.toCharArray());
+        options.setConnectionTimeout(timeout);
+        return options;
     }
 
     /**
