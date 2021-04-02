@@ -80,6 +80,10 @@
             "name": "vtag.unwired.token",
             "type": "java.lang.String",
             "description": "Description for vtag.unwired.token."
+        }, {
+            "name": "vtag.mqtt.enable",
+            "type": "java.lang.Boolean",
+            "description": "Description for vtag.mqtt.enable."
         }
     ]
 }

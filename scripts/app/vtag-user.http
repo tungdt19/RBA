@@ -2,7 +2,7 @@
 POST http://{{host}}/vtag/user/register/otp
 Content-Type: application/json
 
-{"type": "phone", "value": "0365819777"}
+{"type": "phone", "value": "0365818777"}
 
 ### {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31 12:59:59"}}
 ### {"code": 1, "message": "Some error!"}

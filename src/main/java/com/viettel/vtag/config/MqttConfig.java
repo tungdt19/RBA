@@ -30,15 +30,6 @@ public class MqttConfig {
     @Value("${vtag.mqtt.timeout}")
     private int timeout;
 
-    public MqttConnectOptions connectOptions() {
-        var options = new MqttConnectOptions();
-        options.setCleanSession(true);
-        options.setUserName(username);
-        options.setPassword(password.toCharArray());
-        options.setConnectionTimeout(timeout);
-        return options;
-    }
-
     @Bean
     public MqttClient mqttClient(MqttCallback callback) throws MqttException {
         var client = new MqttClient(url, clientId, new MemoryPersistence());
@@ -48,39 +39,12 @@ public class MqttConfig {
         return client;
     }
 
-    // @Bean
-    // public DefaultMqttPahoClientFactory clientFactory() {
-    //     var factory = new DefaultMqttPahoClientFactory();
-    //     factory.setConnectionOptions(mqttConnectOptions());
-    //     return factory;
-    // }
-    //
-    // @Bean
-    // public MqttConnectOptions mqttConnectOptions() {
-    //     var options = new MqttConnectOptions();
-    //     options.setUserName(username);
-    //     options.setPassword(password.toCharArray());
-    //     return options;
-    // }
-    //
-    // @Bean
-    // public MessageProducer inbound() {
-    //     var adapter = new MqttPahoMessageDrivenChannelAdapter(url, clientId, topic);
-    //     adapter.setCompletionTimeout(timeout);
-    //     adapter.setConverter(new DefaultPahoMessageConverter());
-    //     adapter.setQos(qos);
-    //     adapter.setOutputChannel(mqttInputChannel());
-    //     return adapter;
-    // }
-    //
-    // @Bean
-    // public MessageChannel mqttInputChannel() {
-    //     return new DirectChannel();
-    // }
-    //
-    // @Bean
-    // @ServiceActivator(inputChannel = "mqttInputChannel")
-    // public MessageHandler handler() {
-    //     return message -> System.out.println(message.getPayload());
-    // }
+    public MqttConnectOptions connectOptions() {
+        var options = new MqttConnectOptions();
+        options.setCleanSession(true);
+        options.setUserName(username);
+        options.setPassword(password.toCharArray());
+        options.setConnectionTimeout(timeout);
+        return options;
+    }
 }

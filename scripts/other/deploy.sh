@@ -16,7 +16,7 @@ if [ $# -eq 0 ]; then
   exit 0;
 fi
 
-file=$(ls "$FOLDER" | grep "$BASE_NAME[-]")
+file=$(ls "$FOLDER" | grep "${BASE_NAME}[-]")
 regex="^$BASE_NAME-(.*?)\.jar$"
 [[ $file =~ $regex ]]
 read -r _ VERSION <<< "${BASH_REMATCH[@]}"
@@ -34,7 +34,6 @@ dockerfile() {
 }
 
 build() {
-  docker load < /k8s/install/image/java.tar
   docker build -t "$CONTAINER:$VERSION" "$FOLDER"
 }
 

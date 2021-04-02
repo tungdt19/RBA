@@ -2,6 +2,7 @@ package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.ChangePasswordRequest;
+import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.model.request.TokenRequest;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.UserService;
@@ -48,6 +49,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public User checkToken(ServerHttpRequest request) {
         return checkToken(TokenUtils.getToken(request));
+    }
+
+    @Override
+    public int updateNotificationToken(FcmTokenUpdateRequest request) {
+
+        return 0;
     }
 
     @Override

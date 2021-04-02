@@ -28,6 +28,7 @@ public class OtpServiceImpl implements OtpService {
 
     @Value("${vtag.otp.length}")
     private int length;
+
     @Value("${vtag.otp.allowed-chars}")
     private String allowedChars;
 
@@ -55,6 +56,7 @@ public class OtpServiceImpl implements OtpService {
     }
 
     private OTP generateOtp() {
+        log.info("allowedChars: {}", allowedChars);
         var characters = allowedChars.toCharArray();
         var randomBytes = new byte[length];
         secureRandom.nextBytes(randomBytes);

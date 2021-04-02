@@ -2,6 +2,7 @@ package com.viettel.vtag.service.interfaces;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.ChangePasswordRequest;
+import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.model.request.TokenRequest;
 import com.viettel.vtag.utils.TokenUtils;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -21,4 +22,6 @@ public interface UserService {
     default User checkToken(ServerHttpRequest request) {
         return checkToken(TokenUtils.getToken(request));
     }
+
+    int updateNotificationToken(FcmTokenUpdateRequest request);
 }

@@ -6,14 +6,8 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(fluent = true)
-public class TokenRequest {
+public class FcmTokenUpdateRequest {
 
-    @JsonProperty("username")
-    private String username;
-
-    @JsonProperty("password")
-    private String password;
-
-    @JsonProperty("fcm_token")
+    @JsonProperty
     private String fcmToken;
 }

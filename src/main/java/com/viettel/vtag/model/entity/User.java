@@ -8,15 +8,27 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class User {
 
-    private int id;
+    @JsonProperty("id")
+    private Integer id;
 
     @JsonProperty("phone")
     private String phoneNo;
+
+    @JsonProperty("username")
     private String username;
+
+    @JsonProperty("password")
     private String password;
+
+    @JsonProperty("first_name")
     private String firstName;
+
+    @JsonProperty("last_name")
     private String lastName;
+
+    @JsonProperty("email")
     private String email;
+
     private String avatar;
 
     private String encryptedPassword;

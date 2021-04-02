@@ -1,4 +1,4 @@
-CREATE TABLE "user" (
+CREATE TABLE IF NOT EXISTS "user" (
     id         SERIAL PRIMARY KEY,
     username   VARCHAR UNIQUE,
     password   VARCHAR,
@@ -6,21 +6,22 @@ CREATE TABLE "user" (
     last_name  VARCHAR,
     email      VARCHAR UNIQUE,
     phone_no   VARCHAR UNIQUE,
-    avatar     VARCHAR
+    avatar     VARCHAR,
+    fcm_token  VARCHAR
 );
 
-CREATE TABLE device (
+CREATE TABLE IF NOT EXISTS device (
     id   SERIAL PRIMARY KEY,
     name VARCHAR,
     imei VARCHAR(50) UNIQUE
 );
 
-CREATE TABLE app_role (
+CREATE TABLE IF NOT EXISTS app_role (
     id   SERIAL PRIMARY KEY,
     name VARCHAR UNIQUE
 );
 
-CREATE TABLE user_role (
+CREATE TABLE IF NOT EXISTS user_role (
     user_id   INT,
     device_id INT,
     role_id   INT,
@@ -30,20 +31,20 @@ CREATE TABLE user_role (
     FOREIGN KEY (role_id) REFERENCES app_role (id)
 );
 
-CREATE TABLE token (
+CREATE TABLE IF NOT EXISTS token (
     token           UUID PRIMARY KEY,
     user_id         INT,
     expired_instant TIMESTAMP
 );
 
-CREATE TABLE otp (
+CREATE TABLE IF NOT EXISTS otp (
     otp            VARCHAR(6),
     phone          VARCHAR(15),
     expire_instant TIMESTAMP,
     PRIMARY KEY (otp, phone, expire_instant)
 );
 
-CREATE TABLE cell_id (
+CREATE TABLE IF NOT EXISTS cell_id (
     mcc      INT,
     mnc      INT,
     lac      INT,
