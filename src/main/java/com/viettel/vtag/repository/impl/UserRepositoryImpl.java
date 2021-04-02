@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 @Slf4j
 @Repository
@@ -108,5 +109,10 @@ public class UserRepositoryImpl implements UserRepository {
         return jdbc.queryForObject(sql,
             (rs, i) -> new User().username(rs.getString("username")).encryptedPassword(rs.getString("password")),
             token);
+    }
+
+    @Override
+    public List<String> fetchAllViewers(String deviceId) {
+        return null;
     }
 }

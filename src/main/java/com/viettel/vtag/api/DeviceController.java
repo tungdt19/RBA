@@ -103,6 +103,6 @@ public class DeviceController {
     // gateway to IoT platform is from here on
     @PostMapping("/device/")
     public Mono<ResponseEntity<String>> get(@RequestBody String body) {
-        return iotService.post("/device/", body);
+        return iotService.post("/api/device/", body);
     }
 }

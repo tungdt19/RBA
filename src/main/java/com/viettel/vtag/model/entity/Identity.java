@@ -1,4 +1,4 @@
-package com.viettel.vtag.model.request;
+package com.viettel.vtag.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -6,8 +6,11 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(fluent = true)
-public class FcmTokenUpdateRequest {
+public class Identity {
 
-    @JsonProperty("fcm_token")
-    private String fcmToken;
+    @JsonProperty
+    private String id;
+
+    @JsonProperty
+    private String name;
 }

@@ -2,6 +2,8 @@ package com.viettel.vtag.repository.interfaces;
 
 import com.viettel.vtag.model.entity.User;
 
+import java.util.List;
+
 public interface UserRepository {
 
     User find(String token);
@@ -21,4 +23,6 @@ public interface UserRepository {
     int saveToken(Object token, int userId);
 
     User findByToken(String token);
+
+    List<String> fetchAllViewers(String deviceId);
 }

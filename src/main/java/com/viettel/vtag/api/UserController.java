@@ -1,16 +1,20 @@
 package com.viettel.vtag.api;
 
+import com.viettel.vtag.model.entity.Identity;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.service.impl.UserServiceImpl;
+import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.OtpService;
 import com.viettel.vtag.service.interfaces.UserService;
+import com.viettel.vtag.utils.PhoneUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
@@ -26,42 +30,48 @@ public class UserController {
 
     private final OtpService otpService;
     private final UserService userService;
-    // private final User userService;
+    private final IotPlatformService iotPlatformService;
 
-    @PostMapping("/register/otp")
+    @PostMapping("/otp")
     public ResponseEntity<Map<String, Object>> otp(@RequestBody OtpRequest request) {
         try {
             var otp = otpService.generate(request);
             if (otp == null) {
-                return ok(Map.of("code", 1, "message", "User's already existed!"));
+                return status(CONFLICT).body(Map.of("code", 1, "message", "User's already existed!"));
             }
 
-            log.info("request {} -> otp {}", request, otp);
+            log.info("{} -> {}", request, otp);
             otpService.sendOtp(request, otp);
             var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
             return ok(Map.of("code", 0, "message", "Created OTP successfully!", "data", data));
         } catch (Exception e) {
-            return status(INTERNAL_SERVER_ERROR).body(Map.of("code", 1, "message", String.valueOf(e.getMessage())));
+            var detail = Map.of("detail", String.valueOf(e.getMessage()));
+            return status(INTERNAL_SERVER_ERROR).body(
+                Map.of("code", 1, "message", "Couldn't create OTP", "detail", detail));
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody User user) {
+    public Mono<ResponseEntity<Map<String, Object>>> register(@RequestBody User user) {
         try {
-            var inserted = userService.save(user);
-            if (inserted > 0) {
-                return ok(Map.of("code", 0, "message", "Created user successfully!"));
-            } else {
-                return ok(Map.of("code", 1, "message", "Couldn't create user!"));
-            }
+            var phone = PhoneUtils.standardize(user.phoneNo());
+            return iotPlatformService.post("/api/groups", Map.of("name", phone), Identity.class)
+                .then(Mono.just(userService.save(user)))
+                .flatMap(inserted -> {
+                    if (inserted > 0) {
+                        return Mono.just(ok(Map.of("code", 0, "message", "Created user successfully!")));
+                    } else {
+                        return Mono.just(ok(Map.of("code", 1, "message", "Couldn't create user!")));
+                    }
+                });
         } catch (DuplicateKeyException e) {
             log.error("Couldn't register account {}", e.getMessage());
-            return status(CONFLICT).body(Map.of("code", 1, "message", "User's already existed!"));
+            return Mono.just(status(CONFLICT).body(Map.of("code", 1, "message", "User's already existed!")));
         } catch (Exception e) {
             log.error("Couldn't register account {}", e.getMessage());
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(
-                Map.of("code", 1, "message", "Couldn't create user!", "data", detail));
+            return Mono.just(
+                status(BAD_REQUEST).body(Map.of("code", 1, "message", "Couldn't create user!", "data", detail)));
         }
     }
 
@@ -86,6 +96,11 @@ public class UserController {
             return ok(Map.of("code", 0, "message", "Get token successfully!", "data", data));
         }
 
+        return status(UNAUTHORIZED).body(Map.of("code", 1, "message", "Invalid username or password!"));
+    }
+
+    @PostMapping("/reset")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest request) {
         return status(UNAUTHORIZED).body(Map.of("code", 1, "message", "Invalid username or password!"));
     }
 

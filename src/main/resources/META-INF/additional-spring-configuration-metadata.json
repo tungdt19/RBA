@@ -27,7 +27,7 @@
         }, {
             "name": "vtag.otp.allowed-chars",
             "type": "java.lang.String",
-            "description": "Description for vtag.otp.allow-chars."
+            "description": "Description for vtag.otp.allowed-chars."
         }, {
             "name": "vtag.platform.address",
             "type": "java.lang.String",
@@ -48,6 +48,10 @@
             "name": "spring.datasource.jdbcUrl",
             "type": "java.lang.String",
             "description": "Description for spring.datasource.jdbcUrl."
+        }, {
+            "name": "vtag.mqtt.enable",
+            "type": "java.lang.Boolean",
+            "description": "Description for vtag.mqtt.enable."
         }, {
             "name": "vtag.mqtt.url",
             "type": "java.lang.String",
@@ -81,9 +85,9 @@
             "type": "java.lang.String",
             "description": "Description for vtag.unwired.token."
         }, {
-            "name": "vtag.mqtt.enable",
-            "type": "java.lang.Boolean",
-            "description": "Description for vtag.mqtt.enable."
+            "name": "vtag.unwired.base-url",
+            "type": "java.lang.String",
+            "description": "Description for vtag.unwired.base-url."
         }
     ]
 }

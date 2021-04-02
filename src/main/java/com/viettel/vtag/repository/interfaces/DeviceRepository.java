@@ -6,7 +6,6 @@ public interface DeviceRepository {
 
     Device get(int id);
 
-
     Device find(String imei);
 
     int save(Device device);

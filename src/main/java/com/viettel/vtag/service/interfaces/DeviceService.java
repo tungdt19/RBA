@@ -14,13 +14,13 @@ public interface DeviceService {
 
     int addViewer(User user, AddViewerRequest deviceId);
 
-    String getInfo();
+    String getInfo(String deviceId);
 
     List<Device> getList(User user);
 
     int remove(User user, RemoveViewerRequest detail);
 
-    Mono<ResponseEntity<String>> convert(String json);
+    Mono<ResponseEntity<String>> convert(Object json);
 
     int pairDevice(PairDeviceRequest request);
 }

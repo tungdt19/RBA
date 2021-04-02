@@ -1,19 +1,21 @@
 CREATE TABLE IF NOT EXISTS "user" (
-    id         SERIAL PRIMARY KEY,
-    username   VARCHAR UNIQUE,
-    password   VARCHAR,
-    first_name VARCHAR,
-    last_name  VARCHAR,
-    email      VARCHAR UNIQUE,
-    phone_no   VARCHAR UNIQUE,
-    avatar     VARCHAR,
-    fcm_token  VARCHAR
+    id          SERIAL PRIMARY KEY,
+    username    VARCHAR UNIQUE,
+    password    VARCHAR,
+    first_name  VARCHAR,
+    last_name   VARCHAR,
+    email       VARCHAR UNIQUE,
+    phone_no    VARCHAR UNIQUE,
+    avatar      VARCHAR,
+    fcm_token   VARCHAR,
+    platform_id UUID -- platform's group ID
 );
 
 CREATE TABLE IF NOT EXISTS device (
-    id   SERIAL PRIMARY KEY,
-    name VARCHAR,
-    imei VARCHAR(50) UNIQUE
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR,
+    imei        VARCHAR(50) UNIQUE,
+    platform_id UUID UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS app_role (
@@ -40,8 +42,8 @@ CREATE TABLE IF NOT EXISTS token (
 CREATE TABLE IF NOT EXISTS otp (
     otp            VARCHAR(6),
     phone          VARCHAR(15),
-    expire_instant TIMESTAMP,
-    PRIMARY KEY (otp, phone, expire_instant)
+    expired_instant TIMESTAMP,
+    PRIMARY KEY (otp, phone, expired_instant)
 );
 
 CREATE TABLE IF NOT EXISTS cell_id (
@@ -59,8 +61,8 @@ CREATE TABLE IF NOT EXISTS cell_id (
 
 CREATE TABLE location_history (
     device_id       INT,
-    insert_instant  TIMESTAMP,
-    trigger_instant TIMESTAMP,
     latitude        FLOAT8,
-    longitude       FLOAT8
+    longitude       FLOAT8,
+    insert_instant  TIMESTAMP,
+    trigger_instant TIMESTAMP
 );

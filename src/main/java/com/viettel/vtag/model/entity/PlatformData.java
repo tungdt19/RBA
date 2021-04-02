@@ -1,6 +1,9 @@
 package com.viettel.vtag.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.viettel.vtag.utils.CellIdSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -8,6 +11,8 @@ import java.util.List;
 
 @Data
 @Accessors(fluent = true)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonSerialize(using = CellIdSerializer.class)
 public class PlatformData {
 
     @JsonProperty("Conn")

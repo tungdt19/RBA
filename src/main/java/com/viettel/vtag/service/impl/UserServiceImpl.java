@@ -36,9 +36,9 @@ public class UserServiceImpl implements UserService {
             var token = UUID.randomUUID();
             var updated = userRepository.saveToken(token, user.id());
             return updated > 0 ? token.toString() : null;
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     @Override

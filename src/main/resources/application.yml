@@ -27,7 +27,9 @@ vtag:
     client-id: vtag-backend
     timeout: 5000
   unwired:
-      token:
+      token: 284a3628cddb31
+      base-url: https://ap1.unwiredlabs.com
+      uri: /v2/process.php
 
 ---
 spring:
@@ -51,7 +53,7 @@ vtag:
 spring:
   profiles: test
   datasource:
-    jdbcUrl: jdbc:mysql://127.0.0.1:30306/fm?useSSL=false
+    jdbcUrl: jdbc:postgresql://127.0.0.1:5432/postgres?useSSL=false
     username: root
     password: 1
   sms-datasource:

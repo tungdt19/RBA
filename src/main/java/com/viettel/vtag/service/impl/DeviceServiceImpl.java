@@ -36,6 +36,12 @@ public class DeviceServiceImpl implements DeviceService {
     @Value("${vtag.platform.address}")
     private String platformAddress;
 
+    @Value("${vtag.platform.base-url}")
+    private String platformUrl;
+
+    @Value("${vtag.platform.uri}")
+    private String platformUri;
+
     @Override
     public int addViewer(User user, AddViewerRequest request) {
         var sql = "INSERT INTO user_role(user_id, device_id, role_id) SELECT ?, id, ? FROM device d WHERE imei = ?";
@@ -43,7 +49,7 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public String getInfo() {
+    public String getInfo(String deviceId) {
         //TODO: implement this
         return null;
     }
@@ -57,20 +63,20 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public int remove(User user, RemoveViewerRequest detail) {
-        var sql = "DELETE FROM user_role v USING user_role o "
-            + "WHERE o.role_id = 1 AND o.device_id = v.device_id AND o.user_id = ? AND v.user_id = ?";
-        return jdbc.update(sql, user.id(), detail.viewerId());
+        var sql = "DELETE FROM user_role v USING user_role o WHERE o.role_id = 1 AND o.device_id = v.device_id "
+            + "AND v.phone_no = ? AND o.user_id = ?";
+        return jdbc.update(sql, user.id(), detail.viewerPhone());
     }
 
     @Override
-    public Mono<ResponseEntity<String>> convert(String json) {
+    public Mono<ResponseEntity<String>> convert(Object json) {
         return WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(httpClient))
-            .baseUrl("https://us1.unwiredlabs.com")
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+            .baseUrl(platformUrl)
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build()
             .post()
-            .uri("/v2/process.php")
+            .uri(platformUri)
             .bodyValue(json)
             .retrieve()
             .bodyToMono(String.class)

@@ -26,17 +26,17 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class OtpServiceImpl implements OtpService {
 
-    @Value("${vtag.otp.length}")
-    private int length;
-
-    @Value("${vtag.otp.allowed-chars}")
-    private String allowedChars;
-
     private final MessageSource messageSource;
     private final OtpRepository otpRepository;
     private final UserRepository userRepository;
     private final ThreadPoolTaskScheduler scheduler;
     private final CommunicationService communicationService;
+
+    @Value("${vtag.otp.length}")
+    private int length;
+
+    @Value("${vtag.otp.allowed-chars}")
+    private String allowedChars;
 
     private SecureRandom secureRandom;
 
@@ -52,11 +52,14 @@ public class OtpServiceImpl implements OtpService {
             return null;
         }
 
-        return generateOtp();
+        var otp = generateOtp();
+        var inserted = otpRepository.save(otp, request.value());
+
+        if (inserted > 0) return otp;
+        throw new RuntimeException("Cou");
     }
 
     private OTP generateOtp() {
-        log.info("allowedChars: {}", allowedChars);
         var characters = allowedChars.toCharArray();
         var randomBytes = new byte[length];
         secureRandom.nextBytes(randomBytes);
@@ -71,7 +74,6 @@ public class OtpServiceImpl implements OtpService {
     public void sendOtp(OtpRequest request, OTP otp) {
         var message = messageSource.getMessage("message.otp", new Object[] {otp.content(), otp.expiredInstant()},
             Locale.ENGLISH);
-        log.info("message {}", message);
         communicationService.send(request, message);
     }
 

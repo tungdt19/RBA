@@ -1,6 +1,7 @@
 package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.service.interfaces.StorageService;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -16,19 +17,20 @@ import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.util.stream.Stream;
 
+@Data
 @Service
 public class StorageServiceImpl implements StorageService {
 
-    private final Path location;
+    @Value("${vtag.storage.location}")
+    private String location;
 
-    public StorageServiceImpl(@Value("${vtag.storage.location}") String location) {
-        this.location = Paths.get(location);
-    }
+    private Path storage;
 
     @PostConstruct
     public void init() {
         try {
-            Files.createDirectories(location);
+            this.storage = Paths.get(location);
+            Files.createDirectories(storage);
         } catch (IOException e) {
             throw new RuntimeException("Could not initialize storage", e);
         }
@@ -40,10 +42,10 @@ public class StorageServiceImpl implements StorageService {
             if (file.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
             }
-            var destinationFile = location.resolve(Paths.get(folder, file.getOriginalFilename()))
+            var destinationFile = storage.resolve(Paths.get(folder, file.getOriginalFilename()))
                 .normalize()
                 .toAbsolutePath();
-            if (!destinationFile.getParent().equals(location.toAbsolutePath())) {
+            if (!destinationFile.getParent().equals(storage.toAbsolutePath())) {
                 throw new RuntimeException("Cannot store file outside current directory.");
             }
 
@@ -57,9 +59,7 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public Stream<Path> loadAll() {
         try {
-            return Files.walk(this.location, 1)
-                .filter(path -> !path.equals(this.location))
-                .map(this.location::relativize);
+            return Files.walk(storage, 1).filter(path -> !path.equals(storage)).map(storage::relativize);
         } catch (IOException e) {
             throw new RuntimeException("Failed to read stored files", e);
         }
@@ -67,7 +67,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public Path load(String filename) {
-        return location.resolve(filename);
+        return storage.resolve(filename);
     }
 
     @Override
@@ -87,6 +87,6 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void deleteAll() {
-        FileSystemUtils.deleteRecursively(location.toFile());
+        FileSystemUtils.deleteRecursively(storage.toFile());
     }
 }
