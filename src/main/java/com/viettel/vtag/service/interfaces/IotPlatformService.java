@@ -5,9 +5,25 @@ import reactor.core.publisher.Mono;
 
 public interface IotPlatformService {
 
-    Mono<ResponseEntity<String>> get(String endpoint);
+    <T> Mono<ResponseEntity<T>> get(String endpoint, Class<T> klass);
+    <T> Mono<ResponseEntity<T>> put(String endpoint, Object body, Class<T> klass);
+    <T> Mono<ResponseEntity<T>> post(String endpoint, Object body, Class<T> klass);
 
-    Mono<ResponseEntity<String>> put(String endpoint, String body);
+    <T> Mono<ResponseEntity<T>> delete(String endpoint, Class<T> klass);
 
-    Mono<ResponseEntity<String>> post(String endpoint, String body);
+    default Mono<ResponseEntity<String>> get(String endpoint) {
+        return put(endpoint, String.class);
+    }
+
+    default Mono<ResponseEntity<String>> put(String endpoint, Object body) {
+        return put(endpoint, body, String.class);
+    }
+
+    default Mono<ResponseEntity<String>> post(String endpoint, Object body) {
+        return post(endpoint, body, String.class);
+    }
+
+    default Mono<ResponseEntity<String>> delete(String endpoint) {
+        return delete(endpoint, String.class);
+    }
 }

@@ -1,13 +1,14 @@
 CREATE TABLE IF NOT EXISTS "user" (
-    id         SERIAL PRIMARY KEY,
-    username   VARCHAR UNIQUE,
-    password   VARCHAR,
-    first_name VARCHAR,
-    last_name  VARCHAR,
-    email      VARCHAR UNIQUE,
-    phone_no   VARCHAR UNIQUE,
-    avatar     VARCHAR,
-    fcm_token  VARCHAR
+    id          SERIAL PRIMARY KEY,
+    username    VARCHAR UNIQUE,
+    password    VARCHAR,
+    first_name  VARCHAR,
+    last_name   VARCHAR,
+    email       VARCHAR UNIQUE,
+    phone_no    VARCHAR UNIQUE,
+    avatar      VARCHAR,
+    fcm_token   VARCHAR,
+    platform_id UUID -- platform's group ID
 );
 
 CREATE TABLE IF NOT EXISTS device (

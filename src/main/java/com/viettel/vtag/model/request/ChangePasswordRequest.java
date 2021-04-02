@@ -8,9 +8,9 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class ChangePasswordRequest {
 
-    @JsonProperty
+    @JsonProperty("old_password")
     private String oldPassword;
 
-    @JsonProperty
+    @JsonProperty("new_password")
     private String newPassword;
 }

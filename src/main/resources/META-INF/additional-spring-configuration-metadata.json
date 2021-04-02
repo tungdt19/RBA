@@ -27,7 +27,7 @@
         }, {
             "name": "vtag.otp.allowed-chars",
             "type": "java.lang.String",
-            "description": "Description for vtag.otp.allow-chars."
+            "description": "Description for vtag.otp.allowed-chars."
         }, {
             "name": "vtag.platform.address",
             "type": "java.lang.String",

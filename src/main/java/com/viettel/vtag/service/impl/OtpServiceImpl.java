@@ -56,7 +56,6 @@ public class OtpServiceImpl implements OtpService {
     }
 
     private OTP generateOtp() {
-        log.info("allowedChars: {}", allowedChars);
         var characters = allowedChars.toCharArray();
         var randomBytes = new byte[length];
         secureRandom.nextBytes(randomBytes);
@@ -71,7 +70,6 @@ public class OtpServiceImpl implements OtpService {
     public void sendOtp(OtpRequest request, OTP otp) {
         var message = messageSource.getMessage("message.otp", new Object[] {otp.content(), otp.expiredInstant()},
             Locale.ENGLISH);
-        log.info("message {}", message);
         communicationService.send(request, message);
     }
 

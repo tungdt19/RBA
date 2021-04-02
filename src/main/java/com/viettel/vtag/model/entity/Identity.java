@@ -5,11 +5,7 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(fluent = true)
-public class Device {
-
-    private int id;
+public class Identity {
+    private String id;
     private String name;
-    private String imei;
-
-    private String platformId;
 }

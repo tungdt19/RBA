@@ -74,17 +74,17 @@ public class IotPlatformServiceImpl implements IotPlatformService {
     }
 
     @Override
-    public Mono<ResponseEntity<String>> get(String endpoint) {
+    public <T> Mono<ResponseEntity<T>> get(String endpoint, Class<T> klass) {
         var client = webClientBuilder().build();
         return client.get()
             .uri(endpoint)
             .header("Authorization", platformToken.toString())
             .retrieve()
-            .toEntity(String.class);
+            .toEntity(klass);
     }
 
     @Override
-    public Mono<ResponseEntity<String>> put(String endpoint, String body) {
+    public <T> Mono<ResponseEntity<T>> put(String endpoint, Object body, Class<T> klass) {
         var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
 
         return client.put()
@@ -92,11 +92,11 @@ public class IotPlatformServiceImpl implements IotPlatformService {
             .header("Authorization", platformToken.toString())
             .bodyValue(body)
             .retrieve()
-            .toEntity(String.class);
+            .toEntity(klass);
     }
 
     @Override
-    public Mono<ResponseEntity<String>> post(String endpoint, String body) {
+    public <T> Mono<ResponseEntity<T>> post(String endpoint, Object body, Class<T> klass) {
         var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
 
         return client.post()
@@ -104,6 +104,17 @@ public class IotPlatformServiceImpl implements IotPlatformService {
             .header("Authorization", platformToken.toString())
             .bodyValue(body)
             .retrieve()
-            .toEntity(String.class);
+            .toEntity(klass);
+    }
+
+    @Override
+    public <T> Mono<ResponseEntity<T>> delete(String endpoint, Class<T> klass) {
+        var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
+
+        return client.delete()
+            .uri(endpoint)
+            .header("Authorization", platformToken.toString())
+            .retrieve()
+            .toEntity(klass);
     }
 }
