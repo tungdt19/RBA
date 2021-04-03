@@ -1,5 +1,5 @@
 ### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}/vtag/user/register/otp
+POST http://{{host}}/vtag/user/otp/register
 Content-Type: application/json
 
 {"type": "phone", "value": "0365818777"}
@@ -33,4 +33,35 @@ Content-Type: application/json
 
 {"username": "duclm22", "password": "invalid password"}
 
+### {"code": 1, "message": "Some error!"}
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/user/otp/reset
+Content-Type: application/json
+
+{"type": "phone", "value": "0365818777"}
+
+### {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31 12:59:59"}}
+### {"code": 1, "message": "Some error!"}
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/user/notification
+Content-Type: application/json
+
+{"fcm_token": "0365818777"}
+
+### {"code": 0, "message": "Some message!"}
+### {"code": 1, "message": "Some error!"}
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/user/password
+Content-Type: application/json
+Authorization: Bearer
+
+{"old_password": "abcd", "new_password": "abcdef"}
+
+### {"code": 0, "message": "Some message!"}
 ### {"code": 1, "message": "Some error!"}

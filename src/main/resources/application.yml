@@ -16,7 +16,6 @@ vtag:
     length: 6
     allowed-chars: "0123456789"
   platform:
-    address: http://10.55.123.124:4438
     grant-type: client_credentials
     client-id: 28e1ffc5-029c-4fa4-b688-6309593d68f0
     client-secret: PBfya2HCR_MiWZPJXenpADKhtp
@@ -43,6 +42,8 @@ spring:
     username: root
     password: 1
 vtag:
+  platform:
+    address: https://api.iotcloud.com.vn:4438
   mqtt:
     url: tcp://127.0.0.1:1883
     topic: test
@@ -73,9 +74,11 @@ spring:
     username: hrmuser
     password: 123456a@
 vtag:
+  platform:
+    address: https://10.55.123.124:4438
   mqtt:
     enable: false
     url: tcp://10.55.123.124:4439
-    topic: messages/0b00307f-b802-486a-93ef-ba204e631764/data
+    topic: messages/+/data
     username: username
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTczMzA1OTIsImlzcyI6IjJhNjFmNjYzLTgzMDItNGNhMS1hM2ZmLWJiOTUwYTMzNDk3MSIsInN1YiI6IjJhNjFmNjYzLTgzMDItNGNhMS1hM2ZmLWJiOTUwYTMzNDk3MSIsInR5cGUiOjJ9.4keTJ6QA1oaBwyeZibrXAsOlrLLBPW3XAhdrcpwr0Gs

@@ -26,7 +26,7 @@ public class AppRoleRepositoryImpl implements RoleRepository {
 
     @Override
     public List<AppRole> getRoles(String token) {
-        var sql = "SELECT user_id, device_id, role_id FROM user_role ur JOIN \"user\" u ON u.id = ur.user_id "
+        var sql = "SELECT user_id, device_id, role_id FROM user_role ur JOIN end_user u ON u.id = ur.user_id "
             + "JOIN app_role ar ON ar.id = ur.role_id WHERE username = ? OR email = ? OR phone_no = ?";
 
         return jdbc.query(sql, new Object[] {token}, (rs, rowNum) -> new AppRole().userId(rs.getInt("user_id"))

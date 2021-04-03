@@ -35,9 +35,4 @@ public class PlatformToken {
         type = token.type;
         return this;
     }
-
-    @Override
-    public String toString() {
-        return type + " " + accessToken;
-    }
 }

@@ -1,6 +1,5 @@
 package com.viettel.vtag.api;
 
-import com.viettel.vtag.model.entity.Identity;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.service.impl.UserServiceImpl;
@@ -32,15 +31,32 @@ public class UserController {
     private final UserService userService;
     private final IotPlatformService iotPlatformService;
 
-    @PostMapping("/otp")
-    public ResponseEntity<Map<String, Object>> otp(@RequestBody OtpRequest request) {
+    @PostMapping("/otp/register")
+    public ResponseEntity<Map<String, Object>> registerOtp(@RequestBody OtpRequest request) {
         try {
-            var otp = otpService.generate(request);
+            var otp = otpService.generateRegisterOtp(request);
             if (otp == null) {
                 return status(CONFLICT).body(Map.of("code", 1, "message", "User's already existed!"));
             }
 
-            log.info("{} -> {}", request, otp);
+            otpService.sendOtp(request, otp);
+            var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
+            return ok(Map.of("code", 0, "message", "Created OTP successfully!", "data", data));
+        } catch (Exception e) {
+            var detail = Map.of("detail", String.valueOf(e.getMessage()));
+            return status(INTERNAL_SERVER_ERROR).body(
+                Map.of("code", 1, "message", "Couldn't create OTP", "detail", detail));
+        }
+    }
+
+    @PostMapping("/otp/reset")
+    public ResponseEntity<Map<String, Object>> resetOtp(@RequestBody OtpRequest request) {
+        try {
+            var otp = otpService.generateResetOtp(request);
+            if (otp == null) {
+                return status(NOT_FOUND).body(Map.of("code", 1, "message", "User does not exist!"));
+            }
+
             otpService.sendOtp(request, otp);
             var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
             return ok(Map.of("code", 0, "message", "Created OTP successfully!", "data", data));
@@ -55,15 +71,12 @@ public class UserController {
     public Mono<ResponseEntity<Map<String, Object>>> register(@RequestBody User user) {
         try {
             var phone = PhoneUtils.standardize(user.phoneNo());
-            return iotPlatformService.post("/api/groups", Map.of("name", phone), Identity.class)
-                .then(Mono.just(userService.save(user)))
-                .flatMap(inserted -> {
-                    if (inserted > 0) {
-                        return Mono.just(ok(Map.of("code", 0, "message", "Created user successfully!")));
-                    } else {
-                        return Mono.just(ok(Map.of("code", 1, "message", "Couldn't create user!")));
-                    }
-                });
+            return userService.save(user.phoneNo(phone)).flatMap(inserted -> {
+                if (inserted > 0) {
+                    return Mono.just(ok(Map.of("code", 0, "message", "Created user successfully!")));
+                }
+                return Mono.just(status(INTERNAL_SERVER_ERROR).body(Map.of("code", 1, "message", "Couldn't create user!")));
+            });
         } catch (DuplicateKeyException e) {
             log.error("Couldn't register account {}", e.getMessage());
             return Mono.just(status(CONFLICT).body(Map.of("code", 1, "message", "User's already existed!")));
@@ -88,7 +101,7 @@ public class UserController {
     }
 
     /** {@link UserServiceImpl#createToken} */
-    @PostMapping("/sms")
+    @PostMapping("/notification")
     public ResponseEntity<Map<String, Object>> updateFcmToken(@RequestBody FcmTokenUpdateRequest request) {
         var token = userService.updateNotificationToken(request);
         if (token > 0) {

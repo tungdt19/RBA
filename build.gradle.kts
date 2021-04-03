@@ -50,7 +50,7 @@ dependencies {
     implementation(spring("boot", "-starter-jdbc"))
     implementation(spring("boot", "-starter-webflux"))
     implementation(spring("boot", "-starter-security"))
-    implementation(spring("boot", "-starter-actuator"))
+    // implementation(spring("boot", "-starter-actuator"))
 
     implementation("org.postgresql:postgresql:42.2.19")
     implementation("mysql:mysql-connector-java:5.1.49")

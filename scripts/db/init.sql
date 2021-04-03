@@ -1,21 +1,21 @@
-CREATE TABLE IF NOT EXISTS "user" (
-    id          SERIAL PRIMARY KEY,
-    username    VARCHAR UNIQUE,
-    password    VARCHAR,
-    first_name  VARCHAR,
-    last_name   VARCHAR,
-    email       VARCHAR UNIQUE,
-    phone_no    VARCHAR UNIQUE,
-    avatar      VARCHAR,
-    fcm_token   VARCHAR,
-    platform_id UUID -- platform's group ID
+CREATE TABLE IF NOT EXISTS end_user (
+    id                SERIAL PRIMARY KEY,
+    username          VARCHAR UNIQUE,
+    password          VARCHAR,
+    first_name        VARCHAR,
+    last_name         VARCHAR,
+    email             VARCHAR UNIQUE,
+    phone_no          VARCHAR UNIQUE,
+    avatar            VARCHAR,
+    fcm_token         VARCHAR,
+    platform_group_id UUID -- platform's group ID
 );
 
 CREATE TABLE IF NOT EXISTS device (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR,
-    imei        VARCHAR(50) UNIQUE,
-    platform_id UUID UNIQUE
+    id                 SERIAL PRIMARY KEY,
+    name               VARCHAR,
+    imei               VARCHAR(50) UNIQUE,
+    platform_device_id UUID UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS app_role (
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS user_role (
     role_id   INT,
 
     PRIMARY KEY (user_id, device_id),
-    FOREIGN KEY (user_id) REFERENCES "user" (id),
+    FOREIGN KEY (user_id) REFERENCES end_user (id),
     FOREIGN KEY (role_id) REFERENCES app_role (id)
 );
 
@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS token (
 );
 
 CREATE TABLE IF NOT EXISTS otp (
-    otp            VARCHAR(6),
-    phone          VARCHAR(15),
+    otp             VARCHAR(6),
+    phone           VARCHAR(15),
     expired_instant TIMESTAMP,
     PRIMARY KEY (otp, phone, expired_instant)
 );
@@ -66,3 +66,10 @@ CREATE TABLE location_history (
     insert_instant  TIMESTAMP,
     trigger_instant TIMESTAMP
 );
+
+
+------------------------------------------------------------------------------------------------------------------------
+INSERT INTO app_role (id, name)
+VALUES
+    (1, 'ROLE_OWNER'),
+    (2, 'ROLE_VIEWER');

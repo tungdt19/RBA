@@ -5,7 +5,9 @@ import com.viettel.vtag.model.request.OtpRequest;
 
 public interface OtpService {
 
-    OTP generate(OtpRequest request);
+    OTP generateResetOtp(OtpRequest request);
+
+    OTP generateRegisterOtp(OtpRequest request);
 
     void sendOtp(OtpRequest request, OTP otp);
 }

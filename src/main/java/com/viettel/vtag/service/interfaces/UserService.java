@@ -6,12 +6,13 @@ import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.model.request.TokenRequest;
 import com.viettel.vtag.utils.TokenUtils;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import reactor.core.publisher.Mono;
 
 public interface UserService {
 
     User checkToken(String token);
 
-    int save(User user);
+    Mono<Integer> save(User user);
 
     String createToken(TokenRequest request);
 

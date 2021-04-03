@@ -48,6 +48,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
             }
 
             platformToken.update(entity.getBody());
+            log.info("Platform token {}", platformToken);
             taskScheduler.schedule(() -> {
                 var response = fetchToken().block();
                 if (response == null || response.getBody() == null) {

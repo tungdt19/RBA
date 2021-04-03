@@ -47,7 +47,7 @@ public class OtpServiceImpl implements OtpService {
     }
 
     @Override
-    public OTP generate(OtpRequest request) {
+    public OTP generateRegisterOtp(OtpRequest request) {
         if (userRepository.findByPhone(request.value()) != null) {
             return null;
         }
@@ -56,7 +56,20 @@ public class OtpServiceImpl implements OtpService {
         var inserted = otpRepository.save(otp, request.value());
 
         if (inserted > 0) return otp;
-        throw new RuntimeException("Cou");
+        throw new RuntimeException("Couldn't create OTP");
+    }
+
+    @Override
+    public OTP generateResetOtp(OtpRequest request) {
+        if (userRepository.findByPhone(request.value()) == null) {
+            return null;
+        }
+
+        var otp = generateOtp();
+        var inserted = otpRepository.save(otp, request.value());
+
+        if (inserted > 0) return otp;
+        throw new RuntimeException("Couldn't create OTP");
     }
 
     private OTP generateOtp() {
@@ -72,9 +85,9 @@ public class OtpServiceImpl implements OtpService {
 
     @Override
     public void sendOtp(OtpRequest request, OTP otp) {
-        var message = messageSource.getMessage("message.otp", new Object[] {otp.content(), otp.expiredInstant()},
-            Locale.ENGLISH);
-        communicationService.send(request, message);
+        log.info("{} -> {}", request, otp);
+        var params = new Object[] {otp.content(), otp.expiredInstant()};
+        communicationService.send(request, messageSource.getMessage("message.otp", params, Locale.ENGLISH));
     }
 
     @PostConstruct

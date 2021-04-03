@@ -22,6 +22,8 @@ public interface UserRepository {
 
     int saveToken(Object token, int userId);
 
+    int updateNotificationToken(String token, int userId);
+
     User findByToken(String token);
 
     List<String> fetchAllViewers(String deviceId);

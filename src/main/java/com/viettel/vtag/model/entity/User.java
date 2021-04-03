@@ -30,6 +30,7 @@ public class User {
     private String email;
 
     private String avatar;
+    private String platformId;
 
     private String encryptedPassword;
 }

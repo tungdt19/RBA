@@ -1,10 +1,10 @@
 package com.viettel.vtag.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.viettel.vtag.model.entity.PlatformData;
 import com.viettel.vtag.model.request.AddViewerRequest;
+import com.viettel.vtag.model.request.PairDeviceRequest;
 import com.viettel.vtag.model.request.RemoveViewerRequest;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
@@ -36,14 +36,13 @@ public class DeviceController {
     private final DeviceService deviceService;
     private final IotPlatformService iotService;
 
-
     {
         mapper.registerModule(new SimpleModule().addSerializer(PlatformData.class, new CellIdSerializer()));
     }
 
     @PostMapping("/test")
-    public Mono<ResponseEntity<String>> getInfo(@RequestBody PlatformData data) throws JsonProcessingException {
-        return deviceService.convert(mapper.writeValueAsString(data));
+    public Mono<ResponseEntity<String>> getInfo(@RequestBody PlatformData data) {
+        return deviceService.convert(data);
     }
 
     @GetMapping("/list")
@@ -101,8 +100,13 @@ public class DeviceController {
     }
 
     // gateway to IoT platform is from here on
-    @PostMapping("/device/")
-    public Mono<ResponseEntity<String>> get(@RequestBody String body) {
-        return iotService.post("/api/device/", body);
+    @PostMapping("/pair")
+    public Mono<ResponseEntity<Map<String, Object>>> pairDevice(@RequestBody PairDeviceRequest request) {
+        return deviceService.pairDevice(request).map(paired -> {
+            if (paired == null || paired != 1) {
+                return status(INTERNAL_SERVER_ERROR).body(Map.of("code", 1, "message", "Couldn't pair device!"));
+            }
+            return ok(Map.of("code", 0, "message", "Paired device successfully!"));
+        });
     }
 }

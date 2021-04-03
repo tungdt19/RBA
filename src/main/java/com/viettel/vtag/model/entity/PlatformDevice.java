@@ -1,37 +1,39 @@
 package com.viettel.vtag.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.std.UUIDDeserializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import java.util.UUID;
 
 @Data
 @Accessors(fluent = true)
 public class PlatformDevice {
 
-    @JsonProperty
-    private String id;
+    @JsonProperty("id")
+    @JsonDeserialize(using = UUIDDeserializer.class)
+    private UUID id;
 
-    @JsonProperty
+    @JsonProperty("template_id")
+    private String templateId;
+
+    @JsonProperty("name")
     private String name;
 
-    @JsonProperty
-    private int battery;
+    @JsonProperty("groupID")
+    private String groupId;
 
-    @JsonProperty
-    private double latitude;
+    @JsonProperty("groupName")
+    private String groupName;
 
-    @JsonProperty
-    private double longitude;
+    @JsonProperty("typeID")
+    private String typeID;
 
-    @JsonProperty
-    private String status;
+    @JsonProperty("typename")
+    private String typeName;
 
-    @JsonProperty
-    private String accuracy;
-
-    @JsonProperty("geofencing_status")
-    private String geofencingStatus;
-
-    @JsonProperty
-    private String uptime;
+    @JsonProperty("status")
+    private boolean status;
 }

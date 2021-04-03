@@ -1,6 +1,7 @@
 package com.viettel.vtag.service.interfaces;
 
 import com.viettel.vtag.model.entity.Device;
+import com.viettel.vtag.model.entity.PlatformData;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.AddViewerRequest;
 import com.viettel.vtag.model.request.PairDeviceRequest;
@@ -20,7 +21,9 @@ public interface DeviceService {
 
     int remove(User user, RemoveViewerRequest detail);
 
-    Mono<ResponseEntity<String>> convert(Object json);
+    Mono<ResponseEntity<String>> convert(String json);
 
-    int pairDevice(PairDeviceRequest request);
+    Mono<ResponseEntity<String>> convert(PlatformData json);
+
+    Mono<Integer> pairDevice(PairDeviceRequest request);
 }

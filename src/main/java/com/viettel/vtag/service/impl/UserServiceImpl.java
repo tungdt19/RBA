@@ -1,18 +1,22 @@
 package com.viettel.vtag.service.impl;
 
+import com.viettel.vtag.model.entity.Identity;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.ChangePasswordRequest;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.model.request.TokenRequest;
 import com.viettel.vtag.repository.interfaces.UserRepository;
+import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
 import com.viettel.vtag.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -21,17 +25,22 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder bCrypt;
+    private final IotPlatformService iotPlatformService;
+    private final PasswordEncoder bCrypt;
 
     @Override
-    public int save(User user) {
-        return userRepository.register(user);
+    public Mono<Integer> save(User user) {
+        return iotPlatformService.post("/api/groups", Map.of("name", user.phoneNo()), Identity.class)
+            .flatMap(entity -> Mono.justOrEmpty(entity.getBody()))
+            .flatMap(identity -> Mono.just(userRepository.register(user.platformId(identity.id()))));
     }
 
     @Override
     public String createToken(TokenRequest request) {
-        var user = userRepository.find(request.username());
-        log.debug("user {}", user);
+        var user = userRepository.findByPhone(request.username());
+        log.info("user {}", user);
+        if (user == null) return null;
+
         if (bCrypt.matches(request.password(), user.encryptedPassword())) {
             var token = UUID.randomUUID();
             var updated = userRepository.saveToken(token, user.id());
@@ -53,7 +62,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public int updateNotificationToken(FcmTokenUpdateRequest request) {
-
+        var sql = "up";
         return 0;
     }
 
