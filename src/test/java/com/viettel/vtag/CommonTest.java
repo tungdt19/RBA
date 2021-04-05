@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import reactor.core.publisher.Mono;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -18,10 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @Slf4j
 public class CommonTest {
 
-    @BeforeAll
-    public static void test() {
-
-    }
 
     @Test
     public void test_bcrypt() {
@@ -57,6 +54,30 @@ public class CommonTest {
         var info = mapper.readValue("{\"red\":12}", Info.class);
         var s = mapper.writeValueAsString(info);
         log.info("s {}", s);
+    }
+
+    @Test
+    public void split_topic() {
+        var a = Mono.just("A");
+
+        a.subscribe(s -> {
+            try {
+                log.info("{}", s + 2);
+                Thread.sleep(1000);
+                log.info("{}", s + 2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        a.subscribe(s -> {
+            try {
+                log.info("{}", s + 1);
+                Thread.sleep(500);
+                log.info("{}", s + 1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Data

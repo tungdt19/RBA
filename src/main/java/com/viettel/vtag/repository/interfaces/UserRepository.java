@@ -1,6 +1,7 @@
 package com.viettel.vtag.repository.interfaces;
 
 import com.viettel.vtag.model.entity.User;
+import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ public interface UserRepository {
 
     int saveToken(Object token, int userId);
 
-    int updateNotificationToken(String token, int userId);
+    int updateNotificationToken(User user, FcmTokenUpdateRequest request);
 
     User findByToken(String token);
 

@@ -47,6 +47,7 @@ public class UserController {
     @PostMapping("/register")
     public Mono<ResponseEntity<ResponseBody>> register(@RequestBody User user) {
         return userService.save(user).flatMap(registered -> {
+            log.info("create user: {}", registered);
             if (registered > 0) {
                 return Mono.just(ok(new ResponseBody(0, "Created user successfully!")));
             }
@@ -84,11 +85,13 @@ public class UserController {
 
     /** {@link UserServiceImpl#createToken} */
     @PostMapping("/notification")
-    public ResponseEntity<ResponseBody> updateFcmToken(@RequestBody FcmTokenUpdateRequest request) {
-        var token = userService.updateNotificationToken(request);
-        if (token > 0) {
-            var data = Map.of("token", token);
-            return ok(new ResponseBody(0, "Get token successfully!", data));
+    public ResponseEntity<ResponseBody> updateFcmToken(
+        @RequestBody FcmTokenUpdateRequest detail, ServerHttpRequest request
+    ) {
+        var user = userService.checkToken(request);
+        var updated = userService.updateNotificationToken(user, detail);
+        if (updated > 0) {
+            return ok(new ResponseBody(0, "Get token successfully!", Map.of("token", updated)));
         }
 
         return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
@@ -100,7 +103,6 @@ public class UserController {
     ) {
         try {
             var user = userService.checkToken(request);
-            log.info("{}", user);
             var changed = userService.changePassword(user, passwordRequest);
             if (changed > 0) {
                 return ok(new ResponseBody(0, "Changed password successfully!"));

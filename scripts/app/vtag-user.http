@@ -22,7 +22,10 @@ Content-Type: application/json
 POST http://{{host}}/vtag/user/token
 Content-Type: application/json
 
-{"username": "0365819777", "password": "test"}
+{
+    "username": "84365819777",
+    "password": "test"
+}
 
 > {%
 client.test("Request executed successfully", function() {

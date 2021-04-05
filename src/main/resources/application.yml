@@ -15,8 +15,8 @@ vtag:
   platform:
     base-url: https://api.iotcloud.com.vn:4438
     grant-type: client_credentials
-    client-id: 28e1ffc5-029c-4fa4-b688-6309593d68f0
-    client-secret: PBfya2HCR_MiWZPJXenpADKhtp
+    client-id: 9221f93a-58b6-40c5-8dc5-1bd6ab0a4897
+    client-secret: 90pd2Ot8LZURZtUB8XL69cOdB9
   storage:
     location: ~/storage/
   mqtt:
@@ -45,7 +45,7 @@ spring:
 vtag:
   mqtt:
     url: tcp://127.0.0.1:1883
-    topic: test
+    topic: messages/+/wildcard
     username: username
     password: password
 
@@ -78,4 +78,4 @@ vtag:
     url: tcp://10.55.123.124:4439
     topic: messages/+/data
     username: username
-    password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTczMzA1OTIsImlzcyI6IjJhNjFmNjYzLTgzMDItNGNhMS1hM2ZmLWJiOTUwYTMzNDk3MSIsInN1YiI6IjJhNjFmNjYzLTgzMDItNGNhMS1hM2ZmLWJiOTUwYTMzNDk3MSIsInR5cGUiOjJ9.4keTJ6QA1oaBwyeZibrXAsOlrLLBPW3XAhdrcpwr0Gs
+    password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc

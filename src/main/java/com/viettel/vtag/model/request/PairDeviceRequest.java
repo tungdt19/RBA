@@ -14,6 +14,6 @@ public class PairDeviceRequest {
     @JsonProperty
     private String name;
 
-    @JsonProperty
-    private String imei;
+    @JsonProperty("platform_id")
+    private String platformId;
 }

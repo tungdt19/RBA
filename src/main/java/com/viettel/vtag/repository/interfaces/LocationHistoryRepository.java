@@ -1,13 +1,14 @@
 package com.viettel.vtag.repository.interfaces;
 
-import com.viettel.vtag.model.entity.Location;
+import com.viettel.vtag.model.entity.LocationHistory;
+import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.LocationHistoryRequest;
 
 import java.util.List;
 
 public interface LocationHistoryRepository {
 
-    int save(Location location);
+    int save(LocationHistory location);
 
-    List<Location> fetch(LocationHistoryRequest request);
+    List<LocationHistory> fetch(User user, LocationHistoryRequest request);
 }

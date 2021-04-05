@@ -24,5 +24,5 @@ public interface UserService {
 
     User checkToken(String token);
 
-    int updateNotificationToken(FcmTokenUpdateRequest request);
+    int updateNotificationToken(User user, FcmTokenUpdateRequest request);
 }

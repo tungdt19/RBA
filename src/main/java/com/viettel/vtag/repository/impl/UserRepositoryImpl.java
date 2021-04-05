@@ -1,6 +1,7 @@
 package com.viettel.vtag.repository.impl;
 
 import com.viettel.vtag.model.entity.User;
+import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +37,8 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User findByPhone(String phone) {
         try {
-            var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar FROM end_user "
-                + "WHERE phone_no = ?";
+            var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar, fcm_token "
+                + "FROM end_user WHERE phone_no = ?";
             return jdbc.queryForObject(sql, new Object[] {phone}, (rs, num) -> mapUser(rs));
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
@@ -57,11 +58,11 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public int register(User user) {
-        var sql = "INSERT INTO end_user (username, password, first_name, last_name, email, phone_no, avatar) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        var sql = "INSERT INTO end_user (username, password, first_name, last_name, email, phone_no, avatar, "
+            + "platform_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         var password = bCrypt.encode(user.password());
         return jdbc.update(sql, user.username(), password, user.firstName(), user.lastName(), user.email(),
-            user.phoneNo(), user.avatar());
+            user.phoneNo(), user.avatar(), user.platformId());
     }
 
     @Override
@@ -92,14 +93,15 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public int updateNotificationToken(String token, int userId) {
-        return 0;
+    public int updateNotificationToken(User user, FcmTokenUpdateRequest request) {
+        var sql = "UPDATE end_user SET fcm_token = ? WHERE id = ?";
+        return jdbc.update(sql, request.fcmToken(), user.id());
     }
 
     @Override
     public User findByToken(String token) {
         var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email, "
-            + "phone_no, avatar, fcm_token FROM token t LEFT JOIN end_user u ON t.user_id = u.id "
+            + "phone_no, avatar, fcm_token, platform_group_id FROM token t LEFT JOIN end_user u ON t.user_id = u.id "
             + "WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
         return jdbc.queryForObject(sql, new Object[] {UUID.fromString(token)}, (rs, i) -> mapUser(rs));
     }
@@ -121,6 +123,7 @@ public class UserRepositoryImpl implements UserRepository {
             .email(rs.getString("email"))
             .phoneNo(rs.getString("phone_no"))
             .avatar(rs.getString("avatar"))
-            .fcmToken(rs.getString("fcm_token"));
+            .fcmToken(rs.getString("fcm_token"))
+            .platformId(rs.getString("platform_group_id"));
     }
 }

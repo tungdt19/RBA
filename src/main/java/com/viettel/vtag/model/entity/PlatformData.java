@@ -16,20 +16,32 @@ import java.util.List;
 @JsonSerialize(using = CellIdSerializer.class)
 public class PlatformData {
 
+    @JsonProperty("Type")
+    private String type;
+
     @JsonIgnore
     private String token;
 
     @JsonProperty("Conn")
-    private String conn;
-
-    @JsonProperty("Type")
-    private String type;
+    private String connection;
 
     @JsonProperty("Cell")
     private List<Cell> cells;
 
     @JsonProperty("APs")
     private List<AP> aps;
+
+    @JsonProperty("Ver")
+    private String version;
+
+    @JsonProperty("Lat")
+    private double latitude;
+
+    @JsonProperty("Lon") //: 105.81206979664238
+    private double longitude;
+
+    @JsonProperty("TS")  //: "2021-03-24 14-33-23"
+    private String timestamp;
 
     @Data
     @Accessors(fluent = true)

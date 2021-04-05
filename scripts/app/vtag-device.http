@@ -1,5 +1,19 @@
-POST http://{{host}}}/vtag/device/pair
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/device/pair
+Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
+
+{
+    "name": "PairDevice",
+    "platform_id": "d86c8f22-e026-440f-bc17-ca77cee811c2"
+}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+GET http://{{host}}/vtag/device/list
+Content-Type: application/json
+Authorization: Bearer {{vtag_token}}
 
 {
     "name": "test",
@@ -8,25 +22,15 @@ Content-Type: application/json
 
 
 
-###
-POST http://{{host}}}/vtag/device/list
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/device/route
 Content-Type: application/json
-Authorization: Bearer
-
-{
-    "name": "test",
-    "imei": "123456"
-}
-
-
-###
-POST http://{{host}}}/vtag/device/route
-Content-Type: application/json
-Authorization: Bearer
+Authorization: Bearer {{vtag_token}}
 
 {
     "device_id": "9a2612a6-4f5f-4fa2-84f8-6cc00d63a12f",
     "from": 1617438512412,
     "to": 1617439512412
 }
+
 

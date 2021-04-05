@@ -15,8 +15,9 @@ public class PairDeviceSerializer extends JsonSerializer<PairDeviceRequest> {
 
         json.writeObjectField("name", request.name());
 
-        json.writeStartObject("metadata");
-        json.writeObjectField("imei", request.imei());
+        json.writeFieldName("metadata");
+        json.writeStartObject();
+        json.writeObjectField("imei", request.platformId());
         json.writeEndObject();
 
         json.writeEndObject();

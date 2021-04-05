@@ -22,6 +22,12 @@ public class FirebaseServiceImpl implements FirebaseService {
     @Override
     public void message(List<String> topicTokens, Map<String, String> data) {
         try {
+            if (topicTokens.isEmpty()) {
+                topicTokens.add(
+                    "en7DxvC6SG-q-gEO3LQTeP:APA91bGZDQvHRMlZf84OsfQDMw658IS2D1tqHNO4u8XRKNssSIK-NAjSwhl_pqKrNik8WgzQY"
+                        + "-BSMfXmFaQFCLtP6BH9Y8FC610biJfi2s1gcc2fVrMGfWa6JJEIakdXCNhweMAIiEA6");
+                // return;
+            }
             var message = MulticastMessage.builder().putAllData(data).addAllTokens(topicTokens).build();
             var response = FirebaseMessaging.getInstance().sendMulticast(message);
             if (response.getFailureCount() <= 0) {return;}
@@ -32,7 +38,7 @@ public class FirebaseServiceImpl implements FirebaseService {
                 .mapToObj(topicTokens::get)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-            System.out.println("List of tokens that caused failures: " + failedTokens);
+            log.error("List of tokens that caused failures: {}", failedTokens);
         } catch (FirebaseMessagingException e) {
             log.error("Couldn't send message to user: {}", e.getMessage());
         }

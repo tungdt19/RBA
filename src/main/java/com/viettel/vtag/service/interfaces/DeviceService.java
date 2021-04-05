@@ -1,12 +1,8 @@
 package com.viettel.vtag.service.interfaces;
 
-import com.viettel.vtag.model.entity.Device;
-import com.viettel.vtag.model.entity.PlatformData;
-import com.viettel.vtag.model.entity.User;
-import com.viettel.vtag.model.request.AddViewerRequest;
-import com.viettel.vtag.model.request.PairDeviceRequest;
-import com.viettel.vtag.model.request.RemoveViewerRequest;
-import org.springframework.http.ResponseEntity;
+import com.viettel.vtag.model.entity.*;
+import com.viettel.vtag.model.request.*;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -21,9 +17,13 @@ public interface DeviceService {
 
     int remove(User user, RemoveViewerRequest detail);
 
-    Mono<ResponseEntity<String>> convert(String json);
+    Mono<ClientResponse> convert(String json);
 
-    Mono<ResponseEntity<String>> convert(PlatformData json);
+    Mono<ClientResponse> convert(PlatformData json);
 
-    Mono<Integer> pairDevice(PairDeviceRequest request);
+    Mono<Integer> pairDevice(User user, PairDeviceRequest request);
+
+    List<LocationHistory> fetchHistory(User user, LocationHistoryRequest detail);
+
+    Mono<ClientResponse> active(PairDeviceRequest detail);
 }

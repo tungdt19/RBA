@@ -3,9 +3,7 @@ package com.viettel.vtag.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.viettel.vtag.model.entity.PlatformData;
-import com.viettel.vtag.model.request.AddViewerRequest;
-import com.viettel.vtag.model.request.PairDeviceRequest;
-import com.viettel.vtag.model.request.RemoveViewerRequest;
+import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.UserService;
@@ -20,7 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
@@ -37,11 +35,6 @@ public class DeviceController {
 
     {
         mapper.registerModule(new SimpleModule().addSerializer(PlatformData.class, new CellIdSerializer()));
-    }
-
-    @PostMapping("/test")
-    public Mono<ResponseEntity<String>> getInfo(@RequestBody PlatformData data) {
-        return deviceService.convert(data);
     }
 
     @GetMapping("/list")
@@ -87,7 +80,7 @@ public class DeviceController {
             if (removed > 0) {
                 return ok(new ResponseBody(0, "Add viewer successfully!"));
             } else {
-                return ok(new ResponseBody(1, "Couldn't remove viewer"));
+                return status(BAD_REQUEST).body(new ResponseBody(1, "Couldn't remove viewer"));
             }
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
@@ -97,12 +90,36 @@ public class DeviceController {
 
     // gateway to IoT platform is from here on
     @PostMapping("/pair")
-    public Mono<ResponseEntity<ResponseBody>> pairDevice(@RequestBody PairDeviceRequest request) {
-        return deviceService.pairDevice(request).map(paired -> {
-            if (paired == null || paired != 1) {
-                return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't pair device!"));
+    public Mono<ResponseEntity<ResponseBody>> pairDevice(
+        @RequestBody PairDeviceRequest detail, ServerHttpRequest request
+    ) {
+        var token = TokenUtils.getToken(request);
+        var user = userService.checkToken(token);
+        return deviceService.pairDevice(user, detail).flatMap(paired -> {
+            log.info("paired {}", paired);
+            return deviceService.active(detail);
+        }).map(response -> {
+            var successful = response.statusCode().is2xxSuccessful();
+            log.info("put to platform {}", successful);
+            return successful;
+        }).map(paired -> {
+            if (paired) {
+                return status(BAD_GATEWAY).body(new ResponseBody(1, "Couldn't pair device!"));
             }
             return ok(new ResponseBody(0, "Paired device successfully!"));
         });
+    }
+
+    @GetMapping("/history")
+    public Mono<ResponseEntity<ResponseBody>> history(
+        @RequestBody LocationHistoryRequest detail, ServerHttpRequest request
+    ) {
+        var token = TokenUtils.getToken(request);
+        var user = userService.checkToken(token);
+        var history = deviceService.fetchHistory(user, detail);
+        if (history.isEmpty()) {
+            return Mono.just(status(NOT_FOUND).body(new ResponseBody(1, "Couldn't pair device!")));
+        }
+        return Mono.just(ok(new ResponseBody(0, "Okie dokie!", history)));
     }
 }

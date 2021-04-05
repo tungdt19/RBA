@@ -27,7 +27,7 @@ public class PlatformDeviceStatus {
     private String status;
 
     @JsonProperty
-    private String accuracy;
+    private int accuracy;
 
     @JsonProperty("geofencing_status")
     private String geofencingStatus;

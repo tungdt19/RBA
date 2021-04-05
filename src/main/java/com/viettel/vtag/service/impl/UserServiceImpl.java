@@ -19,8 +19,6 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.springframework.http.HttpStatus.OK;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,9 +31,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public Mono<Integer> save(User user) {
         var phone = PhoneUtils.standardize(user.phoneNo());
+        user.phoneNo(phone);
         return iotPlatformService.post("/api/groups", Map.of("name", phone)).flatMap(entity -> {
-            if (entity.statusCode() == OK) {
+            if (entity.statusCode().is2xxSuccessful()) {
                 return entity.bodyToMono(Identity.class).flatMap(identity -> {
+                    log.info("/api/groups/{}: {} -> {}", phone, entity.statusCode(), identity);
                     user.platformId(identity.id());
                     return Mono.just(userRepository.register(user));
                 });
@@ -49,13 +49,14 @@ public class UserServiceImpl implements UserService {
         try {
             var phone = PhoneUtils.standardize(request.username());
             var user = userRepository.findByPhone(phone);
-            log.info("{}", user);
+            log.info("create token {}", user);
             if (user == null || !bCrypt.matches(request.password(), user.encryptedPassword())) return null;
 
             var token = UUID.randomUUID();
             var updated = userRepository.saveToken(token, user.id());
             return updated > 0 ? token.toString() : null;
         } catch (Exception e) {
+            log.error("cannot create token {}", e.getMessage());
             return null;
         }
     }
@@ -66,15 +67,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int updateNotificationToken(FcmTokenUpdateRequest request) {
+    public int updateNotificationToken(User user, FcmTokenUpdateRequest request) {
         //TODO implement this
-        var sql = "up";
-        return 0;
+        return userRepository.updateNotificationToken(user, request);
     }
 
     @Override
     public int changePassword(User user, ChangePasswordRequest request) {
-        log.info("old: {} {}; new: {}", request.oldPassword(), user.encryptedPassword(), request.newPassword());
         if (!bCrypt.matches(request.oldPassword(), user.encryptedPassword())) {
             log.info("Password does not match");
             return 0;
