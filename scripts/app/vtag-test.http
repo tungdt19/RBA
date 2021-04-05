@@ -85,3 +85,7 @@ Content-Type: application/json
         {"SS": -95, "MAC": "D8:07:B6:EE:6F:C3"}
     ]
 }
+
+### SMS
+GET http://{{host}}/vtag/test/sms?recipient=0365819777&content="Hello world"
+

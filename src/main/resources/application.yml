@@ -73,6 +73,8 @@ spring:
     username: hrmuser
     password: 123456a@
 vtag:
+  platform:
+    base-url: https://10.55.123.124:4438
   mqtt:
     enable: false
     url: tcp://10.55.123.124:4439
