@@ -6,8 +6,8 @@ import com.viettel.vtag.model.entity.PlatformData;
 import com.viettel.vtag.model.request.AddViewerRequest;
 import com.viettel.vtag.model.request.PairDeviceRequest;
 import com.viettel.vtag.model.request.RemoveViewerRequest;
+import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.service.interfaces.DeviceService;
-import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
 import com.viettel.vtag.utils.CellIdSerializer;
 import com.viettel.vtag.utils.TokenUtils;
@@ -34,7 +34,6 @@ public class DeviceController {
 
     private final UserService userService;
     private final DeviceService deviceService;
-    private final IotPlatformService iotService;
 
     {
         mapper.registerModule(new SimpleModule().addSerializer(PlatformData.class, new CellIdSerializer()));
@@ -46,21 +45,20 @@ public class DeviceController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<Map<String, Object>> getDevices(ServerHttpRequest request) {
+    public ResponseEntity<ResponseBody> getDevices(ServerHttpRequest request) {
         try {
             var token = TokenUtils.getToken(request);
             var user = userService.checkToken(token);
             var deviceList = deviceService.getList(user);
-            return ok(Map.of("code", 0, "message", "Couldn't add user as viewer", "data", deviceList));
+            return ok(new ResponseBody(0, "Couldn't add user as viewer", deviceList));
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(
-                Map.of("code", 1, "message", "Couldn't add user as viewer", "data", map));
+            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't add user as viewer", map));
         }
     }
 
     @PostMapping("/viewer")
-    public ResponseEntity<Map<String, Object>> addViewer(
+    public ResponseEntity<ResponseBody> addViewer(
         @RequestBody AddViewerRequest detail, ServerHttpRequest request
     ) {
         try {
@@ -68,19 +66,18 @@ public class DeviceController {
             var user = userService.checkToken(token);
             var inserted = deviceService.addViewer(user, detail);
             if (inserted > 0) {
-                return ok(Map.of("code", 0, "message", "Add viewer successfully!"));
+                return ok(new ResponseBody(0, "Add viewer successfully!"));
             } else {
-                return ok(Map.of("code", 1, "message", "Couldn't add user as viewer"));
+                return ok(new ResponseBody(1, "Couldn't add user as viewer"));
             }
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(
-                Map.of("code", 1, "message", "Couldn't add user as viewer", "data", map));
+            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't add user as viewer", map));
         }
     }
 
     @DeleteMapping("/viewer")
-    public ResponseEntity<Map<String, Object>> deleteViewer(
+    public ResponseEntity<ResponseBody> deleteViewer(
         @RequestBody RemoveViewerRequest detail, ServerHttpRequest request
     ) {
         try {
@@ -88,25 +85,24 @@ public class DeviceController {
             var user = userService.checkToken(token);
             var removed = deviceService.remove(user, detail);
             if (removed > 0) {
-                return ok(Map.of("code", 0, "message", "Add viewer successfully!"));
+                return ok(new ResponseBody(0, "Add viewer successfully!"));
             } else {
-                return ok(Map.of("code", 1, "message", "Couldn't remove viewer"));
+                return ok(new ResponseBody(1, "Couldn't remove viewer"));
             }
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(
-                Map.of("code", 1, "message", "Couldn't add user as viewer", "data", map));
+            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't add user as viewer", map));
         }
     }
 
     // gateway to IoT platform is from here on
     @PostMapping("/pair")
-    public Mono<ResponseEntity<Map<String, Object>>> pairDevice(@RequestBody PairDeviceRequest request) {
+    public Mono<ResponseEntity<ResponseBody>> pairDevice(@RequestBody PairDeviceRequest request) {
         return deviceService.pairDevice(request).map(paired -> {
             if (paired == null || paired != 1) {
-                return status(INTERNAL_SERVER_ERROR).body(Map.of("code", 1, "message", "Couldn't pair device!"));
+                return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't pair device!"));
             }
-            return ok(Map.of("code", 0, "message", "Paired device successfully!"));
+            return ok(new ResponseBody(0, "Paired device successfully!"));
         });
     }
 }

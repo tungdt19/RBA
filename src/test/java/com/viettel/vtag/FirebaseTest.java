@@ -25,7 +25,7 @@ public class FirebaseTest {
     @Test
     public void a() throws JsonProcessingException {
         var mapper = new ObjectMapper();
-        var info = mapper.readValue("{\"red\":12}", new TypeReference<Info>() { });
+        var info = mapper.readValue("{\"red\":12}", Info.class);
         var s = mapper.writeValueAsString(info);
         log.info("s {}", s);
     }

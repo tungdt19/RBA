@@ -2,8 +2,8 @@ package com.viettel.vtag.api;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.service.impl.UserServiceImpl;
-import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.OtpService;
 import com.viettel.vtag.service.interfaces.UserService;
 import com.viettel.vtag.utils.PhoneUtils;
@@ -29,127 +29,120 @@ public class UserController {
 
     private final OtpService otpService;
     private final UserService userService;
-    private final IotPlatformService iotPlatformService;
 
     @PostMapping("/otp/register")
-    public ResponseEntity<Map<String, Object>> registerOtp(@RequestBody OtpRequest request) {
+    public ResponseEntity<ResponseBody> registerOtp(@RequestBody OtpRequest request) {
         try {
             var otp = otpService.generateRegisterOtp(request);
             if (otp == null) {
-                return status(CONFLICT).body(Map.of("code", 1, "message", "User's already existed!"));
+                return status(CONFLICT).body(new ResponseBody(1, "User's already existed!"));
             }
 
             otpService.sendOtp(request, otp);
-            var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
-            return ok(Map.of("code", 0, "message", "Created OTP successfully!", "data", data));
+            return ok(new ResponseBody(0, "Created OTP successfully!", otp));
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(
-                Map.of("code", 1, "message", "Couldn't create OTP", "detail", detail));
+            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't create OTP", detail));
         }
     }
 
     @PostMapping("/otp/reset")
-    public ResponseEntity<Map<String, Object>> resetOtp(@RequestBody OtpRequest request) {
+    public ResponseEntity<ResponseBody> resetOtp(@RequestBody OtpRequest request) {
         try {
             var otp = otpService.generateResetOtp(request);
             if (otp == null) {
-                return status(NOT_FOUND).body(Map.of("code", 1, "message", "User does not exist!"));
+                return status(NOT_FOUND).body(new ResponseBody(1, "User does not exist!"));
             }
 
             otpService.sendOtp(request, otp);
             var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
-            return ok(Map.of("code", 0, "message", "Created OTP successfully!", "data", data));
+            return ok(new ResponseBody(0, "Created OTP successfully!", data));
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(
-                Map.of("code", 1, "message", "Couldn't create OTP", "detail", detail));
+            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't create OTP", detail));
         }
     }
 
     @PostMapping("/register")
-    public Mono<ResponseEntity<Map<String, Object>>> register(@RequestBody User user) {
+    public Mono<ResponseEntity<ResponseBody>> register(@RequestBody User user) {
         try {
             var phone = PhoneUtils.standardize(user.phoneNo());
             return userService.save(user.phoneNo(phone)).flatMap(inserted -> {
                 if (inserted > 0) {
-                    return Mono.just(ok(Map.of("code", 0, "message", "Created user successfully!")));
+                    return Mono.just(ok(new ResponseBody(0, "Created user successfully!")));
                 }
-                return Mono.just(status(INTERNAL_SERVER_ERROR).body(Map.of("code", 1, "message", "Couldn't create user!")));
+                return Mono.just(status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't create user!")));
             });
         } catch (DuplicateKeyException e) {
             log.error("Couldn't register account {}", e.getMessage());
-            return Mono.just(status(CONFLICT).body(Map.of("code", 1, "message", "User's already existed!")));
+            return Mono.just(status(CONFLICT).body(new ResponseBody(1, "User's already existed!")));
         } catch (Exception e) {
             log.error("Couldn't register account {}", e.getMessage());
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return Mono.just(
-                status(BAD_REQUEST).body(Map.of("code", 1, "message", "Couldn't create user!", "data", detail)));
+            return Mono.just(status(BAD_REQUEST).body(new ResponseBody(1, "Couldn't create user!", detail)));
         }
     }
 
     /** {@link UserServiceImpl#createToken} */
     @PostMapping("/token")
-    public ResponseEntity<Map<String, Object>> getToken(@RequestBody TokenRequest request) {
+    public ResponseEntity<ResponseBody> getToken(@RequestBody TokenRequest request) {
         var token = userService.createToken(request);
         if (token == null) {
-            return status(UNAUTHORIZED).body(Map.of("code", 1, "message", "Invalid username or password!"));
+            return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
         }
 
         var data = Map.of("token", token);
-        return ok(Map.of("code", 0, "message", "Get token successfully!", "data", data));
+        return ok(new ResponseBody(0, "Get token successfully!", data));
     }
 
     /** {@link UserServiceImpl#createToken} */
     @PostMapping("/notification")
-    public ResponseEntity<Map<String, Object>> updateFcmToken(@RequestBody FcmTokenUpdateRequest request) {
+    public ResponseEntity<ResponseBody> updateFcmToken(@RequestBody FcmTokenUpdateRequest request) {
         var token = userService.updateNotificationToken(request);
         if (token > 0) {
             var data = Map.of("token", token);
-            return ok(Map.of("code", 0, "message", "Get token successfully!", "data", data));
+            return ok(new ResponseBody(0, "Get token successfully!", data));
         }
 
-        return status(UNAUTHORIZED).body(Map.of("code", 1, "message", "Invalid username or password!"));
+        return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
     }
 
     @PostMapping("/reset")
-    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest request) {
-        return status(UNAUTHORIZED).body(Map.of("code", 1, "message", "Invalid username or password!"));
+    public ResponseEntity<ResponseBody> resetPassword(@RequestBody ResetPasswordRequest request) {
+        return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
     }
 
     @PostMapping("/password")
-    public ResponseEntity<Map<String, Object>> changePassword(
+    public ResponseEntity<ResponseBody> changePassword(
         @RequestBody ChangePasswordRequest passwordRequest, ServerHttpRequest request
     ) {
         try {
             var user = userService.checkToken(request);
             var changed = userService.changePassword(user, passwordRequest);
             if (changed > 0) {
-                return ok(Map.of("code", 0, "message", "Changed password successfully!"));
+                return ok(new ResponseBody(0, "Changed password successfully!"));
             }
 
-            return status(INTERNAL_SERVER_ERROR).body(Map.of("code", 1, "message", "Couldn't change password!"));
+            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't change password!"));
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(
-                Map.of("code", 1, "message", "Couldn't change password!", "data", detail));
+            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't change password!", detail));
         }
     }
 
     @DeleteMapping
-    public ResponseEntity<Map<String, Object>> deleteUser(ServerHttpRequest request) {
+    public ResponseEntity<ResponseBody> deleteUser(ServerHttpRequest request) {
         try {
             var user = userService.checkToken(request);
             var deleted = userService.delete(user);
             if (deleted > 0) {
-                return ok(Map.of("code", 0, "message", "Delete user successfully!"));
+                return ok(new ResponseBody(0, "Delete user successfully!"));
             } else {
-                return ok(Map.of("code", 1, "message", "Couldn't delete user!"));
+                return ok(new ResponseBody(1, "Couldn't delete user!"));
             }
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(
-                Map.of("code", 1, "message", "Couldn't delete user!", "detail", detail));
+            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't delete user!", detail));
         }
     }
 }
