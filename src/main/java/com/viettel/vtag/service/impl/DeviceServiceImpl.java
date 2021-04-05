@@ -1,7 +1,6 @@
 package com.viettel.vtag.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.AddViewerRequest;
@@ -14,7 +13,9 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,8 @@ import reactor.netty.http.client.HttpClient;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 
 @Data
 @Slf4j
@@ -100,22 +102,19 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Integer> pairDevice(PairDeviceRequest request) {
-        return iotPlatformService.post("/api/devices", request, PlatformDevice.class).flatMap(entity -> {
-            if (entity.getStatusCode() != CREATED) return Mono.empty();
+        return iotPlatformService.post("/api/devices", request).flatMap(entity -> {
+            if (entity.statusCode() != CREATED) return Mono.empty();
 
-            var platformDevice = entity.getBody();
-            if (platformDevice == null) return Mono.empty();
-
-            iotPlatformService.post("/api/devices/" + platformDevice.id() + "/group/" + platformDevice.groupId(), request)
-                .flatMap(response -> {
-                    if (entity.getStatusCode() == OK) return Mono.empty();
-                    var device = new Device().name(request.name())
-                        .imei(request.imei())
-                        .platformId(platformDevice.id().toString());
-                    return Mono.just(deviceRepository.save(device));
-                });
-
-            return Mono.empty();
+            return entity.bodyToMono(PlatformDevice.class)
+                .flatMap(platformDevice -> iotPlatformService.post(
+                    "/api/devices/" + platformDevice.id() + "/group/" + platformDevice.groupId(), request)
+                    .flatMap(response -> {
+                        if (entity.statusCode() != OK) return Mono.empty();
+                        var device = new Device().name(request.name())
+                            .imei(request.imei())
+                            .platformId(platformDevice.id().toString());
+                        return Mono.just(deviceRepository.save(device));
+                    }));
         });
     }
 }

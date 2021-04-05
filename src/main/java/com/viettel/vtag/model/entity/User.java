@@ -31,6 +31,6 @@ public class User {
 
     private String avatar;
     private String platformId;
-
     private String encryptedPassword;
+    private String fcmToken;
 }

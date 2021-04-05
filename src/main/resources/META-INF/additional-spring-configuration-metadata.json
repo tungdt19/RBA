@@ -29,9 +29,9 @@
             "type": "java.lang.String",
             "description": "Description for vtag.otp.allowed-chars."
         }, {
-            "name": "vtag.platform.address",
+            "name": "vtag.platform.base-url",
             "type": "java.lang.String",
-            "description": "Description for vtag.platform.address."
+            "description": "Description for vtag.platform.base-url."
         }, {
             "name": "vtag.platform.client-id",
             "type": "java.lang.String",
@@ -86,6 +86,10 @@
             "description": "Description for vtag.unwired.token."
         }, {
             "name": "vtag.unwired.base-url",
+            "type": "java.lang.String",
+            "description": "Description for vtag.unwired.base-url."
+        }, {
+            "name": "vtag.unwired.uri",
             "type": "java.lang.String",
             "description": "Description for vtag.unwired.base-url."
         }

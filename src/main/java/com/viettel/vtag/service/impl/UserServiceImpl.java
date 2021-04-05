@@ -8,16 +8,18 @@ import com.viettel.vtag.model.request.TokenRequest;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
-import com.viettel.vtag.utils.TokenUtils;
+import com.viettel.vtag.utils.PhoneUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
 @Service
@@ -30,24 +32,32 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Integer> save(User user) {
-        return iotPlatformService.post("/api/groups", Map.of("name", user.phoneNo()), Identity.class)
-            .flatMap(entity -> Mono.justOrEmpty(entity.getBody()))
-            .flatMap(identity -> Mono.just(userRepository.register(user.platformId(identity.id()))));
+        var phone = PhoneUtils.standardize(user.phoneNo());
+        return iotPlatformService.post("/api/groups", Map.of("name", phone)).flatMap(entity -> {
+            if (entity.statusCode() == OK) {
+                return entity.bodyToMono(Identity.class).flatMap(identity -> {
+                    user.platformId(identity.id());
+                    return Mono.just(userRepository.register(user));
+                });
+            }
+            return Mono.just(-1);
+        }).onErrorReturn(DuplicateKeyException.class::isInstance, -1);
     }
 
     @Override
     public String createToken(TokenRequest request) {
-        var user = userRepository.findByPhone(request.username());
-        log.info("user {}", user);
-        if (user == null) return null;
+        try {
+            var phone = PhoneUtils.standardize(request.username());
+            var user = userRepository.findByPhone(phone);
+            log.info("{}", user);
+            if (user == null || !bCrypt.matches(request.password(), user.encryptedPassword())) return null;
 
-        if (bCrypt.matches(request.password(), user.encryptedPassword())) {
             var token = UUID.randomUUID();
             var updated = userRepository.saveToken(token, user.id());
             return updated > 0 ? token.toString() : null;
+        } catch (Exception e) {
+            return null;
         }
-
-        return null;
     }
 
     @Override
@@ -56,19 +66,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User checkToken(ServerHttpRequest request) {
-        return checkToken(TokenUtils.getToken(request));
-    }
-
-    @Override
     public int updateNotificationToken(FcmTokenUpdateRequest request) {
+        //TODO implement this
         var sql = "up";
         return 0;
     }
 
     @Override
     public int changePassword(User user, ChangePasswordRequest request) {
-        if (!bCrypt.matches(request.oldPassword(), user.encryptedPassword())) return 0;
+        log.info("old: {} {}; new: {}", request.oldPassword(), user.encryptedPassword(), request.newPassword());
+        if (!bCrypt.matches(request.oldPassword(), user.encryptedPassword())) {
+            log.info("Password does not match");
+            return 0;
+        }
 
         return userRepository.updatePassword(user, request.newPassword());
     }

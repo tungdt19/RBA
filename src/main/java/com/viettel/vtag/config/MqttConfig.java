@@ -30,13 +30,17 @@ public class MqttConfig {
     @Value("${vtag.mqtt.timeout}")
     private int timeout;
 
-    @Bean
+    // @Bean
     public MqttClient mqttClient(MqttCallback callback) throws MqttException {
-        var client = new MqttClient(url, clientId, new MemoryPersistence());
-        client.connect(connectOptions());
-        client.setCallback(callback);
-        client.subscribe(this.topic, qos);
-        return client;
+        try {
+            var client = new MqttClient(url, clientId, new MemoryPersistence());
+            client.connect(connectOptions());
+            client.setCallback(callback);
+            client.subscribe(this.topic, qos);
+            return client;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public MqttConnectOptions connectOptions() {

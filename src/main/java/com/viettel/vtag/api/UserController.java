@@ -6,10 +6,8 @@ import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.service.impl.UserServiceImpl;
 import com.viettel.vtag.service.interfaces.OtpService;
 import com.viettel.vtag.service.interfaces.UserService;
-import com.viettel.vtag.utils.PhoneUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +44,16 @@ public class UserController {
         }
     }
 
+    @PostMapping("/register")
+    public Mono<ResponseEntity<ResponseBody>> register(@RequestBody User user) {
+        return userService.save(user).flatMap(registered -> {
+            if (registered > 0) {
+                return Mono.just(ok(new ResponseBody(0, "Created user successfully!")));
+            }
+            return Mono.just(status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't create user!")));
+        }).onErrorReturn(status(BAD_REQUEST).body(new ResponseBody(1, "Couldn't create user!")));
+    }
+
     @PostMapping("/otp/reset")
     public ResponseEntity<ResponseBody> resetOtp(@RequestBody OtpRequest request) {
         try {
@@ -63,26 +71,6 @@ public class UserController {
         }
     }
 
-    @PostMapping("/register")
-    public Mono<ResponseEntity<ResponseBody>> register(@RequestBody User user) {
-        try {
-            var phone = PhoneUtils.standardize(user.phoneNo());
-            return userService.save(user.phoneNo(phone)).flatMap(inserted -> {
-                if (inserted > 0) {
-                    return Mono.just(ok(new ResponseBody(0, "Created user successfully!")));
-                }
-                return Mono.just(status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't create user!")));
-            });
-        } catch (DuplicateKeyException e) {
-            log.error("Couldn't register account {}", e.getMessage());
-            return Mono.just(status(CONFLICT).body(new ResponseBody(1, "User's already existed!")));
-        } catch (Exception e) {
-            log.error("Couldn't register account {}", e.getMessage());
-            var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return Mono.just(status(BAD_REQUEST).body(new ResponseBody(1, "Couldn't create user!", detail)));
-        }
-    }
-
     /** {@link UserServiceImpl#createToken} */
     @PostMapping("/token")
     public ResponseEntity<ResponseBody> getToken(@RequestBody TokenRequest request) {
@@ -91,8 +79,7 @@ public class UserController {
             return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
         }
 
-        var data = Map.of("token", token);
-        return ok(new ResponseBody(0, "Get token successfully!", data));
+        return ok(new ResponseBody(0, "Get token successfully!", Map.of("token", token)));
     }
 
     /** {@link UserServiceImpl#createToken} */
@@ -107,24 +94,21 @@ public class UserController {
         return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
     }
 
-    @PostMapping("/reset")
-    public ResponseEntity<ResponseBody> resetPassword(@RequestBody ResetPasswordRequest request) {
-        return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
-    }
-
     @PostMapping("/password")
     public ResponseEntity<ResponseBody> changePassword(
         @RequestBody ChangePasswordRequest passwordRequest, ServerHttpRequest request
     ) {
         try {
             var user = userService.checkToken(request);
+            log.info("{}", user);
             var changed = userService.changePassword(user, passwordRequest);
             if (changed > 0) {
                 return ok(new ResponseBody(0, "Changed password successfully!"));
             }
 
-            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't change password!"));
+            return status(BAD_REQUEST).body(new ResponseBody(1, "Couldn't change password!"));
         } catch (Exception e) {
+            log.error("change password", e);
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
             return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't change password!", detail));
         }

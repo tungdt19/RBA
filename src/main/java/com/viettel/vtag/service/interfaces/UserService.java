@@ -10,8 +10,6 @@ import reactor.core.publisher.Mono;
 
 public interface UserService {
 
-    User checkToken(String token);
-
     Mono<Integer> save(User user);
 
     String createToken(TokenRequest request);
@@ -23,6 +21,8 @@ public interface UserService {
     default User checkToken(ServerHttpRequest request) {
         return checkToken(TokenUtils.getToken(request));
     }
+
+    User checkToken(String token);
 
     int updateNotificationToken(FcmTokenUpdateRequest request);
 }
