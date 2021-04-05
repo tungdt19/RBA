@@ -1,5 +1,5 @@
 ### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}}/vtag/device/test
+POST https://ap1.unwiredlabs.com/v2/process.php
 Content-Type: application/json
 
 {
@@ -9,11 +9,21 @@ Content-Type: application/json
     "mcc": 452,
     "mnc": 4,
     "cells": [
-        {"lac": 43300, "cid": 75430933, "psc": 0}
+        {"cid": 75430933, "lac": 43300, "psc": 0}
     ],
-    "wifi": []
+    "wifi": [
+        {"signal": -59, "bssid": "E6:A6:B2:0F:82:73"},
+        {"signal": -66, "bssid": "3C:7C:3F:40:B4:68"},
+        {"signal": -70, "bssid": "C0:4A:00:0C:8B:A2"},
+        {"signal": -78, "bssid": "7C:8B:CA:DF:9D:E4"},
+        {"signal": -83, "bssid": "D4:2C:3D:29:18:0D"},
+        {"signal": -89, "bssid": "3C:15:FB:42:DE:0C"},
+        {"signal": -91, "bssid": "10:2F:6B:BB:1C:33"}
+    ]
 }
 
+### "status": "ok", "balance": 4656, "lat": 21.066706,   "lon": 105.811164,   "accuracy": 2500
+### "status": "ok", "balance": 4655, "lat": 21.06757812, "lon": 105.81127031, "accuracy": 40
 
 ### wifi cell ----------------------------------------------------------------------------------------------------------
 POST http://localhost:8080/vtag/device/test

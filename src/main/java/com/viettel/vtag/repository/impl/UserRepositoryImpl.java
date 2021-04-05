@@ -75,8 +75,8 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public int updatePassword(User user, String newPassword) {
-        var sql = "UPDATE end_user SET password = ? WHERE username = ?";
-        return jdbc.update(sql, bCrypt.encode(newPassword), user.username());
+        var sql = "UPDATE end_user SET password = ? WHERE phone_no = ?";
+        return jdbc.update(sql, bCrypt.encode(newPassword), user.phoneNo());
     }
 
     @Override
@@ -99,18 +99,16 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User findByToken(String token) {
         var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email, "
-            + "phone_no FROM token t LEFT JOIN end_user u ON t.user_id = u.id WHERE (expired_instant IS NULL "
-            + "OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
-        return jdbc.queryForObject(sql,
-            (rs, i) -> new User().username(rs.getString("username")).encryptedPassword(rs.getString("password")),
-            token);
+            + "phone_no, avatar, fcm_token FROM token t LEFT JOIN end_user u ON t.user_id = u.id "
+            + "WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
+        return jdbc.queryForObject(sql, new Object[] {UUID.fromString(token)}, (rs, i) -> mapUser(rs));
     }
 
     @Override
     public List<String> fetchAllViewers(String deviceId) {
         var uuid = UUID.fromString(deviceId);
         var sql = "SELECT fcm_token FROM user_role ur JOIN end_user u ON u.id = ur.user_id "
-            + "JOIN device d ON d.id = ur.device_id WHERE platform_id = ?";
+            + "JOIN device d ON d.id = ur.device_id WHERE platform_device_id = ?";
         return jdbc.query(sql, new Object[] {uuid}, (rs, rowNum) -> rs.getString("fcm_token"));
     }
 
@@ -122,6 +120,7 @@ public class UserRepositoryImpl implements UserRepository {
             .lastName(rs.getString("last_name"))
             .email(rs.getString("email"))
             .phoneNo(rs.getString("phone_no"))
-            .avatar(rs.getString("avatar"));
+            .avatar(rs.getString("avatar"))
+            .fcmToken(rs.getString("fcm_token"));
     }
 }

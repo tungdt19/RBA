@@ -1,31 +1,31 @@
 package com.viettel.vtag.service.interfaces;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 public interface IotPlatformService {
 
-    <T> Mono<ResponseEntity<T>> get(String endpoint, Class<T> klass);
-
-    <T> Mono<ResponseEntity<T>> put(String endpoint, Object body, Class<T> klass);
-
-    <T> Mono<ResponseEntity<T>> post(String endpoint, Object body, Class<T> klass);
-
-    <T> Mono<ResponseEntity<T>> delete(String endpoint, Class<T> klass);
-
-    default Mono<ResponseEntity<String>> get(String endpoint) {
-        return get(endpoint, String.class);
+    default <T> Mono<T> get(String endpoint, Class<T> klass) {
+        return get(endpoint).flatMap(response -> response.bodyToMono(klass));
     }
 
-    default Mono<ResponseEntity<String>> put(String endpoint, Object body) {
-        return put(endpoint, body, String.class);
+    Mono<ClientResponse> get(String endpoint);
+
+    default <T> Mono<T> put(String endpoint, Object body, Class<T> klass) {
+        return put(endpoint, body).flatMap(response -> response.bodyToMono(klass));
     }
 
-    default Mono<ResponseEntity<String>> post(String endpoint, Object body) {
-        return post(endpoint, body, String.class);
+    Mono<ClientResponse> put(String endpoint, Object body);
+
+    default <T> Mono<T> post(String endpoint, Object body, Class<T> klass) {
+        return post(endpoint, body).flatMap(response -> response.bodyToMono(klass));
     }
 
-    default Mono<ResponseEntity<String>> delete(String endpoint) {
-        return delete(endpoint, String.class);
+    Mono<ClientResponse> post(String endpoint, Object body);
+
+    default <T> Mono<T> delete(String endpoint, Class<T> klass) {
+        return delete(endpoint).flatMap(response -> response.bodyToMono(klass));
     }
+
+    Mono<ClientResponse> delete(String endpoint);
 }

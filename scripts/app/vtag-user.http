@@ -2,9 +2,9 @@
 POST http://{{host}}/vtag/user/otp/register
 Content-Type: application/json
 
-{"type": "phone", "value": "0365818777"}
+{"type": "phone", "value": "84365819777"}
 
-### {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31 12:59:59"}}
+### {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31T12:59:59.123456"}}
 ### {"code": 1, "message": "Some error!"}
 
 
@@ -22,9 +22,16 @@ Content-Type: application/json
 POST http://{{host}}/vtag/user/token
 Content-Type: application/json
 
-{"username": "duclm22", "password": "test"}
+{"username": "0365819777", "password": "test"}
 
-### {"code": 0, "message": "Get token successfully!", "data": {"token": "13143534-1231423-1425"}}
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+  client.global.set("vtag_token", response.body.data.token)
+});
+%}
+
+### {"code": 0, "message": "Get token successfully!", "data": {"token": "13143534-123-423-142-132132"}}
 
 
 ### --------------------------------------------------------------------------------------------------------------------
@@ -40,9 +47,17 @@ Content-Type: application/json
 POST http://{{host}}/vtag/user/otp/reset
 Content-Type: application/json
 
-{"type": "phone", "value": "0365818777"}
+{"type": "phone", "value": "0365819777"}
 
 ### {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31 12:59:59"}}
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/user/otp/reset
+Content-Type: application/json
+
+{"type": "phone", "value": "0365819778"}
+
 ### {"code": 1, "message": "Some error!"}
 
 
@@ -59,9 +74,18 @@ Content-Type: application/json
 ### --------------------------------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/user/password
 Content-Type: application/json
-Authorization: Bearer
+Authorization: Bearer {{vtag_token}}
 
-{"old_password": "abcd", "new_password": "abcdef"}
+{"old_password": "test", "new_password": "abcdef"}
 
 ### {"code": 0, "message": "Some message!"}
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/user/password
+Content-Type: application/json
+Authorization: Bearer {{vtag_token}}
+
+{"old_password": "abcdef", "new_password": "test"}
+
 ### {"code": 1, "message": "Some error!"}

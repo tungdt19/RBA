@@ -6,6 +6,7 @@ import com.viettel.vtag.repository.interfaces.OtpRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.CommunicationService;
 import com.viettel.vtag.service.interfaces.OtpService;
+import com.viettel.vtag.utils.PhoneUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,27 +49,36 @@ public class OtpServiceImpl implements OtpService {
 
     @Override
     public OTP generateRegisterOtp(OtpRequest request) {
-        if (userRepository.findByPhone(request.value()) != null) {
-            return null;
+        if (request.type().equals("phone")) {
+            var phone = PhoneUtils.standardize(request.value());
+            request.value(phone);
+            if (userRepository.findByPhone(phone) != null) {
+                return null;
+            }
+
+            var otp = generateOtp();
+            var inserted = otpRepository.save(otp, phone);
+
+            if (inserted > 0) return otp;
         }
 
-        var otp = generateOtp();
-        var inserted = otpRepository.save(otp, request.value());
-
-        if (inserted > 0) return otp;
         throw new RuntimeException("Couldn't create OTP");
     }
 
     @Override
     public OTP generateResetOtp(OtpRequest request) {
-        if (userRepository.findByPhone(request.value()) == null) {
-            return null;
+        if (request.type().equals("phone")) {
+            var phone = PhoneUtils.standardize(request.value());
+            request.value(phone);
+            if (userRepository.findByPhone(phone) == null) {
+                return null;
+            }
+
+            var otp = generateOtp();
+            var inserted = otpRepository.save(otp, phone);
+
+            if (inserted > 0) return otp;
         }
-
-        var otp = generateOtp();
-        var inserted = otpRepository.save(otp, request.value());
-
-        if (inserted > 0) return otp;
         throw new RuntimeException("Couldn't create OTP");
     }
 

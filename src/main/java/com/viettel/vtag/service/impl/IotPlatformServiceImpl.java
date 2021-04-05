@@ -11,6 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -26,7 +27,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class IotPlatformServiceImpl implements IotPlatformService {
 
-    @Value("${vtag.platform.address}")
+    private final ThreadPoolTaskScheduler taskScheduler;
+    private final PlatformToken platformToken;
+    private final HttpClient httpClient;
+
+    @Value("${vtag.platform.base-url}")
     private String address;
     @Value("${vtag.platform.grant-type}")
     private String grantType;
@@ -34,10 +39,6 @@ public class IotPlatformServiceImpl implements IotPlatformService {
     private String clientId;
     @Value("${vtag.platform.client-secret}")
     private String clientSecret;
-
-    private final ThreadPoolTaskScheduler taskScheduler;
-    private final PlatformToken platformToken;
-    private final HttpClient httpClient;
 
     @PostConstruct
     public void init() {
@@ -60,10 +61,6 @@ public class IotPlatformServiceImpl implements IotPlatformService {
         });
     }
 
-    private WebClient.Builder webClientBuilder() {
-        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient)).baseUrl(address);
-    }
-
     private Mono<ResponseEntity<PlatformToken>> fetchToken() {
         var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_FORM_URLENCODED_VALUE).build();
 
@@ -74,48 +71,45 @@ public class IotPlatformServiceImpl implements IotPlatformService {
         return client.post().uri("/token").body(body).retrieve().toEntity(PlatformToken.class);
     }
 
+    private WebClient.Builder webClientBuilder() {
+        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient)).baseUrl(address);
+    }
+
     @Override
-    public <T> Mono<ResponseEntity<T>> get(String endpoint, Class<T> klass) {
+    public Mono<ClientResponse> get(String endpoint) {
         var client = webClientBuilder().build();
-        return client.get()
-            .uri(endpoint)
-            .header("Authorization", platformToken.toString())
-            .retrieve()
-            .toEntity(klass);
+        return client.get().uri(endpoint).header("Authorization", platformToken.toString()).exchange();
     }
 
     @Override
-    public <T> Mono<ResponseEntity<T>> put(String endpoint, Object body, Class<T> klass) {
-        var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
-
-        return client.put()
+    public Mono<ClientResponse> put(String endpoint, Object body) {
+        return webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+            .build()
+            .put()
             .uri(endpoint)
             .header("Authorization", platformToken.toString())
             .bodyValue(body)
-            .retrieve()
-            .toEntity(klass);
+            .exchange();
     }
 
     @Override
-    public <T> Mono<ResponseEntity<T>> post(String endpoint, Object body, Class<T> klass) {
-        var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
-
-        return client.post()
+    public Mono<ClientResponse> post(String endpoint, Object body) {
+        return webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+            .build()
+            .post()
             .uri(endpoint)
             .header("Authorization", platformToken.toString())
             .bodyValue(body)
-            .retrieve()
-            .toEntity(klass);
+            .exchange();
     }
 
     @Override
-    public <T> Mono<ResponseEntity<T>> delete(String endpoint, Class<T> klass) {
-        var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
-
-        return client.delete()
+    public Mono<ClientResponse> delete(String endpoint) {
+        return webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+            .build()
+            .delete()
             .uri(endpoint)
             .header("Authorization", platformToken.toString())
-            .retrieve()
-            .toEntity(klass);
+            .exchange();
     }
 }

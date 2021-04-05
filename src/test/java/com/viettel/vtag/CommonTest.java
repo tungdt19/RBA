@@ -1,6 +1,10 @@
 package com.viettel.vtag;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,6 +31,7 @@ public class CommonTest {
         log.info(s);
         assertNotNull(s);
         assertTrue(encoder.matches("test", s));
+        assertTrue(encoder.matches("test", "$2a$10$JjHwyUDVisZZwqFPPU5I5OFC4JaXnsvXLi/JRKhsdYzhQWbDezl2G"));
 
         var t = encoder.encode("test");
         log.info(t);
@@ -44,5 +49,19 @@ public class CommonTest {
     public void test_mockData() {
         var faker = new Faker(new Locale("vi"));
         log.info(faker.name().name());
+    }
+
+    @Test
+    public void a() throws JsonProcessingException {
+        var mapper = new ObjectMapper();
+        var info = mapper.readValue("{\"red\":12}", Info.class);
+        var s = mapper.writeValueAsString(info);
+        log.info("s {}", s);
+    }
+
+    @Data
+    public static class Info {
+        @JsonAlias({"red"})
+        public int r;
     }
 }
