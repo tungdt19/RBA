@@ -2,6 +2,7 @@ package com.viettel.vtag.repository.impl;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
+import com.viettel.vtag.model.request.ResetPasswordRequest;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,9 +76,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public int updatePassword(User user, String newPassword) {
+    public int updatePassword(String phone, String newPassword) {
         var sql = "UPDATE end_user SET password = ? WHERE phone_no = ?";
-        return jdbc.update(sql, bCrypt.encode(newPassword), user.phoneNo());
+        return jdbc.update(sql, bCrypt.encode(newPassword), phone);
     }
 
     @Override

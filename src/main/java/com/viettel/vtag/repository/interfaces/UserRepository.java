@@ -2,6 +2,7 @@ package com.viettel.vtag.repository.interfaces;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
+import com.viettel.vtag.model.request.ResetPasswordRequest;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public interface UserRepository {
 
     int update(User user);
 
-    int updatePassword(User user, String newPassword);
+    int updatePassword(String phone, String newPassword);
 
     int delete(User user);
 

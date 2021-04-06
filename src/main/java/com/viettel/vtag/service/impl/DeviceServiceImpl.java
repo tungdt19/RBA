@@ -109,7 +109,7 @@ public class DeviceServiceImpl implements DeviceService {
             var statusCode = response.statusCode();
             log.info("{}: {}", endpoint, statusCode);
             if (statusCode.is2xxSuccessful()) {
-                var device = new Device().name(request.name()).platformId(request.platformId());
+                var device = new Device().name("VTAG").platformId(request.platformId());
                 return Mono.just(deviceRepository.save(device));
             }
             return Mono.empty();

@@ -4,15 +4,15 @@ Content-Type: application/json
 
 {"type": "phone", "value": "84365819777"}
 
-### {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31T12:59:59.123456"}}
-### {"code": 1, "message": "Some error!"}
+### 200: {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31T12:59:59.123456"}}
+### 500: {"code": 1, "message": "Some error!"}
 
 
 ### Register new account -----------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/user/register
 Content-Type: application/json
 
-{"phone": "0365819777", "password": "test"}
+{"phone": "0365819888", "password": "test"}
 
 ### {"code": 0, "message": "Created user successfully!"}
 ### {"code": 1, "message": "Some error!"}
@@ -79,7 +79,10 @@ POST http://{{host}}/vtag/user/password
 Content-Type: application/json
 Authorization: Bearer {{vtag_token}}
 
-{"old_password": "test", "new_password": "abcdef"}
+{
+    "old_password": "test",
+    "new_password": "abcdef"
+}
 
 ### {"code": 0, "message": "Some message!"}
 
@@ -89,6 +92,21 @@ POST http://{{host}}/vtag/user/password
 Content-Type: application/json
 Authorization: Bearer {{vtag_token}}
 
-{"old_password": "abcdef", "new_password": "test"}
+{
+    "old_password": "abcdef",
+    "new_password": "test"
+}
 
 ### {"code": 1, "message": "Some error!"}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/user/password/reset
+Content-Type: application/json
+
+{
+    "otp": "123456",
+    "phone": "0365819777",
+    "new_password": "new_password"
+}

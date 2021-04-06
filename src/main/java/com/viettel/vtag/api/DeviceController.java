@@ -96,7 +96,8 @@ public class DeviceController {
     ) {
         var token = TokenUtils.getToken(request);
         var user = userService.checkToken(token);
-        log.info("pair user: {}", user);
+        log.info("pair device {} to user {}", detail.platformId(), user);
+
         return deviceService.pairDevice(user, detail)
             .flatMap(paired -> deviceService.active(detail))
             .map(response -> response.statusCode().is2xxSuccessful())

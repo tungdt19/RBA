@@ -1,9 +1,7 @@
 package com.viettel.vtag.service.interfaces;
 
 import com.viettel.vtag.model.entity.User;
-import com.viettel.vtag.model.request.ChangePasswordRequest;
-import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
-import com.viettel.vtag.model.request.TokenRequest;
+import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.utils.TokenUtils;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import reactor.core.publisher.Mono;
@@ -15,6 +13,8 @@ public interface UserService {
     String createToken(TokenRequest request);
 
     int changePassword(User user, ChangePasswordRequest password);
+
+    int resetPassword(ResetPasswordRequest request);
 
     int delete(User user);
 

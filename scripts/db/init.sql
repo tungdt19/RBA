@@ -39,10 +39,13 @@ CREATE TABLE IF NOT EXISTS token (
     expired_instant TIMESTAMP
 );
 
+CREATE TYPE OTP_TYPE AS ENUM ( 'TYPE_CREATE_USER', 'TYPE_RESET_PASSWORD' );
+
 CREATE TABLE IF NOT EXISTS otp (
     otp             VARCHAR(6),
     phone           VARCHAR(15),
     expired_instant TIMESTAMP,
+    otp_type        OTP_TYPE,
     PRIMARY KEY (otp, phone, expired_instant)
 );
 

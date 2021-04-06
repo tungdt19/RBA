@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
+import static com.viettel.vtag.model.response.ResponseBody.of;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
@@ -33,14 +34,14 @@ public class UserController {
         try {
             var otp = otpService.generateRegisterOtp(request);
             if (otp == null) {
-                return status(CONFLICT).body(new ResponseBody(1, "User's already existed!"));
+                return status(CONFLICT).body(of(1, "User's already existed!"));
             }
 
             otpService.sendOtp(request, otp);
-            return ok(new ResponseBody(0, "Created OTP successfully!", otp));
+            return ok(of(0, "Created OTP successfully!", otp));
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't create OTP", detail));
+            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP", detail));
         }
     }
 
@@ -50,10 +51,10 @@ public class UserController {
         return userService.save(user).flatMap(registered -> {
             log.info("create user: {}", registered);
             if (registered > 0) {
-                return Mono.just(ok(new ResponseBody(0, "Created user successfully!")));
+                return Mono.just(ok(of(0, "Created user successfully!")));
             }
-            return Mono.just(status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't create user!")));
-        }).onErrorReturn(status(BAD_REQUEST).body(new ResponseBody(1, "Couldn't create user!")));
+            return Mono.just(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!")));
+        }).onErrorReturn(status(BAD_REQUEST).body(of(1, "Couldn't create user!")));
     }
 
     @PostMapping("/otp/reset")
@@ -61,15 +62,15 @@ public class UserController {
         try {
             var otp = otpService.generateResetOtp(request);
             if (otp == null) {
-                return status(NOT_FOUND).body(new ResponseBody(1, "User does not exist!"));
+                return status(NOT_FOUND).body(of(1, "User does not exist!"));
             }
 
             otpService.sendOtp(request, otp);
             var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
-            return ok(new ResponseBody(0, "Created OTP successfully!", data));
+            return ok(of(0, "Created OTP successfully!", data));
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't create OTP", detail));
+            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP", detail));
         }
     }
 
@@ -78,10 +79,10 @@ public class UserController {
     public ResponseEntity<ResponseBody> getToken(@RequestBody TokenRequest request) {
         var token = userService.createToken(request);
         if (token == null) {
-            return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
+            return status(UNAUTHORIZED).body(of(1, "Invalid username or password!"));
         }
 
-        return ok(new ResponseBody(0, "Get token successfully!", Map.of("token", token)));
+        return ok(of(0, "Get token successfully!", Map.of("token", token)));
     }
 
     /** {@link UserServiceImpl#createToken} */
@@ -92,10 +93,10 @@ public class UserController {
         var user = userService.checkToken(request);
         var updated = userService.updateNotificationToken(user, detail);
         if (updated > 0) {
-            return ok(new ResponseBody(0, "Get token successfully!", Map.of("token", updated)));
+            return ok(of(0, "Get token successfully!", Map.of("token", updated)));
         }
 
-        return status(UNAUTHORIZED).body(new ResponseBody(1, "Invalid username or password!"));
+        return status(UNAUTHORIZED).body(of(1, "Invalid username or password!"));
     }
 
     @PostMapping("/password")
@@ -106,15 +107,39 @@ public class UserController {
             var user = userService.checkToken(request);
             var changed = userService.changePassword(user, passwordRequest);
             if (changed > 0) {
-                return ok(new ResponseBody(0, "Changed password successfully!"));
+                return ok(of(0, "Changed password successfully!"));
             }
 
-            return status(BAD_REQUEST).body(new ResponseBody(1, "Couldn't change password!"));
+            return status(BAD_REQUEST).body(of(1, "Couldn't change password!"));
         } catch (Exception e) {
             log.error("change password", e);
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't change password!", detail));
+            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't change password!", detail));
         }
+    }
+
+    /** {@see UserServiceImpl#resetPassword} */
+    @PostMapping("/password/reset")
+    public ResponseEntity<ResponseBody> resetPassword(
+        @RequestBody ResetPasswordRequest detail, ServerHttpRequest request
+    ) {
+        try {
+            var reset = userService.resetPassword(detail);
+            if (reset > 0) {
+                return ok(of(0, "Changed password successfully!"));
+            }
+
+            return status(BAD_REQUEST).body(of(1, "Couldn't change password!"));
+        } catch (Exception e) {
+            log.error("Couldn't change password", e);
+            return status(INTERNAL_SERVER_ERROR).body(
+                of(1, "Couldn't change password!", Map.of("detail", String.valueOf(e.getMessage()))));
+        }
+    }
+
+    @DeleteMapping("/token")
+    public ResponseEntity<ResponseBody> signout(ServerHttpRequest request) {
+        return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't delete token!"));
     }
 
     @DeleteMapping
@@ -123,13 +148,13 @@ public class UserController {
             var user = userService.checkToken(request);
             var deleted = userService.delete(user);
             if (deleted > 0) {
-                return ok(new ResponseBody(0, "Delete user successfully!"));
+                return ok(of(0, "Delete user successfully!"));
             } else {
-                return ok(new ResponseBody(1, "Couldn't delete user!"));
+                return ok(of(1, "Couldn't delete user!"));
             }
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't delete user!", detail));
+            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't delete user!", detail));
         }
     }
 }

@@ -11,9 +11,6 @@ import lombok.experimental.Accessors;
 @JsonSerialize(using = PairDeviceSerializer.class)
 public class PairDeviceRequest {
 
-    @JsonProperty
-    private String name;
-
     @JsonProperty("platform_id")
     private String platformId;
 }

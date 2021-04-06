@@ -2,9 +2,7 @@ package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.entity.Identity;
 import com.viettel.vtag.model.entity.User;
-import com.viettel.vtag.model.request.ChangePasswordRequest;
-import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
-import com.viettel.vtag.model.request.TokenRequest;
+import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.repository.impl.UserRepositoryImpl;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
@@ -44,6 +42,7 @@ public class UserServiceImpl implements UserService {
                     return Mono.just(userRepository.register(user));
                 });
             }
+            log.error("Couldn't register user with phone {}", user.phoneNo());
             return Mono.just(-1);
         }).onErrorReturn(DuplicateKeyException.class::isInstance, -1);
     }
@@ -79,11 +78,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public int changePassword(User user, ChangePasswordRequest request) {
         if (!bCrypt.matches(request.oldPassword(), user.encryptedPassword())) {
-            log.info("Password does not match");
+            log.info("Password does not match for user {}", user.phoneNo());
             return 0;
         }
 
-        return userRepository.updatePassword(user, request.newPassword());
+        return userRepository.updatePassword(user.phoneNo(), request.newPassword());
+    }
+
+    @Override
+    public int resetPassword(ResetPasswordRequest request) {
+        return userRepository.updatePassword(request.phone(), request.password());
     }
 
     @Override

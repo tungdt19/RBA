@@ -77,8 +77,11 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Override
     public Mono<ClientResponse> get(String endpoint) {
-        var client = webClientBuilder().build();
-        return client.get().uri(endpoint).header("Authorization", platformToken.toString()).exchange();
+        return webClientBuilder().build()
+            .get()
+            .uri(endpoint)
+            .header("Authorization", platformToken.toString())
+            .exchange();
     }
 
     @Override
@@ -105,8 +108,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Override
     public Mono<ClientResponse> delete(String endpoint) {
-        return webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-            .build()
+        return webClientBuilder().build()
             .delete()
             .uri(endpoint)
             .header("Authorization", platformToken.toString())

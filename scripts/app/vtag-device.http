@@ -8,13 +8,16 @@ Content-Type: application/json
     "platform_id": "d86c8f22-e026-440f-bc17-ca77cee811c2"
 }
 
-### 200: {"code": 0, "message": "Couldn't pair device!"}
+### 200: {"code": 0, "message": "Paired device successfully!"}
 ### 502: {"code": 1, "message": "Couldn't pair device!"}
+
+
 
 ### --------------------------------------------------------------------------------------------------------------------
 GET http://{{host}}/vtag/device/list
 Content-Type: application/json
 Authorization: Bearer {{vtag_token}}
+
 
 
 ### --------------------------------------------------------------------------------------------------------------------
