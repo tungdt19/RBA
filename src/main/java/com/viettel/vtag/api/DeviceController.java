@@ -44,7 +44,7 @@ public class DeviceController {
             var token = TokenUtils.getToken(request);
             var user = userService.checkToken(token);
             var deviceList = deviceService.getList(user);
-            return ok(of(0, "Couldn't add user as viewer", deviceList));
+            return ok(of(0, "Okie dokie!", deviceList));
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
             return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer", map));
@@ -101,12 +101,9 @@ public class DeviceController {
         return deviceService.pairDevice(user, detail)
             .flatMap(paired -> deviceService.active(detail))
             .map(response -> response.statusCode().is2xxSuccessful())
-            .map(paired -> {
-                if (paired) {
-                    return ok(of(0, "Paired device successfully!"));
-                }
-                return status(BAD_GATEWAY).body(of(1, "Couldn't pair device!"));
-            });
+            .map(paired -> paired
+                ? ok(of(0, "Paired device successfully!"))
+                : status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
     }
 
     @GetMapping("/history")
