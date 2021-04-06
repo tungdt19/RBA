@@ -29,12 +29,13 @@ dockerfile() {
     echo 'LABEL maintainer="duclm22@viettel.com.vn"'
     echo "COPY ./$BASE_NAME-$VERSION.jar ./[a]pplication.yml /be"
     echo "RUN echo \"Asia/Ho_Chi_Minh\" > /etc/timezone"
+    echo "RUN echo \"10.55.123.124 api.iotcloud.com.vn iotcloud.com.vn\" > /etc/hosts"
     echo "CMD [\"java\", \"-jar\", \"/be/$BASE_NAME-$VERSION.jar\", \"-Dspring.profiles.active=$PROFILE\"]"
   } > "$FOLDER/$MODULE/Dockerfile"
 }
 
 build() {
-  docker build -t "$CONTAINER:$VERSION" "$FOLDER"
+  docker build -t "$IMAGE:$VERSION" "$FOLDER"
 }
 
 run() {

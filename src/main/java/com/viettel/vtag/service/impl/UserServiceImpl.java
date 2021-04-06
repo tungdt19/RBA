@@ -37,12 +37,14 @@ public class UserServiceImpl implements UserService {
         return iotPlatformService.post("/api/groups", Map.of("name", phone)).flatMap(entity -> {
             var statusCode = entity.statusCode();
             log.info("register user {}: {}", phone, statusCode);
+
+            var result = entity.bodyToMono(Identity.class).flatMap(identity -> {
+                log.info("/api/groups/{}: {} -> {}", phone, statusCode, identity);
+                user.platformId(UUID.fromString(identity.id()));
+                return Mono.just(userRepository.register(user));
+            });
             if (statusCode.is2xxSuccessful()) {
-                return entity.bodyToMono(Identity.class).flatMap(identity -> {
-                    log.info("/api/groups/{}: {} -> {}", phone, statusCode, identity);
-                    user.platformId(UUID.fromString(identity.id()));
-                    return Mono.just(userRepository.register(user));
-                });
+                return result;
             }
             return Mono.just(-1);
         }).onErrorReturn(DuplicateKeyException.class::isInstance, -1);
@@ -66,17 +68,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User checkToken(String token) {
-        return userRepository.findByToken(token);
-    }
-
-    @Override
-    public int updateNotificationToken(User user, FcmTokenUpdateRequest request) {
-        //TODO implement this
-        return userRepository.updateNotificationToken(user, request);
-    }
-
-    @Override
     public int changePassword(User user, ChangePasswordRequest request) {
         if (!bCrypt.matches(request.oldPassword(), user.encryptedPassword())) {
             log.info("Password does not match");
@@ -89,5 +80,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public int delete(User user) {
         return 0;
+    }
+
+    @Override
+    public User checkToken(String token) {
+        return userRepository.findByToken(token);
+    }
+
+    @Override
+    public int updateNotificationToken(User user, FcmTokenUpdateRequest request) {
+        //TODO implement this
+        return userRepository.updateNotificationToken(user, request);
     }
 }

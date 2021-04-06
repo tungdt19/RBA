@@ -77,6 +77,8 @@ VALUES
 
 INSERT INTO end_user(phone_no, password)
 VALUES
+('$2a$10$JjHwyUDVisZZwqFPPU5I5OFC4JaXnsvXLi/JRKhsdYzhQWbDezl2G', '84365819777');
+
 ('$2a$10$qh02zcA0vzdFya0EpO59dOrxGwGZwxLgVExg6ZC2tyyu.27izBGbS', '0365731814'),
-('$2a$10$jQzz7NLdCAtS6OzlRt6t2uARre5xi/BdwFI8F5a4S30INkWEE0yty', '0869999904')
+('$2a$10$jQzz7NLdCAtS6OzlRt6t2uARre5xi/BdwFI8F5a4S30INkWEE0yty', '0869999904'),
 
