@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 @Slf4j
 @Repository
@@ -35,8 +36,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public int save(Device device) {
-        var sql = "INSERT INTO device(name, imei) VALUES (?, ?)";
-        return jdbc.update(sql, device.name(), device.imei());
+        var sql = "INSERT INTO device(name, platform_device_id) VALUES (?, ?)";
+        return jdbc.update(sql, device.name(), UUID.fromString(device.platformId()));
     }
 
     @Override

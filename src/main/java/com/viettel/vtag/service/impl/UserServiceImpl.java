@@ -5,6 +5,7 @@ import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.ChangePasswordRequest;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.model.request.TokenRequest;
+import com.viettel.vtag.repository.impl.UserRepositoryImpl;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
@@ -28,6 +29,7 @@ public class UserServiceImpl implements UserService {
     private final IotPlatformService iotPlatformService;
     private final PasswordEncoder bCrypt;
 
+    /** {@link UserRepositoryImpl#register(User)} */
     @Override
     public Mono<Integer> save(User user) {
         var phone = PhoneUtils.standardize(user.phoneNo());
@@ -36,7 +38,7 @@ public class UserServiceImpl implements UserService {
             if (entity.statusCode().is2xxSuccessful()) {
                 return entity.bodyToMono(Identity.class).flatMap(identity -> {
                     log.info("/api/groups/{}: {} -> {}", phone, entity.statusCode(), identity);
-                    user.platformId(identity.id());
+                    user.platformId(UUID.fromString(identity.id()));
                     return Mono.just(userRepository.register(user));
                 });
             }

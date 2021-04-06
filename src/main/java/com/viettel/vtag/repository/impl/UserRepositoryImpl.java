@@ -37,8 +37,8 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User findByPhone(String phone) {
         try {
-            var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar, fcm_token "
-                + "FROM end_user WHERE phone_no = ?";
+            var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar, fcm_token, "
+                + "platform_group_id FROM end_user WHERE phone_no = ?";
             return jdbc.queryForObject(sql, new Object[] {phone}, (rs, num) -> mapUser(rs));
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
@@ -115,6 +115,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     private User mapUser(ResultSet rs) throws SQLException {
+        var id = rs.getString("platform_group_id");
+        var groupId = rs.getObject("platform_group_id", UUID.class);
+        log.info("platform_group_id {} {}", groupId, id);
         return new User().id(rs.getInt("id"))
             .username(rs.getString("username"))
             .encryptedPassword(rs.getString("password"))
@@ -124,6 +127,6 @@ public class UserRepositoryImpl implements UserRepository {
             .phoneNo(rs.getString("phone_no"))
             .avatar(rs.getString("avatar"))
             .fcmToken(rs.getString("fcm_token"))
-            .platformId(rs.getString("platform_group_id"));
+            .platformId(groupId);
     }
 }
