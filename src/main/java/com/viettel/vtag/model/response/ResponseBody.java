@@ -23,4 +23,11 @@ public class ResponseBody {
     @JsonProperty
     private Object data;
 
+    public static ResponseBody of(int code, String message) {
+        return new ResponseBody(code, message);
+    }
+
+    public static ResponseBody of(int code, String message, Object data) {
+        return new ResponseBody(code, message, data);
+    }
 }

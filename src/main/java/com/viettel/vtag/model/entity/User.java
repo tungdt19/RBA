@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.UUID;
+
 @Data
 @Accessors(fluent = true)
 public class User {
@@ -30,7 +32,7 @@ public class User {
     private String email;
 
     private String avatar;
-    private String platformId;
+    private UUID platformId;
     private String encryptedPassword;
     private String fcmToken;
 }

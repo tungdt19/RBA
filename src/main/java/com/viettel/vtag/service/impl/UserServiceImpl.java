@@ -5,6 +5,7 @@ import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.ChangePasswordRequest;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.model.request.TokenRequest;
+import com.viettel.vtag.repository.impl.UserRepositoryImpl;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
@@ -12,6 +13,7 @@ import com.viettel.vtag.utils.PhoneUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -28,15 +30,18 @@ public class UserServiceImpl implements UserService {
     private final IotPlatformService iotPlatformService;
     private final PasswordEncoder bCrypt;
 
+    /** {@link UserRepositoryImpl#register(User)} */
     @Override
     public Mono<Integer> save(User user) {
         var phone = PhoneUtils.standardize(user.phoneNo());
         user.phoneNo(phone);
         return iotPlatformService.post("/api/groups", Map.of("name", phone)).flatMap(entity -> {
-            if (entity.statusCode().is2xxSuccessful()) {
+            var statusCode = entity.statusCode();
+            log.info("register user {}: {}", phone, statusCode);
+            if (statusCode.is2xxSuccessful()) {
                 return entity.bodyToMono(Identity.class).flatMap(identity -> {
-                    log.info("/api/groups/{}: {} -> {}", phone, entity.statusCode(), identity);
-                    user.platformId(identity.id());
+                    log.info("/api/groups/{}: {} -> {}", phone, statusCode, identity);
+                    user.platformId(UUID.fromString(identity.id()));
                     return Mono.just(userRepository.register(user));
                 });
             }

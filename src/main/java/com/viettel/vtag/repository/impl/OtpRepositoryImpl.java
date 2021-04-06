@@ -20,7 +20,7 @@ public class OtpRepositoryImpl implements OtpRepository {
 
     @Override
     public void clearOldOtp() {
-        var sql = "DELETE FROM otp WHERE NOW() > expired_instant";
-        jdbc.update(sql);
+        // var sql = "DELETE FROM otp WHERE NOW() > expired_instant";
+        // jdbc.update(sql);
     }
 }

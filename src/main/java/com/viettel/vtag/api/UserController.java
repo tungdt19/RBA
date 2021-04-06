@@ -44,6 +44,7 @@ public class UserController {
         }
     }
 
+    /** {@link UserServiceImpl#save(User)} */
     @PostMapping("/register")
     public Mono<ResponseEntity<ResponseBody>> register(@RequestBody User user) {
         return userService.save(user).flatMap(registered -> {

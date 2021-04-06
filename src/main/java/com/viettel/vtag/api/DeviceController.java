@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
+import static com.viettel.vtag.model.response.ResponseBody.of;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
@@ -43,10 +44,10 @@ public class DeviceController {
             var token = TokenUtils.getToken(request);
             var user = userService.checkToken(token);
             var deviceList = deviceService.getList(user);
-            return ok(new ResponseBody(0, "Couldn't add user as viewer", deviceList));
+            return ok(of(0, "Couldn't add user as viewer", deviceList));
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't add user as viewer", map));
+            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer", map));
         }
     }
 
@@ -59,13 +60,13 @@ public class DeviceController {
             var user = userService.checkToken(token);
             var inserted = deviceService.addViewer(user, detail);
             if (inserted > 0) {
-                return ok(new ResponseBody(0, "Add viewer successfully!"));
+                return ok(of(0, "Add viewer successfully!"));
             } else {
-                return ok(new ResponseBody(1, "Couldn't add user as viewer"));
+                return ok(of(1, "Couldn't add user as viewer"));
             }
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't add user as viewer", map));
+            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer", map));
         }
     }
 
@@ -78,13 +79,13 @@ public class DeviceController {
             var user = userService.checkToken(token);
             var removed = deviceService.remove(user, detail);
             if (removed > 0) {
-                return ok(new ResponseBody(0, "Add viewer successfully!"));
+                return ok(of(0, "Add viewer successfully!"));
             } else {
-                return status(BAD_REQUEST).body(new ResponseBody(1, "Couldn't remove viewer"));
+                return status(BAD_REQUEST).body(of(1, "Couldn't remove viewer"));
             }
         } catch (Exception e) {
             var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(new ResponseBody(1, "Couldn't add user as viewer", map));
+            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer", map));
         }
     }
 
@@ -95,19 +96,16 @@ public class DeviceController {
     ) {
         var token = TokenUtils.getToken(request);
         var user = userService.checkToken(token);
-        return deviceService.pairDevice(user, detail).flatMap(paired -> {
-            log.info("paired {}", paired);
-            return deviceService.active(detail);
-        }).map(response -> {
-            var successful = response.statusCode().is2xxSuccessful();
-            log.info("put to platform {}", successful);
-            return successful;
-        }).map(paired -> {
-            if (paired) {
-                return status(BAD_GATEWAY).body(new ResponseBody(1, "Couldn't pair device!"));
-            }
-            return ok(new ResponseBody(0, "Paired device successfully!"));
-        });
+        log.info("pair user: {}", user);
+        return deviceService.pairDevice(user, detail)
+            .flatMap(paired -> deviceService.active(detail))
+            .map(response -> response.statusCode().is2xxSuccessful())
+            .map(paired -> {
+                if (paired) {
+                    return ok(of(0, "Paired device successfully!"));
+                }
+                return status(BAD_GATEWAY).body(of(1, "Couldn't pair device!"));
+            });
     }
 
     @GetMapping("/history")
@@ -117,9 +115,10 @@ public class DeviceController {
         var token = TokenUtils.getToken(request);
         var user = userService.checkToken(token);
         var history = deviceService.fetchHistory(user, detail);
+
         if (history.isEmpty()) {
-            return Mono.just(status(NOT_FOUND).body(new ResponseBody(1, "Couldn't pair device!")));
+            return Mono.just(status(NOT_FOUND).body(of(1, "Couldn't pair device!")));
         }
-        return Mono.just(ok(new ResponseBody(0, "Okie dokie!", history)));
+        return Mono.just(ok(of(0, "Okie dokie!", history)));
     }
 }

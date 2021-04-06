@@ -17,6 +17,6 @@ public class PhoneUtils {
             return phone;
         }
 
-        throw new NumberFormatException("Phone number is invalid!");
+        throw new NumberFormatException("Phone number '" + phone + "' is in invalid format!");
     }
 }

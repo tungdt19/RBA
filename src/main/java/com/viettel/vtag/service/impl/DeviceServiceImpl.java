@@ -11,8 +11,11 @@ import com.viettel.vtag.service.interfaces.IotPlatformService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -100,16 +103,17 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Integer> pairDevice(User user, PairDeviceRequest request) {
-        return iotPlatformService.put("/api/devices/" + request.platformId() + "/group/" + user.platformId(), request)
-            .flatMap(response -> {
-                log.info("/api/devices/{}/group/{}: {}", request.platformId(), user.platformId(),
-                    response.statusCode());
-                if (response.statusCode().is2xxSuccessful()) {
-                    var device = new Device().name(request.name()).platformId(request.platformId());
-                    return Mono.just(deviceRepository.save(device));
-                }
-                return Mono.empty();
-            });
+        var endpoint = MessageFormatter.arrayFormat("/api/devices/{}/group/{}",
+            new Object[] {request.platformId(), user.platformId()}).getMessage();
+        return iotPlatformService.put(endpoint, request).flatMap(response -> {
+            var statusCode = response.statusCode();
+            log.info("{}: {}", endpoint, statusCode);
+            if (statusCode.is2xxSuccessful()) {
+                var device = new Device().name(request.name()).platformId(request.platformId());
+                return Mono.just(deviceRepository.save(device));
+            }
+            return Mono.empty();
+        });
     }
 
     @Override
@@ -119,6 +123,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<ClientResponse> active(PairDeviceRequest request) {
+        log.info("/api/devices/{}/active", request.platformId());
         return iotPlatformService.post("/api/devices/" + request.platformId() + "/active", Map.of("Type", "MAD"));
     }
 }
