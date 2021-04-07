@@ -1,7 +1,7 @@
 package com.viettel.vtag.repository.impl;
 
-import com.viettel.vtag.model.entity.LocationHistory;
-import com.viettel.vtag.model.entity.User;
+import com.viettel.vtag.model.ILocation;
+import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.LocationHistoryRequest;
 import com.viettel.vtag.repository.interfaces.LocationHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +20,10 @@ public class LocationHistoryRepositoryImpl implements LocationHistoryRepository 
     private final JdbcTemplate jdbc;
 
     @Override
-    public int save(LocationHistory location) {
-        var sql = "INSERT INTO location_history(device_id, latitude, longitude, trigger_instant) VALUES (?, ?, ?, ?)";
-        return jdbc.update(sql, location.deviceId(), location.latitude(), location.longitude(), location.time());
+    public int save(UUID platformDeviceId, ILocation location) {
+        var sql = "INSERT INTO location_history(device_id, latitude, longitude, trigger_instant) "
+            + "SELECT (id, ?, ?, NOW()) FROM device WHERE platform_device_id = ?";
+        return jdbc.update(sql, location.latitude(), location.longitude(), platformDeviceId);
     }
 
     @Override

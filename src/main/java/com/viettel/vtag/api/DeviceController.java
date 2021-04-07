@@ -2,7 +2,7 @@ package com.viettel.vtag.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.viettel.vtag.model.entity.PlatformData;
+import com.viettel.vtag.model.transfer.LocationMessage;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.service.interfaces.DeviceService;
@@ -15,8 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-
-import java.util.Map;
 
 import static com.viettel.vtag.model.response.ResponseBody.of;
 import static org.springframework.http.HttpStatus.*;
@@ -35,88 +33,86 @@ public class DeviceController {
     private final DeviceService deviceService;
 
     {
-        mapper.registerModule(new SimpleModule().addSerializer(PlatformData.class, new CellIdSerializer()));
+        mapper.registerModule(new SimpleModule().addSerializer(LocationMessage.class, new CellIdSerializer()));
     }
 
     @GetMapping("/list")
-    public ResponseEntity<ResponseBody> getDevices(ServerHttpRequest request) {
-        try {
-            var token = TokenUtils.getToken(request);
-            var user = userService.checkToken(token);
-            var deviceList = deviceService.getList(user);
-            return ok(of(0, "Okie dokie!", deviceList));
-        } catch (Exception e) {
-            var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer", map));
-        }
+    public Mono<ResponseEntity<ResponseBody>> getDevices(ServerHttpRequest request) {
+        return Mono.justOrEmpty(TokenUtils.getToken(request))
+            .map(userService::checkToken)
+            .flatMap(deviceService::getList)
+            .map(devices -> ok(of(0, "Okie dokie!", devices)))
+            .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't get user's device")))
+            .doOnError(throwable -> log.error("Couldn't add user", throwable))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer")));
     }
 
     @PostMapping("/viewer")
-    public ResponseEntity<ResponseBody> addViewer(
+    public Mono<ResponseEntity<ResponseBody>> addViewer(
         @RequestBody AddViewerRequest detail, ServerHttpRequest request
     ) {
-        try {
-            var token = TokenUtils.getToken(request);
-            var user = userService.checkToken(token);
-            var inserted = deviceService.addViewer(user, detail);
-            if (inserted > 0) {
-                return ok(of(0, "Add viewer successfully!"));
-            } else {
-                return ok(of(1, "Couldn't add user as viewer"));
-            }
-        } catch (Exception e) {
-            var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer", map));
-        }
+        return Mono.justOrEmpty(TokenUtils.getToken(request))
+            .map(userService::checkToken)
+            .flatMap(user -> deviceService.addViewer(user, detail))
+            .map(added -> ok(of(0, "Add viewer successfully!")))
+            .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't add user as viewer")))
+            .doOnError(throwable -> log.error("Couldn't add user", throwable))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer")));
     }
 
     @DeleteMapping("/viewer")
-    public ResponseEntity<ResponseBody> deleteViewer(
+    public Mono<ResponseEntity<ResponseBody>> deleteViewer(
         @RequestBody RemoveViewerRequest detail, ServerHttpRequest request
     ) {
-        try {
-            var token = TokenUtils.getToken(request);
-            var user = userService.checkToken(token);
-            var removed = deviceService.remove(user, detail);
-            if (removed > 0) {
-                return ok(of(0, "Add viewer successfully!"));
-            } else {
-                return status(BAD_REQUEST).body(of(1, "Couldn't remove viewer"));
-            }
-        } catch (Exception e) {
-            var map = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer", map));
-        }
+        return Mono.justOrEmpty(TokenUtils.getToken(request))
+            .map(userService::checkToken)
+            .flatMap(user -> deviceService.removeViewer(user, detail))
+            .filter(removed -> removed > 0)
+            .map(removed -> ok(of(0, "Add viewer successfully!")))
+            .defaultIfEmpty(status(BAD_REQUEST).body(of(1, "Couldn't remove viewer")))
+            .doOnError(throwable -> log.error("Couldn't add user", throwable))
+            .onErrorReturn(Exception.class, status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't remove viewer")));
     }
 
-    // gateway to IoT platform is from here on
     @PostMapping("/pair")
     public Mono<ResponseEntity<ResponseBody>> pairDevice(
         @RequestBody PairDeviceRequest detail, ServerHttpRequest request
     ) {
-        var token = TokenUtils.getToken(request);
-        var user = userService.checkToken(token);
-        log.info("pair device {} to user {}", detail.platformId(), user);
+        return Mono.justOrEmpty(TokenUtils.getToken(request))
+            .map(userService::checkToken)
+            .map(user -> {
+                log.info("pair device {} to user {}", detail.platformId(), user);
+                return user;
+            })
+            .flatMap(user -> deviceService.pairDevice(user, detail))
+            .then(deviceService.activate(detail))
+            .map(activated -> ok(of(0, "Paired device successfully!")))
+            .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
+    }
 
-        return deviceService.pairDevice(user, detail)
-            .flatMap(paired -> deviceService.active(detail))
-            .map(response -> response.statusCode().is2xxSuccessful())
-            .map(paired -> paired
-                ? ok(of(0, "Paired device successfully!"))
-                : status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
+    @PutMapping("/name")
+    public Mono<ResponseEntity<ResponseBody>> updateName(
+        @RequestBody ChangeDeviceNameRequest detail, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(TokenUtils.getToken(request))
+            .map(userService::checkToken)
+            .flatMap(user -> deviceService.updateDeviceName(user, detail))
+            .map(added -> ok(of(0, "Changed device's name successfully!")))
+            .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't update device's name!")))
+            .doOnError(throwable -> log.error("Couldn't add user", throwable))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't update device's name!")));
     }
 
     @GetMapping("/history")
     public Mono<ResponseEntity<ResponseBody>> history(
         @RequestBody LocationHistoryRequest detail, ServerHttpRequest request
     ) {
-        var token = TokenUtils.getToken(request);
-        var user = userService.checkToken(token);
-        var history = deviceService.fetchHistory(user, detail);
-
-        if (history.isEmpty()) {
-            return Mono.just(status(NOT_FOUND).body(of(1, "Couldn't pair device!")));
-        }
-        return Mono.just(ok(of(0, "Okie dokie!", history)));
+        return Mono.justOrEmpty(TokenUtils.getToken(request))
+            .map(userService::checkToken)
+            .flatMap(user -> deviceService.fetchHistory(user, detail))
+            .map(history -> ok(of(0, "Okie dokie!", history)))
+            .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't fetch history!")))
+            .doOnError(e -> log.error("Couldn't fetch history", e))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
     }
 }

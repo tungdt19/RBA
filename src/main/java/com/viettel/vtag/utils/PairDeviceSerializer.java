@@ -13,7 +13,7 @@ public class PairDeviceSerializer extends JsonSerializer<PairDeviceRequest> {
     public void serialize(PairDeviceRequest request, JsonGenerator json, SerializerProvider p) throws IOException {
         json.writeStartObject();
 
-        json.writeObjectField("name", request.name());
+        json.writeObjectField("name", "VTAG");
 
         json.writeFieldName("metadata");
         json.writeStartObject();

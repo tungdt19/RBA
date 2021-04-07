@@ -1,0 +1,49 @@
+package com.viettel.vtag.model.transfer;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+@Data
+@Accessors(fluent = true)
+public class ConfigMessage {
+
+    @JsonProperty("Type") // "DCF"
+    private String type;
+
+    @JsonProperty("Ver") // "7.2"
+    private String version;
+
+    @JsonProperty("Conn") // "nbiot"
+    private String connection;
+
+    @JsonProperty("MBC") // {"Per":{"V":600,"U":"s"},"Mod":1,"Thre":20}
+    private PeriodConfig MBC;
+
+    @JsonProperty("MMC") // {"Per":{"V":2,"U":"m"},"Mod":0}
+    private PeriodConfig MMC;
+
+    @Data
+    @Accessors(fluent = true)
+    public static class PeriodConfig {
+
+        @JsonProperty("Per")
+        private Period period;
+
+        @JsonProperty("Mod")
+        private int mode;
+
+        @JsonProperty("Thre")
+        private int threshold;
+
+        public String modeString() {
+            switch (mode) {
+                case 0: return "Real-time";
+                case 2: return "Hibernate";
+                case 1:
+                default:
+                    return "On-demand";
+            }
+        }
+    }
+}

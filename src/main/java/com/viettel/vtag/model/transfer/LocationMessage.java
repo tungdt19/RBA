@@ -1,9 +1,10 @@
-package com.viettel.vtag.model.entity;
+package com.viettel.vtag.model.transfer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.utils.CellIdSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -14,7 +15,7 @@ import java.util.List;
 @Accessors(fluent = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(using = CellIdSerializer.class)
-public class PlatformData {
+public class LocationMessage implements ILocation {
 
     @JsonProperty("Type")
     private String type;
@@ -37,10 +38,10 @@ public class PlatformData {
     @JsonProperty("Lat")
     private double latitude;
 
-    @JsonProperty("Lon") //: 105.81206979664238
+    @JsonProperty("Lon")
     private double longitude;
 
-    @JsonProperty("TS")  //: "2021-03-24 14-33-23"
+    @JsonProperty("TS")
     private String timestamp;
 
     @Data

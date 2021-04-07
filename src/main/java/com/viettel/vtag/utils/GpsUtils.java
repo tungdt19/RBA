@@ -23,12 +23,6 @@ public class GpsUtils {
     }
 
     public static void main(String[] args) {
-        var lat1 = toDouble(50, 3, 59, false);
-        var lon1 = toDouble(5, 42, 53, true);
-        var lat2 = toDouble(58, 38, 38, false);
-        var lon2 = toDouble(3, 4, 12, true);
-
-        System.out.println(distance(lat1, lon1, lat2, lon2));
-        System.out.println(distance(51.5, 0, 38.8, -77.1));
+        System.out.println(distance(21.06757812, 105.81127031, 21.066706, 105.811164));
     }
 }

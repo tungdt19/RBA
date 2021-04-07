@@ -5,7 +5,6 @@ import com.viettel.vtag.service.interfaces.IotPlatformService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.PeriodicTrigger;
@@ -33,42 +32,40 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Value("${vtag.platform.base-url}")
     private String address;
+
     @Value("${vtag.platform.grant-type}")
     private String grantType;
+
     @Value("${vtag.platform.client-id}")
     private String clientId;
+
     @Value("${vtag.platform.client-secret}")
     private String clientSecret;
 
     @PostConstruct
     public void init() {
-        fetchToken().subscribe(entity -> {
-            if (entity == null || entity.getBody() == null) {
-                log.error("Couldn't get token from platform");
-                return;
-            }
-
-            platformToken.update(entity.getBody());
-            log.info("Platform token {}", platformToken);
-            taskScheduler.schedule(() -> {
-                var response = fetchToken().block();
-                if (response == null || response.getBody() == null) {
-                    log.error("Couldn't get token from platform!");
-                    return;
-                }
-                platformToken.update(response.getBody());
-            }, new PeriodicTrigger(platformToken.expiresIn() * 1000));
+        fetchToken().subscribe(token -> {
+            log.info("Setting up token schedule for each {}s", token.expiresIn());
+            taskScheduler.schedule(this::fetchToken, new PeriodicTrigger(platformToken.expiresIn() * 1000));
         });
     }
 
-    private Mono<ResponseEntity<PlatformToken>> fetchToken() {
+    private Mono<PlatformToken> fetchToken() {
         var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_FORM_URLENCODED_VALUE).build();
 
         var body = BodyInserters.fromFormData("grant_type", grantType)
             .with("client_id", clientId)
             .with("client_secret", clientSecret);
 
-        return client.post().uri("/token").body(body).retrieve().toEntity(PlatformToken.class);
+        return client.post()
+            .uri("/token")
+            .body(body)
+            .exchange()
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .flatMap(response -> response.bodyToMono(PlatformToken.class))
+            .map(platformToken::update)
+            .doOnNext(token -> log.info("Platform token {}", platformToken))
+            .doOnError(e -> log.error("Couldn't get token from platform!", e));
     }
 
     private WebClient.Builder webClientBuilder() {

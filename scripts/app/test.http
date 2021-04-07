@@ -1,4 +1,12 @@
 ### --------------------------------------------------------------------------------------------------------------------
+GET http://{{host}}/vtag/test/mqtt
+    ?id=691e700f-9b1c-477f-a2fc-3699de6e3d15
+    &subtopic=events
+
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
 POST https://ap1.unwiredlabs.com/v2/process.php
 Content-Type: application/json
 
@@ -27,8 +35,30 @@ Content-Type: application/json
 
 
 
+### --------------------------------------------------------------------------------------------------------------------
+POST https://ap1.unwiredlabs.com/v2/process.php
+Content-Type: application/json
+
+{
+    "token": "{{token}}",
+    "radio": "nbiot",
+    "address": 1,
+    "mcc": 452,
+    "mnc": 4,
+    "cells": [
+        {"cid": 75430933, "lac": 43300, "psc": 0}
+    ],
+    "wifi": [
+    ]
+}
+
+### "status": "ok", "balance": 4656, "lat": 21.066706,   "lon": 105.811164,   "accuracy": 2500
+### "status": "ok", "balance": 4655, "lat": 21.06757812, "lon": 105.81127031, "accuracy": 40
+
+
+
 ### wifi cell ----------------------------------------------------------------------------------------------------------
-POST http://localhost:8080/vtag/device/test
+POST http://{{host}}:8080/vtag/device/test
 Content-Type: application/json
 
 {
@@ -51,7 +81,7 @@ Content-Type: application/json
 
 
 ### GPS ----------------------------------------------------------------------------------------------------------------
-POST http://localhost:8080/vtag/device/test
+POST http://{{host}}:8080/vtag/device/test
 Content-Type: application/json
 
 {
@@ -66,7 +96,7 @@ Content-Type: application/json
 
 
 ### SOS ----------------------------------------------------------------------------------------------------------------
-POST http://localhost:8080/vtag/device/test
+POST http://{{host}}:8080/vtag/device/test
 Content-Type: application/json
 
 {

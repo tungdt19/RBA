@@ -12,7 +12,7 @@ Content-Type: application/json
 POST http://{{host}}/vtag/user/register
 Content-Type: application/json
 
-{"phone": "0365819888", "password": "test"}
+{"phone": "0365819777", "password": "test"}
 
 ### {"code": 0, "message": "Created user successfully!"}
 ### {"code": 1, "message": "Some error!"}
@@ -29,8 +29,9 @@ Content-Type: application/json
 
 > {%
 client.test("Request executed successfully", function() {
-  client.assert(response.status === 200, "Response status is not 200");
-  client.global.set("vtag_token", response.body.data.token)
+  let token = response.body.data.token;
+  console.log(token)
+  client.global.set("vtag_token", token)
 });
 %}
 

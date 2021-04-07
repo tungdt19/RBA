@@ -5,6 +5,7 @@ import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.model.request.ResetPasswordRequest;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface UserRepository {
 
@@ -28,5 +29,5 @@ public interface UserRepository {
 
     User findByToken(String token);
 
-    List<String> fetchAllViewers(String deviceId);
+    List<String> fetchAllViewers(UUID deviceId);
 }

@@ -3,10 +3,7 @@ POST http://{{host}}/vtag/device/pair
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
 
-{
-    "name": "PairDevice",
-    "platform_id": "d86c8f22-e026-440f-bc17-ca77cee811c2"
-}
+{"platform_id": "d86c8f22-e026-440f-bc17-ca77cee811c2"}
 
 ### 200: {"code": 0, "message": "Paired device successfully!"}
 ### 502: {"code": 1, "message": "Couldn't pair device!"}
@@ -17,6 +14,9 @@ Content-Type: application/json
 GET http://{{host}}/vtag/device/list
 Content-Type: application/json
 Authorization: Bearer {{vtag_token}}
+
+### 200: {"code": 0, "message": "Okie dokie!", "data": []}
+
 
 
 

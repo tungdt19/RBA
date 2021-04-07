@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import reactor.core.publisher.Mono;
@@ -14,11 +13,11 @@ import reactor.core.publisher.Mono;
 import java.util.Locale;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 public class CommonTest {
-
 
     @Test
     public void test_bcrypt() {
@@ -78,6 +77,16 @@ public class CommonTest {
                 e.printStackTrace();
             }
         });
+    }
+
+    @Test
+    public void testReactor() {
+        Mono.just("false")
+            .filter(s -> s.length() > 10)
+            .defaultIfEmpty("empty1")
+            .flatMap(o -> Mono.just(o + " map"))
+            .defaultIfEmpty("empty")
+            .subscribe(System.out::println);
     }
 
     @Data

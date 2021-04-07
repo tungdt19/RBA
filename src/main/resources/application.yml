@@ -17,8 +17,6 @@ vtag:
     grant-type: client_credentials
     client-id: 9221f93a-58b6-40c5-8dc5-1bd6ab0a4897
     client-secret: 90pd2Ot8LZURZtUB8XL69cOdB9
-  storage:
-    location: ~/storage/
   mqtt:
     qos: 1
     client-id: vtag-backend
@@ -30,6 +28,8 @@ vtag:
   otp:
     length: 6
     allowed-chars: "0123456789"
+  storage:
+    location: ~/storage/
 
 ---
 spring:
@@ -54,12 +54,20 @@ spring:
   profiles: test
   datasource:
     jdbcUrl: jdbc:postgresql://127.0.0.1:5432/postgres?useSSL=false
-    username: root
+    username: postgres
     password: 1
   sms-datasource:
     jdbcUrl: jdbc:mysql://127.0.0.1:3306/smssupport?useSSL=false
     username: root
     password: 1
+vtag:
+  platform:
+    base-url: https://api.iotcloud.com.vn:4438
+  mqtt:
+    enable: false
+    url: tcp://203.113.138.21:4439
+    username: backend
+    password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc
 
 ---
 spring:

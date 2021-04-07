@@ -21,8 +21,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserRepositoryImpl implements UserRepository {
 
-    private final PasswordEncoder bCrypt;
     private final JdbcTemplate jdbc;
+    private final PasswordEncoder bCrypt;
 
     @Override
     public User find(String token) {
@@ -101,24 +101,25 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public User findByToken(String token) {
-        var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email, "
-            + "phone_no, avatar, fcm_token, platform_group_id FROM token t LEFT JOIN end_user u ON t.user_id = u.id "
-            + "WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
-        return jdbc.queryForObject(sql, new Object[] {UUID.fromString(token)}, (rs, i) -> mapUser(rs));
+        try {
+            var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email, "
+                + "phone_no, avatar, fcm_token, platform_group_id FROM token t LEFT JOIN end_user u ON t.user_id = u"
+                + ".id "
+                + "WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
+            return jdbc.queryForObject(sql, new Object[] {UUID.fromString(token)}, (rs, i) -> mapUser(rs));
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return null;
+        }
     }
 
     @Override
-    public List<String> fetchAllViewers(String deviceId) {
-        var uuid = UUID.fromString(deviceId);
+    public List<String> fetchAllViewers(UUID deviceId) {
         var sql = "SELECT fcm_token FROM user_role ur JOIN end_user u ON u.id = ur.user_id "
             + "JOIN device d ON d.id = ur.device_id WHERE platform_device_id = ?";
-        return jdbc.query(sql, new Object[] {uuid}, (rs, rowNum) -> rs.getString("fcm_token"));
+        return jdbc.query(sql, new Object[] {deviceId}, (rs, rowNum) -> rs.getString("fcm_token"));
     }
 
     private User mapUser(ResultSet rs) throws SQLException {
-        var id = rs.getString("platform_group_id");
-        var groupId = rs.getObject("platform_group_id", UUID.class);
-        log.info("platform_group_id {} {}", groupId, id);
         return new User().id(rs.getInt("id"))
             .username(rs.getString("username"))
             .encryptedPassword(rs.getString("password"))
@@ -128,6 +129,6 @@ public class UserRepositoryImpl implements UserRepository {
             .phoneNo(rs.getString("phone_no"))
             .avatar(rs.getString("avatar"))
             .fcmToken(rs.getString("fcm_token"))
-            .platformId(groupId);
+            .platformId(rs.getObject("platform_group_id", UUID.class));
     }
 }

@@ -19,15 +19,4 @@ public class DeviceConfig {
 
     @JsonProperty("Per")
     private Period period;
-
-    @Data
-    @Accessors(fluent = true)
-    public static class Period {
-
-        @JsonProperty("U")
-        private String unit;
-
-        @JsonProperty("V")
-        private int value;
-    }
 }

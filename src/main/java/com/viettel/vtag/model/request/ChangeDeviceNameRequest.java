@@ -10,15 +10,12 @@ import java.util.UUID;
 
 @Data
 @Accessors(fluent = true)
-public class AddViewerRequest {
+public class ChangeDeviceNameRequest {
 
     @JsonProperty
     private String name;
 
-    @JsonProperty
-    private String phone;
-
-    @JsonProperty("device_id")
+    @JsonProperty("platform_id")
     @JsonDeserialize(using = UUIDDeserializer.class)
-    private UUID deviceId;
+    private UUID platformId;
 }
