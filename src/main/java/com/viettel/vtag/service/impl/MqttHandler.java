@@ -23,6 +23,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -177,9 +178,9 @@ public class MqttHandler implements MqttCallback {
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         try {
-            log.info("msg {}", token.getMessage());
+            log.info("{}: {}", Arrays.toString(token.getTopics()), token.getMessage());
         } catch (MqttException e) {
-            e.printStackTrace();
+            log.error("deliveryComplete", e);
         }
     }
 }

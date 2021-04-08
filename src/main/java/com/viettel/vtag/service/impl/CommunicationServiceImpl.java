@@ -2,6 +2,7 @@ package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.request.OtpRequest;
 import com.viettel.vtag.service.interfaces.CommunicationService;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -16,11 +17,9 @@ import java.sql.SQLException;
 @Service
 public class CommunicationServiceImpl implements CommunicationService {
 
-    private final JdbcTemplate jdbc;
-
-    public CommunicationServiceImpl(@Qualifier("sms-jdbc") JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
+    @Setter
+    @Qualifier("sms-jdbc")
+    private JdbcTemplate jdbc;
 
     @Override
     public void send(OtpRequest request, String content) {

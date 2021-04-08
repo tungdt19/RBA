@@ -3,7 +3,9 @@ POST http://{{host}}/vtag/device/pair
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
 
-{"platform_id": "d86c8f22-e026-440f-bc17-ca77cee811c2"}
+{"platform_id": "d61e77a7-6794-40ba-95e9-c7900e4e5f8e"}
+
+###{"platform_id": "d86c8f22-e026-440f-bc17-ca77cee811c2"}
 
 ### 200: {"code": 0, "message": "Paired device successfully!"}
 ### 502: {"code": 1, "message": "Couldn't pair device!"}
@@ -15,15 +17,18 @@ GET http://{{host}}/vtag/device/list
 Content-Type: application/json
 Authorization: Bearer {{vtag_token}}
 
-### 200: {"code": 0, "message": "Okie dokie!", "data": []}
+### 200: {"code": 0, "message": "Okie dokie!", "data": [{
+###     "id": 1, "platform_device_id": "", "latitude": 123.123, "longitude": 123.123, "status": "Real-time", "accuracy": 40,
+###     "geo-fencing": 0, "uptime": "2021-01-31T12:59:59", "battery": 95, "name": "Tern cua device"
+### }]}
 
 
 
 
 ### --------------------------------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/device/route
-Content-Type: application/json
 Authorization: Bearer {{vtag_token}}
+Content-Type: application/json
 
 {
     "device_id": "9a2612a6-4f5f-4fa2-84f8-6cc00d63a12f",
@@ -32,3 +37,17 @@ Authorization: Bearer {{vtag_token}}
 }
 
 
+
+### --------------------------------------------------------------------------------------------------------------------
+PUT http://{{host}}/vtag/device/name
+Authorization: Bearer {{vtag_token}}
+Content-Type: application/json
+
+{
+    "name": "Name 1",
+    "platform_id": "d61e77a7-6794-40ba-95e9-c7900e4e5f8e"
+}
+
+### 200 {"code": 0, "message": "Changed device's name successfully!"}
+### 417 {"code": 1, "message": "Couldn't update device's name!"}
+### 500 {"code": 1, "message": "Couldn't update device's name!"}

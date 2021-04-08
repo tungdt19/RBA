@@ -1,5 +1,6 @@
 package com.viettel.vtag.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -8,6 +9,7 @@ import java.util.UUID;
 
 @Data
 @Accessors(fluent = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
 
     @JsonProperty("id")
@@ -31,8 +33,10 @@ public class User {
     @JsonProperty("email")
     private String email;
 
-    private String avatar;
+    @JsonProperty
     private UUID platformId;
+
+    private String avatar;
     private String encryptedPassword;
     private String fcmToken;
 }

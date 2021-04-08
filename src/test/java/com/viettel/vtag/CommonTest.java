@@ -81,10 +81,7 @@ public class CommonTest {
 
     @Test
     public void testReactor() {
-        Mono.just("false")
-            .filter(s -> s.length() > 10)
-            .defaultIfEmpty("empty1")
-            .flatMap(o -> Mono.just(o + " map"))
+        Mono.just("false").filter(s -> s.length() < 10).map(s -> null).defaultIfEmpty("empty1").map(o -> o + " map")
             .defaultIfEmpty("empty")
             .subscribe(System.out::println);
     }

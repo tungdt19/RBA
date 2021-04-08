@@ -1,8 +1,16 @@
 package com.viettel.vtag.utils;
 
+import com.viettel.vtag.model.entity.User;
+
 public class PhoneUtils {
 
     private PhoneUtils() { }
+
+    public static String standardize(User user) {
+        var phone = standardize(user.phoneNo());
+        user.phoneNo(phone);
+        return phone;
+    }
 
     public static String standardize(String phone) {
         if (phone == null || phone.isBlank()) {

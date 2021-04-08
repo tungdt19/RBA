@@ -59,8 +59,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public int updateName(User user, ChangeDeviceNameRequest request) {
-        var sql = "UPDATE device d SET name = ? FROM user_role ur WHERE ur.device_id == d.id AND ur.user_id = ? "
-            + "AND device_id = ?";
+        var sql = "UPDATE device d SET name = ? FROM user_role ur WHERE ur.device_id = d.id AND ur.user_id = ? "
+            + "AND role_id = 1 AND device_id = ?";
         return jdbc.update(sql, request.name(), user.id(), request.platformId());
     }
 
@@ -93,8 +93,9 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public int setUserDevice(User user, PairDeviceRequest request) {
-        var sql = "INSERT INTO user_role (user_id, device_id, role_id) VALUES (?, ?, ?)";
-        return jdbc.update(sql, user.id(), request);
+        var sql = "INSERT INTO user_role (device_id, user_id, role_id) SELECT d.id, ?, ? FROM device d "
+            + "WHERE platform_device_id = ?";
+        return jdbc.update(sql, user.id(), 1, request.platformId());
     }
 
     @Override

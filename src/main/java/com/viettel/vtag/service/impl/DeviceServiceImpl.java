@@ -18,8 +18,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 
-import static org.slf4j.helpers.MessageFormatter.format;
-
 @Data
 @Slf4j
 @Service
@@ -34,21 +32,25 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Boolean> activate(PairDeviceRequest request) {
-        var endpoint = format("/api/devices/{}/active", request.platformId()).getMessage();
+        var endpoint = "/api/devices/" + request.platformId() + "/active";
         log.info(endpoint);
         return iotPlatformService.post(endpoint, Map.of("Type", "MAD"))
+            .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
             .map(response -> response.statusCode().is2xxSuccessful())
             .filter(activated -> activated);
     }
 
     @Override
     public Mono<Integer> pairDevice(User user, PairDeviceRequest request) {
-        var endpoint = format("/api/devices/{}/group/{}", request.platformId(), user.platformId()).getMessage();
+        var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
         return iotPlatformService.put(endpoint, request)
             .filter(response -> response.statusCode().is2xxSuccessful())
+            .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
             .map(response -> deviceRepository.save(new Device().name("VTAG").platformId(request.platformId())))
+            .doOnNext(saved -> log.info("saved {}", saved))
             .filter(paired -> paired > 0)
-            .flatMap(paired -> Mono.just(deviceRepository.setUserDevice(user, request)));
+            .map(paired -> deviceRepository.setUserDevice(user, request))
+            .doOnNext(saved -> log.info("save user device {}", saved));
     }
 
     @Override

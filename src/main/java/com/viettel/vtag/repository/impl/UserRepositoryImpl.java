@@ -2,7 +2,6 @@ package com.viettel.vtag.repository.impl;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
-import com.viettel.vtag.model.request.ResetPasswordRequest;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +28,7 @@ public class UserRepositoryImpl implements UserRepository {
         try {
             var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar FROM end_user "
                 + "WHERE username = ? OR email = ? OR phone_no = ?";
-            return jdbc.queryForObject(sql, new Object[] {token, token, token}, (rs, num) -> mapUser(rs));
+            return jdbc.queryForObject(sql, new Object[] {token, token, token}, this::mapUser);
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
         }
@@ -40,7 +39,7 @@ public class UserRepositoryImpl implements UserRepository {
         try {
             var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar, fcm_token, "
                 + "platform_group_id FROM end_user WHERE phone_no = ?";
-            return jdbc.queryForObject(sql, new Object[] {phone}, (rs, num) -> mapUser(rs));
+            return jdbc.queryForObject(sql, new Object[] {phone}, this::mapUser);
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
         }
@@ -51,7 +50,7 @@ public class UserRepositoryImpl implements UserRepository {
         try {
             var sql = "SELECT id, username, password, first_name, last_name, email, phone_no, avatar FROM end_user "
                 + "WHERE email = ?";
-            return jdbc.queryForObject(sql, new Object[] {email}, (rs, num) -> mapUser(rs));
+            return jdbc.queryForObject(sql, new Object[] {email}, this::mapUser);
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
         }
@@ -102,11 +101,11 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User findByToken(String token) {
         try {
-            var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email, "
-                + "phone_no, avatar, fcm_token, platform_group_id FROM token t LEFT JOIN end_user u ON t.user_id = u"
-                + ".id "
-                + "WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
-            return jdbc.queryForObject(sql, new Object[] {UUID.fromString(token)}, (rs, i) -> mapUser(rs));
+            var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email,"
+                + " phone_no, avatar, fcm_token, platform_group_id FROM token t LEFT JOIN end_user u ON t.user_id = u"
+                + ".id"
+                + " WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
+            return jdbc.queryForObject(sql, new Object[] {UUID.fromString(token)}, this::mapUser);
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
         }
@@ -119,7 +118,7 @@ public class UserRepositoryImpl implements UserRepository {
         return jdbc.query(sql, new Object[] {deviceId}, (rs, rowNum) -> rs.getString("fcm_token"));
     }
 
-    private User mapUser(ResultSet rs) throws SQLException {
+    private User mapUser(ResultSet rs, int i) throws SQLException {
         return new User().id(rs.getInt("id"))
             .username(rs.getString("username"))
             .encryptedPassword(rs.getString("password"))

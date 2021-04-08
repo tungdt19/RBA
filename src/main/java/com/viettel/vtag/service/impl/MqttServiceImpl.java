@@ -11,7 +11,6 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.util.Arrays;
@@ -32,15 +31,16 @@ public class MqttServiceImpl implements MqttService {
 
     @PostConstruct
     public void subscribeExistedDevices() {
-        Mono.just(deviceRepository.fetchAllDevices()).subscribe(uuids -> {
-            for (var id : uuids) {
-                try {
-                    client.subscribe(id.toString(), qos);
-                } catch (MqttException e) {
-                    log.error("sub", e);
-                }
+        var uuids = deviceRepository.fetchAllDevices();
+        for (var uuid : uuids) {
+            try {
+                var id = uuid.toString();
+                log.info("Subscribing {}", id);
+                client.subscribe(id, qos);
+            } catch (MqttException e) {
+                log.error("sub", e);
             }
-        });
+        }
     }
 
     @Override

@@ -27,14 +27,8 @@ import static org.springframework.http.ResponseEntity.status;
 @RequestMapping("/device")
 public class DeviceController {
 
-    private final ObjectMapper mapper = new ObjectMapper();
-
     private final UserService userService;
     private final DeviceService deviceService;
-
-    {
-        mapper.registerModule(new SimpleModule().addSerializer(LocationMessage.class, new CellIdSerializer()));
-    }
 
     @GetMapping("/list")
     public Mono<ResponseEntity<ResponseBody>> getDevices(ServerHttpRequest request) {
@@ -80,11 +74,9 @@ public class DeviceController {
     ) {
         return Mono.justOrEmpty(TokenUtils.getToken(request))
             .map(userService::checkToken)
-            .map(user -> {
-                log.info("pair device {} to user {}", detail.platformId(), user);
-                return user;
-            })
+            .doOnNext(user -> log.info("pair device {} to user {}", detail.platformId(), user.phoneNo()))
             .flatMap(user -> deviceService.pairDevice(user, detail))
+            .doOnNext(paired -> log.info("paired {}", paired))
             .then(deviceService.activate(detail))
             .map(activated -> ok(of(0, "Paired device successfully!")))
             .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
@@ -96,10 +88,11 @@ public class DeviceController {
     ) {
         return Mono.justOrEmpty(TokenUtils.getToken(request))
             .map(userService::checkToken)
+            // .map(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")))
             .flatMap(user -> deviceService.updateDeviceName(user, detail))
             .map(added -> ok(of(0, "Changed device's name successfully!")))
             .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't update device's name!")))
-            .doOnError(throwable -> log.error("Couldn't add user", throwable))
+            .doOnError(throwable -> log.error("Couldn't update device's name!", throwable))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't update device's name!")));
     }
 

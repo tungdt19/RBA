@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import javax.annotation.PostConstruct;
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
@@ -26,9 +27,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class IotPlatformServiceImpl implements IotPlatformService {
 
-    private final ThreadPoolTaskScheduler taskScheduler;
+    private final ThreadPoolTaskScheduler scheduler;
     private final PlatformToken platformToken;
     private final HttpClient httpClient;
+
+    private WebClient.Builder webClientBuilder;
 
     @Value("${vtag.platform.base-url}")
     private String address;
@@ -44,22 +47,23 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @PostConstruct
     public void init() {
-        fetchToken().subscribe(token -> {
-            log.info("Setting up token schedule for each {}s", token.expiresIn());
-            taskScheduler.schedule(this::fetchToken, new PeriodicTrigger(platformToken.expiresIn() * 1000));
-        });
+        webClientBuilder = WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .baseUrl(address);
+
+        fetchToken().map(PlatformToken::expiresIn)
+            .doOnNext(expire -> log.info("Setting up token schedule for each {}s", expire))
+            .subscribe(expire -> scheduler.schedule(this::fetchToken, new PeriodicTrigger(expire, TimeUnit.SECONDS)));
     }
 
     private Mono<PlatformToken> fetchToken() {
-        var client = webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_FORM_URLENCODED_VALUE).build();
-
-        var body = BodyInserters.fromFormData("grant_type", grantType)
-            .with("client_id", clientId)
-            .with("client_secret", clientSecret);
-
-        return client.post()
+        return webClientBuilder.defaultHeader(CONTENT_TYPE, APPLICATION_FORM_URLENCODED_VALUE)
+            .build()
+            .post()
             .uri("/token")
-            .body(body)
+            .body(BodyInserters.fromFormData("grant_type", grantType)
+                .with("client_id", clientId)
+                .with("client_secret", clientSecret))
             .exchange()
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(PlatformToken.class))
@@ -68,13 +72,9 @@ public class IotPlatformServiceImpl implements IotPlatformService {
             .doOnError(e -> log.error("Couldn't get token from platform!", e));
     }
 
-    private WebClient.Builder webClientBuilder() {
-        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient)).baseUrl(address);
-    }
-
     @Override
     public Mono<ClientResponse> get(String endpoint) {
-        return webClientBuilder().build()
+        return webClientBuilder.build()
             .get()
             .uri(endpoint)
             .header("Authorization", platformToken.toString())
@@ -83,7 +83,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Override
     public Mono<ClientResponse> put(String endpoint, Object body) {
-        return webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+        return webClientBuilder.defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
             .build()
             .put()
             .uri(endpoint)
@@ -94,7 +94,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Override
     public Mono<ClientResponse> post(String endpoint, Object body) {
-        return webClientBuilder().defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+        return webClientBuilder.defaultHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
             .build()
             .post()
             .uri(endpoint)
@@ -105,7 +105,7 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Override
     public Mono<ClientResponse> delete(String endpoint) {
-        return webClientBuilder().build()
+        return webClientBuilder.build()
             .delete()
             .uri(endpoint)
             .header("Authorization", platformToken.toString())

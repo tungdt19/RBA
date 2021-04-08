@@ -48,12 +48,15 @@ public class UserController {
     /** {@link UserServiceImpl#save(User)} */
     @PostMapping("/register")
     public Mono<ResponseEntity<ResponseBody>> register(@RequestBody User user) {
-        return userService.save(user).flatMap(registered -> {
-            log.info("create user: {}", registered);
-            if (registered > 0) {
-                return Mono.just(ok(of(0, "Created user successfully!")));
+        return userService.save(user).map(registered -> {
+            switch (registered) {
+                case 1:
+                    return ok(of(0, "Created user successfully!"));
+                case -1:
+                    return status(CONFLICT).body(of(1, "User's already existed!"));
+                default:
+                    return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!"));
             }
-            return Mono.just(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!")));
         }).onErrorReturn(status(BAD_REQUEST).body(of(1, "Couldn't create user!")));
     }
 
@@ -85,7 +88,7 @@ public class UserController {
         return ok(of(0, "Get token successfully!", Map.of("token", token)));
     }
 
-    /** {@link UserServiceImpl#createToken} */
+    /** {@link UserServiceImpl#updateNotificationToken(User, FcmTokenUpdateRequest)} */
     @PostMapping("/notification")
     public ResponseEntity<ResponseBody> updateFcmToken(
         @RequestBody FcmTokenUpdateRequest detail, ServerHttpRequest request
@@ -97,6 +100,12 @@ public class UserController {
         }
 
         return status(UNAUTHORIZED).body(of(1, "Invalid username or password!"));
+    }
+
+    @GetMapping("/info")
+    public ResponseEntity<ResponseBody> getUserInfo(ServerHttpRequest request) {
+        var user = userService.checkToken(request);
+        return status(OK).body(of(1, "Okie dokie!", user));
     }
 
     @PostMapping("/password")

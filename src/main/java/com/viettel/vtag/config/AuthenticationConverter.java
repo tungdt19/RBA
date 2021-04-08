@@ -23,7 +23,7 @@ public class AuthenticationConverter implements ServerAuthenticationConverter {
         return Mono.justOrEmpty(exchange)
             .flatMap(this::extract)
             .filter(authValue -> authValue.length() > BEARER.length())
-            .flatMap(authValue -> Mono.justOrEmpty(authValue.substring(BEARER.length())))
+            .map(authValue -> authValue.substring(BEARER.length()))
             .flatMap(s -> Mono.empty());
             // .flatMap(this::verifyToken)
             // .flatMap(this::buildUserDetails)

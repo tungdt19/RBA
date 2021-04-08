@@ -11,8 +11,6 @@ import java.util.UUID;
 
 public interface DeviceRepository {
 
-    List<UUID> fetchAllDevices();
-
     Device get(int id);
 
     Device find(String imei);
@@ -27,7 +25,7 @@ public interface DeviceRepository {
 
     int removeViewer(User user, RemoveViewerRequest request);
 
-    int delete(Device device);
+    List<UUID> fetchAllDevices();
 
     List<Device> getUserDevice(User user);
 
@@ -36,4 +34,6 @@ public interface DeviceRepository {
     int updateBattery(UUID platformDeviceId, BatteryMessage battery);
 
     int updateConfig(UUID platformDeviceId, ConfigMessage config);
+
+    int delete(Device device);
 }

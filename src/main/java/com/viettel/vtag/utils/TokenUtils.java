@@ -10,6 +10,7 @@ public class TokenUtils {
         if (authorizations == null || authorizations.size() == 0) {
             return null;
         }
-        return authorizations.get(0).substring(7); // "Bearer ".length
+        var token = authorizations.get(0);
+        return token.startsWith("Bearer ") ? token.substring(7) : null; // "Bearer ".length
     }
 }

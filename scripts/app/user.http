@@ -8,6 +8,7 @@ Content-Type: application/json
 ### 500: {"code": 1, "message": "Some error!"}
 
 
+
 ### Register new account -----------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/user/register
 Content-Type: application/json
@@ -16,6 +17,13 @@ Content-Type: application/json
 
 ### {"code": 0, "message": "Created user successfully!"}
 ### {"code": 1, "message": "Some error!"}
+
+
+### check token --------------------------------------------------------------------------------------------------------
+GET http://{{host}}/vtag/user/info
+Authorization: Bearer {{vtag_token}}
+Content-Type: application/json
+
 
 
 ### --------------------------------------------------------------------------------------------------------------------
@@ -29,8 +37,8 @@ Content-Type: application/json
 
 > {%
 client.test("Request executed successfully", function() {
-  let token = response.body.data.token;
-  console.log(token)
+  var token = response.body.data.token;
+  print(token)
   client.global.set("vtag_token", token)
 });
 %}

@@ -30,23 +30,15 @@ public class UserServiceImpl implements UserService {
     /** {@link UserRepositoryImpl#register(User)} */
     @Override
     public Mono<Integer> save(User user) {
-        var phone = PhoneUtils.standardize(user.phoneNo());
-        user.phoneNo(phone);
-        return iotPlatformService.post("/api/groups", Map.of("name", phone)).flatMap(entity -> {
-            var statusCode = entity.statusCode();
-            log.info("register user {}: {}", phone, statusCode);
-
-            var result = entity.bodyToMono(Identity.class).flatMap(identity -> {
-                log.info("/api/groups/{}: {} -> {}", phone, statusCode, identity);
-                user.platformId(UUID.fromString(identity.id()));
-                return Mono.just(userRepository.register(user));
-            });
-            if (statusCode.is2xxSuccessful()) {
-                return result;
-            }
-            log.error("Couldn't register user with phone {}", user.phoneNo());
-            return Mono.just(-1);
-        }).onErrorReturn(DuplicateKeyException.class::isInstance, -1);
+        var phone = PhoneUtils.standardize(user);
+        return iotPlatformService.post("/api/groups", Map.of("name", phone))
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .doOnNext(response -> log.info("register user {}: {}", phone, response.statusCode()))
+            .flatMap(entity -> entity.bodyToMono(Identity.class))
+            .map(identity -> user.platformId(UUID.fromString(identity.id())))
+            .map(userRepository::register)
+            .doOnError(e -> log.error("Couldn't register user with phone {}", user.phoneNo()))
+            .onErrorReturn(DuplicateKeyException.class::isInstance, -1);
     }
 
     @Override
