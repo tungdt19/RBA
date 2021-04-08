@@ -53,7 +53,7 @@ vtag:
 spring:
   profiles: test
   datasource:
-    jdbcUrl: jdbc:postgresql://127.0.0.1:5432/postgres?useSSL=false
+    jdbcUrl: jdbc:postgresql://203.113.138.18:4446/postgres?useSSL=false
     username: postgres
     password: 1
   sms-datasource:
@@ -66,7 +66,7 @@ vtag:
   mqtt:
     enable: false
     url: tcp://203.113.138.21:4439
-    username: backend
+    username: vtag_backend
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc
 
 ---
@@ -86,6 +86,5 @@ vtag:
   mqtt:
     enable: false
     url: tcp://10.55.123.124:4439
-    topic: messages/+/data
-    username: username
+    username: vtag_backend
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc

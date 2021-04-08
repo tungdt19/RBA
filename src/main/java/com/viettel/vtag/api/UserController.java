@@ -48,16 +48,17 @@ public class UserController {
     /** {@link UserServiceImpl#save(User)} */
     @PostMapping("/register")
     public Mono<ResponseEntity<ResponseBody>> register(@RequestBody User user) {
-        return userService.save(user).map(registered -> {
-            switch (registered) {
-                case 1:
-                    return ok(of(0, "Created user successfully!"));
-                case -1:
-                    return status(CONFLICT).body(of(1, "User's already existed!"));
-                default:
-                    return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!"));
-            }
-        })
+        return userService.save(user)
+            .map(registered -> {
+                switch (registered) {
+                    case 1:
+                        return ok(of(0, "Created user successfully!"));
+                    case -1:
+                        return status(CONFLICT).body(of(1, "User's already existed!"));
+                    default:
+                        return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!"));
+                }
+            })
             .defaultIfEmpty(status(CONFLICT).body(of(1, "Couldn't create platform user!")))
             .onErrorReturn(status(BAD_REQUEST).body(of(1, "Couldn't create user!")));
     }
@@ -131,9 +132,7 @@ public class UserController {
 
     /** {@see UserServiceImpl#resetPassword} */
     @PostMapping("/password/reset")
-    public ResponseEntity<ResponseBody> resetPassword(
-        @RequestBody ResetPasswordRequest detail, ServerHttpRequest request
-    ) {
+    public ResponseEntity<ResponseBody> resetPassword(@RequestBody ResetPasswordRequest detail) {
         try {
             var reset = userService.resetPassword(detail);
             if (reset > 0) {

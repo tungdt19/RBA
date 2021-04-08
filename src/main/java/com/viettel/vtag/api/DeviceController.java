@@ -1,13 +1,9 @@
 package com.viettel.vtag.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.viettel.vtag.model.transfer.LocationMessage;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.UserService;
-import com.viettel.vtag.utils.CellIdSerializer;
 import com.viettel.vtag.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,7 +92,7 @@ public class DeviceController {
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't update device's name!")));
     }
 
-    @GetMapping("/history")
+    @PostMapping("/history")
     public Mono<ResponseEntity<ResponseBody>> history(
         @RequestBody LocationHistoryRequest detail, ServerHttpRequest request
     ) {
@@ -107,5 +103,19 @@ public class DeviceController {
             .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't fetch history!")))
             .doOnError(e -> log.error("Couldn't fetch history", e))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
+    }
+
+    @PostMapping("/unpair")
+    public Mono<ResponseEntity<ResponseBody>> unpairDevice(
+        @RequestBody PairDeviceRequest detail, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(TokenUtils.getToken(request))
+            .map(userService::checkToken)
+            .doOnNext(user -> log.info("pair device {} to user {}", detail.platformId(), user.phoneNo()))
+            .flatMap(user -> deviceService.unpairDevice(user, detail))
+            .doOnNext(paired -> log.info("paired {}", paired))
+            .then(deviceService.activate(detail))
+            .map(activated -> ok(of(0, "Paired device successfully!")))
+            .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
     }
 }

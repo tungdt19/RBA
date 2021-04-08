@@ -9,6 +9,7 @@ import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.repository.interfaces.LocationHistoryRepository;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
+import com.viettel.vtag.service.interfaces.MqttService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,16 +30,7 @@ public class DeviceServiceImpl implements DeviceService {
     private final DeviceRepository deviceRepository;
     private final IotPlatformService iotPlatformService;
     private final LocationHistoryRepository locationHistory;
-
-    @Override
-    public Mono<Boolean> activate(PairDeviceRequest request) {
-        var endpoint = "/api/devices/" + request.platformId() + "/active";
-        log.info(endpoint);
-        return iotPlatformService.post(endpoint, Map.of("Type", "MAD"))
-            .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
-            .map(response -> response.statusCode().is2xxSuccessful())
-            .filter(activated -> activated);
-    }
+    private final MqttService mqttService;
 
     @Override
     public Mono<Integer> pairDevice(User user, PairDeviceRequest request) {
@@ -51,6 +43,48 @@ public class DeviceServiceImpl implements DeviceService {
             .filter(paired -> paired > 0)
             .map(paired -> deviceRepository.setUserDevice(user, request))
             .doOnNext(saved -> log.info("save user device {}", saved));
+    }
+
+    @Override
+    public Mono<Boolean> activate(PairDeviceRequest request) {
+        var uuid = request.platformId();
+        return Mono.justOrEmpty(uuid)
+            .map(id -> "/api/devices/" + id + "/active")
+            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "MAD")))
+            .doOnNext(response -> log.info("{}: {}", uuid, response.statusCode()))
+            .map(response -> response.statusCode().is2xxSuccessful())
+            .filter(paired -> paired)
+            .doOnNext(response -> mqttService.subscribe(new String[] {
+                "messages/" + uuid + "/battery",
+                "messages/" + uuid + "/data", "messages/" + uuid + "/wificell", "messages/" + uuid + "/devconf"}));
+    }
+
+    @Override
+    public Mono<Integer> unpairDevice(User user, PairDeviceRequest request) {
+        var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
+        return iotPlatformService.delete(endpoint)
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
+            .map(response -> deviceRepository.save(new Device().name("VTAG").platformId(request.platformId())))
+            .doOnNext(saved -> log.info("saved {}", saved))
+            .filter(paired -> paired > 0)
+            .map(paired -> deviceRepository.setUserDevice(user, request))
+            .doOnNext(saved -> log.info("save user device {}", saved));
+    }
+
+    @Override
+    public Mono<Boolean> deactivate(PairDeviceRequest request) {
+        var uuid = request.platformId();
+        return Mono.justOrEmpty(uuid)
+            .map(id -> "/api/devices/" + id + "/active")
+            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "MAD")))
+            .doOnNext(response -> log.info("{}: {}", uuid, response.statusCode()))
+            .map(response -> response.statusCode().is2xxSuccessful())
+            .filter(paired -> paired)
+            .doOnNext(response -> mqttService.unsubscribe(new String[] {
+                "messages/" + uuid + "/data",
+                "messages/" + uuid + "/userdefined/battery",
+                "messages/" + uuid + "/userdefined/wificell", "messages/" + uuid + "/userdefined/devconf"}));
     }
 
     @Override
@@ -75,6 +109,6 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest detail) {
-        return Mono.justOrEmpty(locationHistory.fetch(user, detail)).filter(locations -> locations.size() > 0);
+        return Mono.justOrEmpty(locationHistory.fetch(user, detail));
     }
 }

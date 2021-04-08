@@ -54,8 +54,8 @@ public class MqttHandler implements MqttCallback {
      * @see MqttCallback#connectionLost(Throwable)
      */
     @Override
-    public void connectionLost(Throwable cause) {
-        log.error("MQTT connection lost!", cause);
+    public void connectionLost(Throwable e) {
+        log.error("MQTT connection: {}", e.getMessage());
     }
 
     /**
@@ -131,9 +131,9 @@ public class MqttHandler implements MqttCallback {
 
     private void handleSosMessage(String subtopic, UUID deviceId, LocationMessage payload) {
         log.info("Received an SOS message: {}", payload);
-        var locationMono = convert(payload);
+        var locationMono = convert(payload).doOnNext(location -> log.info("Converted: {}", location));
 
-        locationMono.subscribe(o -> notifyApp(deviceId, o));
+        locationMono.subscribe(location -> notifyApp(deviceId, location));
         locationMono.subscribe(location -> locationHistory.save(deviceId, location));
     }
 

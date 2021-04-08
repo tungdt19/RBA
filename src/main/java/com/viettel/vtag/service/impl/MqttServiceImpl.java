@@ -1,6 +1,5 @@
 package com.viettel.vtag.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.MqttService;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +19,6 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class MqttServiceImpl implements MqttService {
 
-    private final ObjectMapper mapper = new ObjectMapper();
-
     private final MqttClient client;
     private final DeviceRepository deviceRepository;
 
@@ -34,12 +31,22 @@ public class MqttServiceImpl implements MqttService {
         var uuids = deviceRepository.fetchAllDevices();
         for (var uuid : uuids) {
             try {
-                var id = uuid.toString();
-                log.info("Subscribing {}", id);
-                client.subscribe(id, qos);
+                client.subscribe(new String[] {
+                    "messages/" + uuid + "/data",
+                    "messages/" + uuid + "/userdefined/battery",
+                    "messages/" + uuid + "/userdefined/wificell", "messages/" + uuid + "/userdefined/devconf"});
             } catch (MqttException e) {
-                log.error("sub", e);
+                log.error("Cannot subscribe to uuid {}: {}", uuid, e.getMessage());
             }
+        }
+    }
+
+    @Override
+    public void subscribe(String[] topics) {
+        try {
+            client.subscribe(topics, new int[] {qos});
+        } catch (MqttException e) {
+            log.error("Couldn't subscribe to topics {}", Arrays.toString(topics), e);
         }
     }
 
@@ -47,6 +54,15 @@ public class MqttServiceImpl implements MqttService {
     public void subscribe(String topic, int qos) throws MqttException {
         var token = client.subscribeWithResponse(topic, qos);
         log.info("MQTT token {}: {}", token.isComplete(), Arrays.toString(token.getTopics()));
+    }
+
+    @Override
+    public void unsubscribe(String[] topics) {
+        try {
+            client.unsubscribe(topics);
+        } catch (MqttException e) {
+            log.error("Couldn't subscribe to topics {}", Arrays.toString(topics), e);
+        }
     }
 
     @Override

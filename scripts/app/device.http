@@ -51,3 +51,16 @@ Content-Type: application/json
 ### 200 {"code": 0, "message": "Changed device's name successfully!"}
 ### 417 {"code": 1, "message": "Couldn't update device's name!"}
 ### 500 {"code": 1, "message": "Couldn't update device's name!"}
+
+
+
+###
+POST http://{{host}}/vtag/device/history
+Authorization: Bearer {{vtag_token}}
+Content-Type: application/json
+
+{
+    "device_id": "d61e77a7-6794-40ba-95e9-c7900e4e5f8e",
+    "from": 0,
+    "to": 10000000000
+}

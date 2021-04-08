@@ -1,5 +1,5 @@
 ### --------------------------------------------------------------------------------------------------------------------
-GET http://{{host}}/vtag/test/mqtt
+GET http://{{host}}/vtag/test/mqtt/sub
     ?id=691e700f-9b1c-477f-a2fc-3699de6e3d15
     &subtopic=events
 
@@ -118,4 +118,9 @@ Content-Type: application/json
 
 ### SMS
 GET http://{{host}}/vtag/test/sms?recipient=0365819777&content="Hello world"
+
+
+### wifi cell ----------------------------------------------------------------------------------------------------------
+POST http://{{host}}:8080/vtag/test/json
+Content-Type: application/json
 

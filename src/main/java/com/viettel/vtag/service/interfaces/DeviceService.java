@@ -10,11 +10,15 @@ import java.util.List;
 
 public interface DeviceService {
 
-    Mono<Boolean> activate(PairDeviceRequest detail);
-
     Mono<Integer> pairDevice(User user, PairDeviceRequest request);
 
-    Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest detail);
+    Mono<Boolean> activate(PairDeviceRequest request);
+
+    Mono<Integer> unpairDevice(User user, PairDeviceRequest request);
+
+    Mono<Boolean> deactivate(PairDeviceRequest request);
+
+    Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest request);
 
     Mono<Integer> addViewer(User user, AddViewerRequest deviceId);
 
@@ -22,5 +26,5 @@ public interface DeviceService {
 
     Mono<List<Device>> getList(User user);
 
-    Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest detail);
+    Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 }

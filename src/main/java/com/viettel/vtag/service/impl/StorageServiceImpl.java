@@ -12,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.PostConstruct;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.util.stream.Stream;
@@ -38,7 +37,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public String store(String folder, MultipartFile file) {
-        try (InputStream inputStream = file.getInputStream()) {
+        try (var inputStream = file.getInputStream()) {
             if (file.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
             }

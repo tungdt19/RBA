@@ -1,7 +1,8 @@
 package com.viettel.vtag.repository.impl;
 
 import com.viettel.vtag.model.ILocation;
-import com.viettel.vtag.model.entity.*;
+import com.viettel.vtag.model.entity.LocationHistory;
+import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.LocationHistoryRequest;
 import com.viettel.vtag.repository.interfaces.LocationHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +29,9 @@ public class LocationHistoryRepositoryImpl implements LocationHistoryRepository 
 
     @Override
     public List<LocationHistory> fetch(User user, LocationHistoryRequest request) {
-        var sql = "SELECT lh.device_id, latitude, longitude, trigger_instant FROM location_history lh "
-            + "JOIN user_role ur ON lh.device_id = ur.device_id WHERE user_id = ? AND lh.device_id = ? "
-            + "AND trigger_instant > ? AND trigger_instant < ?";
+        var sql = "SELECT latitude, longitude, trigger_instant FROM location_history lh "
+            + "JOIN user_role ur ON lh.device_id = ur.device_id WHERE lh.device_id = ur.device_id AND ur.user_id = ? "
+            + "AND lh.device_id = ? AND trigger_instant > ? AND trigger_instant < ?";
         return jdbc.query(sql, new Object[] {user.id(), request.deviceId(), request.from(), request.to()},
             (rs, num) -> new LocationHistory().deviceId(rs.getObject("device_id", UUID.class))
                 .latitude(rs.getDouble("latitude"))

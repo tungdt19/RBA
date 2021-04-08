@@ -13,7 +13,7 @@ Content-Type: application/json
 POST http://{{host}}/vtag/user/register
 Content-Type: application/json
 
-{"phone": "0365819777", "password": "test"}
+{"phone": "0365819888", "password": "test"}
 
 ### {"code": 0, "message": "Created user successfully!"}
 ### {"code": 1, "message": "Some error!"}
@@ -31,8 +31,8 @@ POST http://{{host}}/vtag/user/token
 Content-Type: application/json
 
 {
-    "username": "84365819777",
-    "password": "test"
+    "username": "84365731814",
+    "password": "Test1aA@"
 }
 
 > {%

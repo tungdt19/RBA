@@ -81,12 +81,4 @@ VALUES
     (1, 'ROLE_OWNER'),
     (2, 'ROLE_VIEWER');
 
-INSERT INTO end_user(phone_no, password)
-VALUES
-('84365819777', '$2a$10$JjHwyUDVisZZwqFPPU5I5OFC4JaXnsvXLi/JRKhsdYzhQWbDezl2G');
-
-INSERT INTO end_user(phone_no, password)
-VALUES
-('84365731814', '$2a$10$qh02zcA0vzdFya0EpO59dOrxGwGZwxLgVExg6ZC2tyyu.27izBGbS'),
-('84869999904', '$2a$10$jQzz7NLdCAtS6OzlRt6t2uARre5xi/BdwFI8F5a4S30INkWEE0yty');
 

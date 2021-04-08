@@ -35,6 +35,9 @@ public class TestController {
         }
     }
 
+    // @GetMapping("/mqtt/sub")
+    // public
+
     @GetMapping("/mqtt/sub")
     public ResponseEntity<Map<String, Object>> subscribe(
         @RequestParam("id") String id, @RequestParam("subtopic") String subtopic
