@@ -57,7 +57,9 @@ public class UserController {
                 default:
                     return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!"));
             }
-        }).onErrorReturn(status(BAD_REQUEST).body(of(1, "Couldn't create user!")));
+        })
+            .defaultIfEmpty(status(CONFLICT).body(of(1, "Couldn't create platform user!")))
+            .onErrorReturn(status(BAD_REQUEST).body(of(1, "Couldn't create user!")));
     }
 
     @PostMapping("/otp/reset")
@@ -138,11 +140,11 @@ public class UserController {
                 return ok(of(0, "Changed password successfully!"));
             }
 
-            return status(BAD_REQUEST).body(of(1, "Couldn't change password!"));
+            return status(BAD_REQUEST).body(of(1, "Couldn't reset password!"));
         } catch (Exception e) {
-            log.error("Couldn't change password", e);
+            log.error("Couldn't reset password", e);
             return status(INTERNAL_SERVER_ERROR).body(
-                of(1, "Couldn't change password!", Map.of("detail", String.valueOf(e.getMessage()))));
+                of(1, "Couldn't reset password!", Map.of("detail", String.valueOf(e.getMessage()))));
         }
     }
 

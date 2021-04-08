@@ -73,7 +73,7 @@ vtag:
 spring:
   profiles: production
   datasource:
-    jdbcUrl: jdbc:postgresql://10.55.121.73:5432/postgres?useSSL=false
+    jdbcUrl: jdbc:postgresql://10.55.121.73:4446/postgres?useSSL=false
     username: postgres
     password: 1
   sms-datasource:

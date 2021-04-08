@@ -3,6 +3,7 @@ package com.viettel.vtag.api;
 import com.viettel.vtag.service.interfaces.CommunicationService;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/test")
@@ -26,7 +28,11 @@ public class TestController {
 
     @PostMapping("/sms")
     public void sendSms(@RequestParam String recipient, @RequestParam String content) {
-        communicationService.sendSms(recipient, content);
+        try {
+            communicationService.sendSms(recipient, content);
+        } catch (Exception e) {
+            log.error("sms error", e);
+        }
     }
 
     @GetMapping("/mqtt/sub")

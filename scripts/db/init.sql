@@ -1,21 +1,24 @@
 CREATE TABLE IF NOT EXISTS end_user (
     id                SERIAL PRIMARY KEY,
     username          VARCHAR UNIQUE,
-    password          VARCHAR,
+    phone_no          VARCHAR UNIQUE,
     first_name        VARCHAR,
     last_name         VARCHAR,
     email             VARCHAR UNIQUE,
-    phone_no          VARCHAR UNIQUE,
     avatar            VARCHAR,
+    password          VARCHAR,
     fcm_token         VARCHAR,
-    platform_group_id UUID -- platform's group ID
+    platform_group_id UUID UNIQUE -- platform's group ID
 );
 
 CREATE TABLE IF NOT EXISTS device (
     id                 SERIAL PRIMARY KEY,
     name               VARCHAR,
     imei               VARCHAR(50) UNIQUE,
-    platform_device_id UUID UNIQUE
+    platform_device_id UUID UNIQUE,
+    battery            INT,
+    status             VARCHAR,
+    geofencing         INT
 );
 
 CREATE TABLE IF NOT EXISTS app_role (
@@ -80,7 +83,7 @@ VALUES
 
 INSERT INTO end_user(phone_no, password)
 VALUES
-('$2a$10$JjHwyUDVisZZwqFPPU5I5OFC4JaXnsvXLi/JRKhsdYzhQWbDezl2G', '84365819777');
+('84365819777', '$2a$10$JjHwyUDVisZZwqFPPU5I5OFC4JaXnsvXLi/JRKhsdYzhQWbDezl2G');
 
 INSERT INTO end_user(phone_no, password)
 VALUES

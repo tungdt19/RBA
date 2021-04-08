@@ -5,14 +5,17 @@
 # echo -e "\nalias fm='$(pwd)/fm'\nalias fma='fm a'\nalias fmg='fm g'\nalias fmp='fm p'" >> ~/.bashrc
 # source ~/.bashrc
 
+echo "VTAG BACKEND DEPLOYMENT UTILITIES"
+
 FOLDER="/home/vht/be"
 PROFILE="production"
 PORT="8080"
 BASE_NAME="iot-vtag"
-CONTAINER="vtag/be"
+CONTAINER="vtag.be"
+IMAGE="vtag/be"
 
 if [ $# -eq 0 ]; then
-  docker ps -a | grep $BASE_NAME
+  docker container ls -f name="$CONTAINER"
   exit 0;
 fi
 
@@ -27,46 +30,53 @@ dockerfile() {
   {
     echo "FROM openjdk"
     echo 'LABEL maintainer="duclm22@viettel.com.vn"'
-    echo "COPY ./$BASE_NAME-$VERSION.jar ./[a]pplication.yml /be"
-    echo "RUN echo \"Asia/Ho_Chi_Minh\" > /etc/timezone"
-    echo "RUN echo \"10.55.123.124 api.iotcloud.com.vn iotcloud.com.vn\" > /etc/hosts"
-    echo "CMD [\"java\", \"-jar\", \"/be/$BASE_NAME-$VERSION.jar\", \"-Dspring.profiles.active=$PROFILE\"]"
+    echo "COPY ./$BASE_NAME-$VERSION.jar /"
+    echo 'RUN echo "Asia/Ho_Chi_Minh" > /etc/timezone'
+    echo 'RUN echo "10.55.123.124 api.iotcloud.com.vn iotcloud.com.vn" > /etc/hosts'
+    echo "CMD [\"java\", \"-jar\", \"/$BASE_NAME-$VERSION.jar\", \"-Dspring.profiles.active=$PROFILE\"]"
   } > "$FOLDER/$MODULE/Dockerfile"
 }
 
 build() {
+  echo "--> Building container $IMAGE"
   docker build -t "$IMAGE:$VERSION" "$FOLDER"
 }
 
 run() {
-  docker run -dp "$PORT:$PORT" --name $CONTAINER -e "SPRING_PROFILES_ACTIVE=$PROFILE" "$CONTAINER:$VERSION"
+  docker run -dp "$PORT:$PORT" --name $CONTAINER -e "SPRING_PROFILES_ACTIVE=$PROFILE" \
+     --add-host=api.iotcloud.com.vn:10.55.123.124 "$IMAGE:$VERSION"
 }
 
 remove() {
-  docker rm $CONTAINER
+  echo "--> Removing container $CONTAINER"
+  docker rm "$CONTAINER"
 }
 
 stop() {
-  docker stop $CONTAINER
+  echo "--> Stopping container $CONTAINER"
+  docker stop "$CONTAINER"
 }
 
 restart() {
-  docker restart $CONTAINER
+  echo "--> Restarting container $CONTAINER"
+  docker restart "$CONTAINER"
 }
 
 log_follow() {
-  docker logs -f --since "10m" $CONTAINER
+  echo "--> Following container $CONTAINER"
+  docker logs -f --since "10m" "$CONTAINER"
 }
 
 log_history() {
-  docker logs $CONTAINER 2>&1 | less -R
+  docker logs "$CONTAINER" 2>&1 | less -R
 }
 
 ssh() {
-  docker exec -it $CONTAINER bash
+  echo "--> Opening container $CONTAINER"
+  docker exec -it "$CONTAINER" bash
 }
 
-for i in "${@:2}"; do
+for i in "${@}"; do
   case "$i" in
     r | run)              run ;;
     S | ssh)              ssh ;;
@@ -76,7 +86,7 @@ for i in "${@:2}"; do
     R | re | restart)     restart ;;
     f | '' | lf | follow) log_follow ;;
     h | lh | history)     log_history ;;
-    u | up | upgrade)     dockerfile; build; stop; remove; run ;;
+    u | up | upgrade)     dockerfile; build; stop; remove; run; log_follow ;;
     *)                    echo "Do not recognize command '$2'" ;;
   esac
 done

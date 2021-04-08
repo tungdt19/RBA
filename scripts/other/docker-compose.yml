@@ -1,5 +1,7 @@
 version: "3.9"
 services:
+# docker run -dp 5432:5432 -e POSTGRES_PASSWORD=1 -e TZ=GMT+7 -v /home/vht/be/init/:/docker-entrypoint-initdb.d
+#  -v ~/be/data/postgres:/var/lib/postgres/data --name postgres postgres:latest
   postgres:
     container_name: postgres
     image: postgres:lastest
@@ -10,7 +12,7 @@ services:
       - ~/data/postgres:/var/lib/postgresql/data
       - ~/be/init/:/docker-entrypoint-initdb.d
     ports:
-      - 5432:5432
+      - 4446:5432
 
   mysql:
     container_name: mysql

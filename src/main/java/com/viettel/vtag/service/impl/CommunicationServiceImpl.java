@@ -17,9 +17,11 @@ import java.sql.SQLException;
 @Service
 public class CommunicationServiceImpl implements CommunicationService {
 
-    @Setter
-    @Qualifier("sms-jdbc")
-    private JdbcTemplate jdbc;
+    private final JdbcTemplate jdbc;
+
+    public CommunicationServiceImpl(@Qualifier("sms-jdbc") JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
 
     @Override
     public void send(OtpRequest request, String content) {
