@@ -45,6 +45,9 @@ public class IotPlatformServiceImpl implements IotPlatformService {
     @Value("${vtag.platform.client-secret}")
     private String clientSecret;
 
+    @Value("${vtag.mqtt.password}")
+    private String deviceToken;
+
     @PostConstruct
     public void init() {
         webClientBuilder = WebClient.builder()
@@ -78,6 +81,16 @@ public class IotPlatformServiceImpl implements IotPlatformService {
             .get()
             .uri(endpoint)
             .header("Authorization", platformToken.toString())
+            .exchange();
+    }
+
+    @Override
+    public Mono<ClientResponse> getWithToken(String endpoint) {
+        return webClientBuilder.build()
+            .get()
+            .uri(endpoint)
+            .header("Authorization", platformToken.toString())
+            .header("Token", deviceToken)
             .exchange();
     }
 

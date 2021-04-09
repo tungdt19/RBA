@@ -32,6 +32,6 @@ public class LocationMessage implements ILocation {
     public Integer accuracy;
 
     public static LocationMessage fromLocation(Location location) {
-        return new LocationMessage().type("").latitude(location.latitude()).longitude(location.longitude());
+        return new LocationMessage().type("CPOS").latitude(location.latitude()).longitude(location.longitude());
     }
 }

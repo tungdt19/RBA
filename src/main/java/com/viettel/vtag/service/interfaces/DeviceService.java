@@ -4,9 +4,11 @@ import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.model.entity.LocationHistory;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface DeviceService {
 
@@ -27,4 +29,6 @@ public interface DeviceService {
     Mono<List<Device>> getList(User user);
 
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
+
+    Mono<ClientResponse> getMessages(User user, UUID deviceId);
 }

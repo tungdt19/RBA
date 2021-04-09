@@ -18,7 +18,11 @@ CREATE TABLE IF NOT EXISTS device (
     platform_device_id UUID UNIQUE,
     battery            INT,
     status             VARCHAR,
-    geofencing         INT
+    last_lat           FLOAT8,
+    last_lon           FLOAT8,
+    geo_status         BOOLEAN,
+    geo_count          INT,
+    geo_data           JSONB
 );
 
 CREATE TABLE IF NOT EXISTS app_role (

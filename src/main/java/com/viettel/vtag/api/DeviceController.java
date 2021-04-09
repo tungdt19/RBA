@@ -2,6 +2,7 @@ package com.viettel.vtag.api;
 
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.ResponseBody;
+import com.viettel.vtag.model.response.ResponseJson;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.UserService;
 import com.viettel.vtag.utils.TokenUtils;
@@ -12,8 +13,8 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 import static com.viettel.vtag.model.response.ResponseBody.of;
@@ -85,8 +86,7 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseBody>> updateName(
         @RequestBody ChangeDeviceNameRequest detail, ServerHttpRequest request
     ) {
-        return Mono.justOrEmpty(TokenUtils.getToken(request))
-            .map(userService::checkToken)
+        return Mono.justOrEmpty(userService.checkToken(request))
             // .map(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")))
             .flatMap(user -> deviceService.updateDeviceName(user, detail))
             .map(added -> ok(of(0, "Changed device's name successfully!")))
@@ -102,29 +102,48 @@ public class DeviceController {
         @RequestParam String to,
         ServerHttpRequest request
     ) {
-        return Mono.justOrEmpty(TokenUtils.getToken(request))
-            .map(userService::checkToken)
-            .zipWith(Mono.just(new LocationHistoryRequest().deviceId(UUID.fromString(deviceId))
+        try {
+            var requestMono = Mono.just(new LocationHistoryRequest().deviceId(UUID.fromString(deviceId))
                 .from(LocalDateTime.parse(from))
-                .to(LocalDateTime.parse(to))))
-            .flatMap(req -> deviceService.fetchHistory(req.getT1(), req.getT2()))
-            .map(history -> ok(of(0, "Okie dokie!", history)))
-            .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't find any history!")))
-            .doOnError(e -> log.error("Error fetching history", e))
-            .onErrorReturn(DateTimeException.class, badRequest().body(of(1, "Invalid date time format!")))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
+                .to(LocalDateTime.parse(to)));
+            return Mono.justOrEmpty(TokenUtils.getToken(request))
+                .map(userService::checkToken)
+                .zipWith(requestMono)
+                .flatMap(req -> deviceService.fetchHistory(req.getT1(), req.getT2()))
+                .map(history -> ok(of(0, "Okie dokie!", history)))
+                .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't find any history!")))
+                .doOnError(e -> log.error("Error fetching history", e))
+                .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
+        } catch (DateTimeParseException e) {
+            return Mono.just(badRequest().body(of(1, "Invalid date time format!")));
+        }
     }
 
     @PostMapping("/unpair")
     public Mono<ResponseEntity<ResponseBody>> unpairDevice(
         @RequestBody PairDeviceRequest detail, ServerHttpRequest request
     ) {
-        return Mono.justOrEmpty(TokenUtils.getToken(request))
-            .map(userService::checkToken)
-            .doOnNext(user -> log.info("pair device {} to user {}", detail.platformId(), user.phoneNo()))
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .doOnNext(user -> log.info("unpair device {} from user {}", detail.platformId(), user.phoneNo()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
             .then(deviceService.activate(detail))
             .map(activated -> ok(of(0, "Paired device successfully!")))
+            .doOnError(e -> log.error("Error on unpair {}", detail.platformId(), e))
             .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
+    }
+
+    @GetMapping("/messages")
+    public Mono<ResponseEntity<ResponseJson>> getMessages(
+        @RequestParam("device_id") String deviceId, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .zipWith(Mono.just(UUID.fromString(deviceId)))
+            .doOnNext(tuple -> log.info("get messages for user {} - device {}", tuple.getT1().platformId(), deviceId))
+            .flatMap(tuple -> deviceService.getMessages(tuple.getT1(), tuple.getT2()))
+            .doOnNext(response -> log.info("get msg response {}", response.statusCode()))
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .flatMap(response -> response.bodyToMono(String.class))
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!").json(content)))
+            .defaultIfEmpty(status(NO_CONTENT).body(ResponseJson.of(1, "Couldn't get any response")));
     }
 }

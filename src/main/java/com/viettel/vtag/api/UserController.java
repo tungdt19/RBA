@@ -117,7 +117,7 @@ public class UserController {
     ) {
         var user = userService.checkToken(request);
         if (user == null) {
-            return Mono.just(status(UNAUTHORIZED).body(of(1, "")));
+            return Mono.just(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")));
         }
 
         return userService.changePassword(user, passwordRequest)

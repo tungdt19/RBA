@@ -33,8 +33,8 @@ public class UserServiceImpl implements UserService {
     public Mono<Integer> save(User user) {
         var phone = PhoneUtils.standardize(user);
         return iotPlatformService.post("/api/groups", Map.of("name", phone))
-            .filter(response -> response.statusCode().is2xxSuccessful())
             .doOnNext(response -> log.info("register user {}: {}", phone, response.statusCode()))
+            .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(entity -> entity.bodyToMono(Identity.class))
             .map(identity -> user.platformId(UUID.fromString(identity.id())))
             .map(userRepository::register)

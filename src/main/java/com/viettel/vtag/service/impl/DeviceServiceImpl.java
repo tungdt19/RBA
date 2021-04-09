@@ -14,10 +14,12 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Data
 @Slf4j
@@ -117,5 +119,13 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest detail) {
         return Mono.justOrEmpty(locationHistory.fetch(user, detail));
+    }
+
+    @Override
+    public Mono<ClientResponse> getMessages(User user, UUID deviceId) {
+        var endpoint = "/api/messages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
+            + "&topic=data,battery,wificell&offset=0&limit=100";
+        log.info("msg endpoint {}", endpoint);
+        return iotPlatformService.getWithToken(endpoint);
     }
 }

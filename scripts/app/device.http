@@ -42,7 +42,7 @@ Content-Type: application/json
 
 {
     "name": "Name 1",
-    "platform_id": "d61e77a7-6794-40ba-95e9-c7900e4e5f8e"
+    "platform_id": "7b762bf8-f157-467c-8f3d-a9d1eb342e35"
 }
 
 ### 200 {"code": 0, "message": "Changed device's name successfully!"}
@@ -61,3 +61,22 @@ Content-Type: application/json
     "from": 0,
     "to": 10000000000
 }
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/device/unpair
+Authorization: Bearer {{vtag_token}}
+Content-Type: application/json
+
+{
+    "device_id": "d61e77a7-6794-40ba-95e9-c7900e4e5f8e"
+}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+GET http://{{host}}/vtag/device/messages?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
+Authorization: Bearer {{vtag_token}}
+Content-Type: application/json
+

@@ -30,8 +30,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     private Device parseDevice(ResultSet rs, int i) throws SQLException {
-        return new Device()
-            .id(rs.getInt("id"))
+        return new Device().id(rs.getInt("id"))
             .name(rs.getString("name"))
             .imei(rs.getString("imei"))
             .battery(rs.getInt("battery"))
@@ -59,8 +58,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public int updateName(User user, ChangeDeviceNameRequest request) {
-        var sql = "UPDATE device d SET name = ? FROM user_role ur WHERE ur.device_id = d.id AND ur.user_id = ? "
-            + "AND role_id = 1 AND device_id = ?";
+        var sql = "UPDATE device d SET name = ? FROM user_role ur WHERE d.id = ur.device_id AND ur.user_id = ? "
+            + "AND role_id = 1 AND d.platform_device_id = ?";
         return jdbc.update(sql, request.name(), user.id(), request.platformId());
     }
 
@@ -107,6 +106,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     @Override
     public int updateConfig(UUID platformDeviceId, ConfigMessage config) {
         var sql = "UPDATE device SET status = ? WHERE platform_device_id = ?";
+        log.info("Device {}; MMC {}", platformDeviceId, config.MMC());
+        log.info("MMC mode {}", config.MMC().modeString());
         return jdbc.update(sql, config.MMC().modeString(), platformDeviceId);
     }
 
