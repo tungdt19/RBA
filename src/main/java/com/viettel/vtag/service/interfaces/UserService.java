@@ -12,7 +12,7 @@ public interface UserService {
 
     String createToken(TokenRequest request);
 
-    int changePassword(User user, ChangePasswordRequest password);
+    Mono<Integer> changePassword(User user, ChangePasswordRequest password);
 
     int resetPassword(ResetPasswordRequest request);
 

@@ -9,7 +9,9 @@ public interface MqttService {
 
     void subscribe(String topic, int qos) throws MqttException;
 
-    void unsubscribe(String[] topics);
-
     void publish(String topic, MqttMessage message) throws MqttException;
+
+    void publish(String topic, Object object) throws MqttException;
+
+    void unsubscribe(String[] topics);
 }

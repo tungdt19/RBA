@@ -5,4 +5,6 @@ public interface ILocation {
     double latitude();
 
     double longitude();
+
+    Integer accuracy();
 }

@@ -112,22 +112,19 @@ public class UserController {
     }
 
     @PostMapping("/password")
-    public ResponseEntity<ResponseBody> changePassword(
+    public Mono<ResponseEntity<ResponseBody>> changePassword(
         @RequestBody ChangePasswordRequest passwordRequest, ServerHttpRequest request
     ) {
-        try {
-            var user = userService.checkToken(request);
-            var changed = userService.changePassword(user, passwordRequest);
-            if (changed > 0) {
-                return ok(of(0, "Changed password successfully!"));
-            }
-
-            return status(BAD_REQUEST).body(of(1, "Couldn't change password!"));
-        } catch (Exception e) {
-            log.error("change password", e);
-            var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't change password!", detail));
+        var user = userService.checkToken(request);
+        if (user == null) {
+            return Mono.just(status(UNAUTHORIZED).body(of(1, "")));
         }
+
+        return userService.changePassword(user, passwordRequest)
+            .filter(changed -> changed > 0)
+            .map(changed -> ok(of(0, "Changed password successfully!")))
+            .defaultIfEmpty(status(BAD_REQUEST).body(of(1, "Couldn't change password!")))
+            .onErrorContinue((e, o) -> status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't change password!")));
     }
 
     /** {@see UserServiceImpl#resetPassword} */

@@ -4,13 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.Notification;
 import com.viettel.vtag.config.MqttConfig;
+import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Location;
 import com.viettel.vtag.model.transfer.*;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.repository.interfaces.LocationHistoryRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
+import com.viettel.vtag.service.interfaces.MqttService;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +43,9 @@ public class MqttHandler implements MqttCallback {
     private final LocationHistoryRepository locationHistory;
     private final MessageSource messageSource;
 
+    @Setter
+    private MqttService mqttService;
+
     @Value("${vtag.unwired.base-url}")
     private String convertAddress;
 
@@ -52,7 +58,7 @@ public class MqttHandler implements MqttCallback {
     /** @see MqttCallback#connectionLost(Throwable) */
     @Override
     public void connectionLost(Throwable e) {
-        log.error("MQTT connection: {}", e.getMessage());
+        log.error("MQTT connection lost", e);
     }
 
     /**
@@ -67,43 +73,45 @@ public class MqttHandler implements MqttCallback {
 
         try {
             switch (subtopic) {
-                case "wificell":
-                    convertLocation(deviceId, payload);
-                    break;
                 case "data":
                     handleGpsMessage(deviceId, payload);
                     break;
-                case "battery":
+                case "userdefined/wificell":
+                    handleWificellMessage(deviceId, payload);
+                    break;
+                case "userdefined/battery":
                     updateBattery(deviceId, payload);
                     break;
-                case "devconf":
+                case "userdefined/devconf":
                     updateConfig(deviceId, payload);
                     break;
+                default:
+                    log.warn("Do not recognize subtopic '{}'", subtopic);
             }
         } catch (JsonProcessingException e) {
             log.error("Couldn't parse MQTT payload from sub topic '{}': {}", subtopic, e.getMessage());
         }
     }
 
-    private void convertLocation(UUID deviceId, String payload) throws JsonProcessingException {
-        var data = mapper.readValue(payload, LocationMessage.class);
+    private void handleGpsMessage(UUID deviceId, String payload) throws JsonProcessingException {
+        log.info("Received an GPS message: {}", payload);
+        var gps = mapper.readValue(payload, LocationMessage.class);
+        locationHistory.save(deviceId, gps);
+    }
+
+    private void handleWificellMessage(UUID deviceId, String payload) throws JsonProcessingException {
+        var data = mapper.readValue(payload, CellWifiMessage.class);
 
         switch (data.type()) {
             case "DSOS":
-                handleSosMessage(deviceId, data);
+                convertWifiCell(deviceId, data).doOnNext(locationMessage -> notifyApp(deviceId, locationMessage));
                 break;
             case "DWFC":
-                handleWifiMessage(deviceId, data);
+                convertWifiCell(deviceId, data);
                 break;
             default:
                 log.info("Do not recognize message {}", payload);
         }
-    }
-
-    private void handleGpsMessage(UUID deviceId, String payload) throws JsonProcessingException {
-        log.info("Received an GPS message: {}", payload);
-        var gps = mapper.readValue(payload, GpsMessage.class);
-        locationHistory.save(deviceId, gps);
     }
 
     private void updateBattery(UUID deviceId, String payload) throws JsonProcessingException {
@@ -126,34 +134,21 @@ public class MqttHandler implements MqttCallback {
         }
     }
 
-    private void handleSosMessage(UUID deviceId, LocationMessage payload) {
-        log.info("Received an SOS message: {}", payload);
-        var locationMono = convert(payload).doOnNext(location -> log.info("Converted: {}", location));
-
-        locationMono.subscribe(location -> notifyApp(deviceId, location));
-        locationMono.subscribe(location -> locationHistory.save(deviceId, location));
+    private Mono<LocationMessage> convertWifiCell(UUID deviceId, CellWifiMessage payload) {
+        return convert(payload).doOnNext(location -> log.info("Converted message from {}: {}", deviceId, location))
+            .doOnNext(location -> locationHistory.save(deviceId, location))
+            .map(LocationMessage::fromLocation)
+            .doOnNext(location -> {
+                var topic = "messages/" + deviceId + "/data";
+                try {
+                    mqttService.publish(topic, location);
+                } catch (MqttException e) {
+                    log.error("Couldn't publish location {} to topic '{}'", location, topic, e);
+                }
+            });
     }
 
-    private void handleWifiMessage(UUID deviceId, LocationMessage payload) {
-        log.info("Received an Wifi message: {}", payload);
-        convert(payload).subscribe(location -> locationHistory.save(deviceId, location));
-    }
-
-    public Mono<Location> convert(LocationMessage json) {
-        return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(httpClient))
-            .baseUrl(convertAddress)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build()
-            .post()
-            .uri(convertUri)
-            .bodyValue(json.token(convertToken))
-            .exchange()
-            .filter(response -> response.statusCode().is2xxSuccessful())
-            .flatMap(response -> response.bodyToMono(Location.class));
-    }
-
-    private void notifyApp(UUID deviceId, Location location) {
+    private void notifyApp(UUID deviceId, ILocation location) {
         //@formatter:off
         var notification= Notification.builder()
             .setTitle(messageSource.getMessage("message.sos.title", new Object[] {}, Locale.ENGLISH))
@@ -167,15 +162,29 @@ public class MqttHandler implements MqttCallback {
         //@formatter:off
     }
 
+    public Mono<Location> convert(CellWifiMessage json) {
+        return WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .baseUrl(convertAddress)
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build()
+            .post()
+            .uri(convertUri)
+            .bodyValue(json.token(convertToken))
+            .exchange()
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .flatMap(response -> response.bodyToMono(Location.class));
+    }
+
     /**
      * @see MqttCallback#deliveryComplete(IMqttDeliveryToken)
      */
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         try {
-            log.info("{}: {}", Arrays.toString(token.getTopics()), token.getMessage());
+            log.info("deliveryComplete {}: {}", Arrays.toString(token.getTopics()), token.getMessage());
         } catch (MqttException e) {
-            log.error("deliveryComplete", e);
+            log.error("Error on deliveryComplete", e);
         }
     }
 }

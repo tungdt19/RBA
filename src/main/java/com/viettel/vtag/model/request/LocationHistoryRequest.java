@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -18,8 +19,8 @@ public class LocationHistoryRequest {
     private UUID deviceId;
 
     @JsonProperty
-    private Timestamp from;
+    private LocalDateTime from;
 
     @JsonProperty
-    private Timestamp to;
+    private LocalDateTime to;
 }

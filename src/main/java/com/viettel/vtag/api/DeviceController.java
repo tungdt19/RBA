@@ -12,10 +12,13 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import static com.viettel.vtag.model.response.ResponseBody.of;
 import static org.springframework.http.HttpStatus.*;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.springframework.http.ResponseEntity.status;
+import static org.springframework.http.ResponseEntity.*;
 
 @Slf4j
 @RestController
@@ -92,16 +95,23 @@ public class DeviceController {
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't update device's name!")));
     }
 
-    @PostMapping("/history")
+    @GetMapping("/history")
     public Mono<ResponseEntity<ResponseBody>> history(
-        @RequestBody LocationHistoryRequest detail, ServerHttpRequest request
+        @RequestParam("device_id") String deviceId,
+        @RequestParam String from,
+        @RequestParam String to,
+        ServerHttpRequest request
     ) {
         return Mono.justOrEmpty(TokenUtils.getToken(request))
             .map(userService::checkToken)
-            .flatMap(user -> deviceService.fetchHistory(user, detail))
+            .zipWith(Mono.just(new LocationHistoryRequest().deviceId(UUID.fromString(deviceId))
+                .from(LocalDateTime.parse(from))
+                .to(LocalDateTime.parse(to))))
+            .flatMap(req -> deviceService.fetchHistory(req.getT1(), req.getT2()))
             .map(history -> ok(of(0, "Okie dokie!", history)))
-            .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't fetch history!")))
-            .doOnError(e -> log.error("Couldn't fetch history", e))
+            .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't find any history!")))
+            .doOnError(e -> log.error("Error fetching history", e))
+            .onErrorReturn(DateTimeException.class, badRequest().body(of(1, "Invalid date time format!")))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
     }
 
@@ -113,7 +123,6 @@ public class DeviceController {
             .map(userService::checkToken)
             .doOnNext(user -> log.info("pair device {} to user {}", detail.platformId(), user.phoneNo()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
-            .doOnNext(paired -> log.info("paired {}", paired))
             .then(deviceService.activate(detail))
             .map(activated -> ok(of(0, "Paired device successfully!")))
             .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));

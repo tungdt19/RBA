@@ -101,9 +101,8 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User findByToken(String token) {
         try {
-            var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email,"
-                + " phone_no, avatar, fcm_token, platform_group_id FROM token t LEFT JOIN end_user u ON t.user_id = u"
-                + ".id"
+            var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email, "
+                + "phone_no, avatar, fcm_token, platform_group_id FROM token t LEFT JOIN end_user u ON t.user_id = u.id"
                 + " WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
             return jdbc.queryForObject(sql, new Object[] {UUID.fromString(token)}, this::mapUser);
         } catch (IncorrectResultSizeDataAccessException e) {
@@ -114,7 +113,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public List<String> fetchAllViewers(UUID deviceId) {
         var sql = "SELECT fcm_token FROM user_role ur JOIN end_user u ON u.id = ur.user_id "
-            + "JOIN device d ON d.id = ur.device_id WHERE platform_device_id = ?";
+            + "JOIN device d ON d.id = ur.device_id WHERE platform_device_id = ? AND fcm_token IS NOT NULL";
         return jdbc.query(sql, new Object[] {deviceId}, (rs, rowNum) -> rs.getString("fcm_token"));
     }
 

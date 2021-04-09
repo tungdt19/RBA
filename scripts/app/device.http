@@ -26,15 +26,12 @@ Authorization: Bearer {{vtag_token}}
 
 
 ### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}/vtag/device/route
+GET http://{{host}}/vtag/device/history
+    ?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
+    &from=2021-03-31T00:00:00
+    &to=2021-04-10T12:59:59
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
-
-{
-    "device_id": "9a2612a6-4f5f-4fa2-84f8-6cc00d63a12f",
-    "from": 1617438512412,
-    "to": 1617439512412
-}
 
 
 
@@ -54,7 +51,7 @@ Content-Type: application/json
 
 
 
-###
+### --------------------------------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/device/history
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json

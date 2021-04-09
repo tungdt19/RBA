@@ -22,19 +22,18 @@ public class LocationHistoryRepositoryImpl implements LocationHistoryRepository 
 
     @Override
     public int save(UUID platformDeviceId, ILocation location) {
-        var sql = "INSERT INTO location_history(device_id, latitude, longitude, trigger_instant) "
-            + "SELECT (id, ?, ?, NOW()) FROM device WHERE platform_device_id = ?";
-        return jdbc.update(sql, location.latitude(), location.longitude(), platformDeviceId);
+        var sql = "INSERT INTO location_history(device_id, latitude, longitude, accuracy, trigger_instant) "
+            + "SELECT d.id, ?, ?, ?, NOW() FROM device d WHERE d.platform_device_id = ?";
+        return jdbc.update(sql, location.latitude(), location.longitude(), location.accuracy(), platformDeviceId);
     }
 
     @Override
     public List<LocationHistory> fetch(User user, LocationHistoryRequest request) {
-        var sql = "SELECT latitude, longitude, trigger_instant FROM location_history lh "
-            + "JOIN user_role ur ON lh.device_id = ur.device_id WHERE lh.device_id = ur.device_id AND ur.user_id = ? "
-            + "AND lh.device_id = ? AND trigger_instant > ? AND trigger_instant < ?";
-        return jdbc.query(sql, new Object[] {user.id(), request.deviceId(), request.from(), request.to()},
-            (rs, num) -> new LocationHistory().deviceId(rs.getObject("device_id", UUID.class))
-                .latitude(rs.getDouble("latitude"))
+        var sql = "SELECT latitude, longitude, trigger_instant FROM location_history lh JOIN user_role ur "
+            + "ON lh.device_id = ur.device_id JOIN device d ON d.id = ur.device_id WHERE ur.user_id = ? "
+            + "AND trigger_instant > ? AND trigger_instant < ? AND platform_device_id = ?";
+        return jdbc.query(sql, new Object[] {user.id(), request.from(), request.to(), request.deviceId()},
+            (rs, num) -> new LocationHistory().latitude(rs.getDouble("latitude"))
                 .longitude(rs.getDouble("longitude"))
                 .time(rs.getTimestamp("trigger_instant").toLocalDateTime()));
     }

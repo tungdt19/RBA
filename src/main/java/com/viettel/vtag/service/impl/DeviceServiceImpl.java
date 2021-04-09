@@ -47,6 +47,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Boolean> activate(PairDeviceRequest request) {
+        // @formatter:off
         var uuid = request.platformId();
         return Mono.justOrEmpty(uuid)
             .map(id -> "/api/devices/" + id + "/active")
@@ -55,8 +56,11 @@ public class DeviceServiceImpl implements DeviceService {
             .map(response -> response.statusCode().is2xxSuccessful())
             .filter(paired -> paired)
             .doOnNext(response -> mqttService.subscribe(new String[] {
-                "messages/" + uuid + "/battery",
-                "messages/" + uuid + "/data", "messages/" + uuid + "/wificell", "messages/" + uuid + "/devconf"}));
+                "messages/" + uuid + "/data",
+                "messages/" + uuid + "/userdefined/battery",
+                "messages/" + uuid + "/userdefined/wificell",
+                "messages/" + uuid + "/userdefined/devconf"}));
+        // @formatter:on
     }
 
     @Override
@@ -74,17 +78,20 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Boolean> deactivate(PairDeviceRequest request) {
+        //@formatter:off
         var uuid = request.platformId();
         return Mono.justOrEmpty(uuid)
-            .map(id -> "/api/devices/" + id + "/active")
-            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "MAD")))
+            .map(id -> "/api/devices/" + id + "/deactive")
+            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
             .doOnNext(response -> log.info("{}: {}", uuid, response.statusCode()))
             .map(response -> response.statusCode().is2xxSuccessful())
             .filter(paired -> paired)
             .doOnNext(response -> mqttService.unsubscribe(new String[] {
                 "messages/" + uuid + "/data",
                 "messages/" + uuid + "/userdefined/battery",
-                "messages/" + uuid + "/userdefined/wificell", "messages/" + uuid + "/userdefined/devconf"}));
+                "messages/" + uuid + "/userdefined/wificell",
+                "messages/" + uuid + "/userdefined/devconf"}));
+        //@formatter:on
     }
 
     @Override

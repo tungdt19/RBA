@@ -26,7 +26,7 @@ public class Location implements ILocation {
     private double longitude;
 
     @JsonProperty
-    private int accuracy;
+    private Integer accuracy;
 
     @JsonProperty
     private String message;

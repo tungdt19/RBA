@@ -1,5 +1,6 @@
 package com.viettel.vtag.service.impl;
 
+import com.google.firestore.v1.UpdateDocumentRequest;
 import com.viettel.vtag.model.entity.Identity;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
@@ -59,13 +60,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int changePassword(User user, ChangePasswordRequest request) {
-        if (!bCrypt.matches(request.oldPassword(), user.encryptedPassword())) {
-            log.info("Password does not match for user {}", user.phoneNo());
-            return 0;
-        }
-
-        return userRepository.updatePassword(user.phoneNo(), request.newPassword());
+    public Mono<Integer> changePassword(User user, ChangePasswordRequest request) {
+        return Mono.just(bCrypt.matches(request.oldPassword(), user.encryptedPassword()))
+            .filter(matched -> matched)
+            .map(matched -> userRepository.updatePassword(user.phoneNo(), request.newPassword()));
     }
 
     @Override
