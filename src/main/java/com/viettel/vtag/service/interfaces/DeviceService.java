@@ -30,5 +30,5 @@ public interface DeviceService {
 
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 
-    Mono<ClientResponse> getMessages(User user, UUID deviceId);
+    Mono<ClientResponse> getMessages(User user, UUID deviceId, int offset, int limit);
 }

@@ -126,7 +126,7 @@ public class DeviceController {
         return Mono.justOrEmpty(userService.checkToken(request))
             .doOnNext(user -> log.info("unpair device {} from user {}", detail.platformId(), user.phoneNo()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
-            .then(deviceService.activate(detail))
+            .then(deviceService.deactivate(detail))
             .map(activated -> ok(of(0, "Paired device successfully!")))
             .doOnError(e -> log.error("Error on unpair {}", detail.platformId(), e))
             .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
@@ -134,12 +134,15 @@ public class DeviceController {
 
     @GetMapping("/messages")
     public Mono<ResponseEntity<ResponseJson>> getMessages(
-        @RequestParam("device_id") String deviceId, ServerHttpRequest request
+        @RequestParam("device_id") String deviceId,
+        @RequestParam("offset") int offset,
+        @RequestParam("limit") int limit,
+        ServerHttpRequest request
     ) {
         return Mono.justOrEmpty(userService.checkToken(request))
             .zipWith(Mono.just(UUID.fromString(deviceId)))
             .doOnNext(tuple -> log.info("get messages for user {} - device {}", tuple.getT1().platformId(), deviceId))
-            .flatMap(tuple -> deviceService.getMessages(tuple.getT1(), tuple.getT2()))
+            .flatMap(tuple -> deviceService.getMessages(tuple.getT1(), tuple.getT2(), offset, limit))
             .doOnNext(response -> log.info("get msg response {}", response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(String.class))

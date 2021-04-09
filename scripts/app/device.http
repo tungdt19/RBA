@@ -76,7 +76,10 @@ Content-Type: application/json
 
 
 ### --------------------------------------------------------------------------------------------------------------------
-GET http://{{host}}/vtag/device/messages?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
+GET http://{{host}}/vtag/device/messages
+    ?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
+    &offset=0
+    &limit=100
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
 
