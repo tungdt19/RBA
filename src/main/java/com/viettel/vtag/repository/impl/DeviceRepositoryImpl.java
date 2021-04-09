@@ -74,7 +74,14 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     public int removeViewer(User user, RemoveViewerRequest request) {
         var sql = "DELETE FROM user_role ur USING device d WHERE d.id = ur.device_id AND ur.user_id = ? AND role_id = 1"
             + " AND platform_device_id = ?";
-        return jdbc.update(sql, user.id(), request.deviceId(), "ROLE_VIEWER");
+        return jdbc.update(sql, user.id(), request.deviceId());
+    }
+
+    @Override
+    public int removeUserDevice(User user, PairDeviceRequest request) {
+        var sql = "DELETE FROM user_role ur USING device d WHERE d.id = ur.device_id AND ur.user_id = ? AND role_id = 1"
+            + " AND platform_device_id = ?";
+        return jdbc.update(sql, user.id(), request.platformId());
     }
 
     @Override

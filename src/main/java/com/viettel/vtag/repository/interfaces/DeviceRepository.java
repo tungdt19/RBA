@@ -25,6 +25,8 @@ public interface DeviceRepository {
 
     int removeViewer(User user, RemoveViewerRequest request);
 
+    int removeUserDevice(User user, PairDeviceRequest request);
+
     List<UUID> fetchAllDevices();
 
     List<Device> getUserDevice(User user);

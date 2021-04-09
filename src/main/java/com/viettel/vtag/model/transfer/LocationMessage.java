@@ -7,6 +7,7 @@ import com.viettel.vtag.model.entity.Location;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Data

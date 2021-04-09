@@ -55,8 +55,9 @@ public class DeviceServiceImpl implements DeviceService {
             .map(id -> "/api/devices/" + id + "/active")
             .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "MAD")))
             .doOnNext(response -> log.info("activate {}: {}", uuid, response.statusCode()))
-            .map(response -> response.statusCode().is2xxSuccessful())
-            .filter(paired -> paired)
+            // .map(response -> response.statusCode().is2xxSuccessful())
+            // .filter(paired -> paired)
+            .map(response -> true)
             .doOnNext(response -> mqttService.subscribe(new String[] {
                 "messages/" + uuid + "/data",
                 "messages/" + uuid + "/userdefined/battery",
@@ -70,12 +71,12 @@ public class DeviceServiceImpl implements DeviceService {
         var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
         return iotPlatformService.delete(endpoint)
             .filter(response -> response.statusCode().is2xxSuccessful())
-            .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
+            .doOnNext(response -> log.info("unpair {}: {}", endpoint, response.statusCode()))
             .map(response -> deviceRepository.delete(user, request.platformId()))
-            .doOnNext(saved -> log.info("saved {}", saved))
+            .doOnNext(saved -> log.info("deleted {} from {}: {}", request.platformId(), user.platformId(), saved))
             .filter(paired -> paired > 0)
-            .map(paired -> deviceRepository.setUserDevice(user, request))
-            .doOnNext(saved -> log.info("save user device {}", saved));
+            .map(paired -> deviceRepository.removeUserDevice(user, request))
+            .doOnNext(saved -> log.info("unpaired user device {}", saved));
     }
 
     @Override
@@ -86,8 +87,9 @@ public class DeviceServiceImpl implements DeviceService {
             .map(id -> "/api/devices/" + id + "/deactive")
             .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
             .doOnNext(response -> log.info("deactive {}: {}", uuid, response.statusCode()))
-            .map(response -> response.statusCode().is2xxSuccessful())
-            .filter(paired -> paired)
+            // .map(response -> response.statusCode().is2xxSuccessful())
+            // .filter(paired -> paired)
+            .map(response -> true)
             .doOnNext(response -> mqttService.unsubscribe(new String[] {
                 "messages/" + uuid + "/data",
                 "messages/" + uuid + "/userdefined/battery",
