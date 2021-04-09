@@ -13,7 +13,7 @@ public interface DeviceRepository {
 
     Device get(int id);
 
-    Device find(String imei);
+    Device find(UUID platformId);
 
     int save(Device device);
 
@@ -35,5 +35,5 @@ public interface DeviceRepository {
 
     int updateConfig(UUID platformDeviceId, ConfigMessage config);
 
-    int delete(Device device);
+    int delete(User user, UUID platformId);
 }

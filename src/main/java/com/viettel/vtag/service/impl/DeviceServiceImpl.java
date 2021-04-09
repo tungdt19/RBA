@@ -65,7 +65,7 @@ public class DeviceServiceImpl implements DeviceService {
         return iotPlatformService.delete(endpoint)
             .filter(response -> response.statusCode().is2xxSuccessful())
             .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
-            .map(response -> deviceRepository.save(new Device().name("VTAG").platformId(request.platformId())))
+            .map(response -> deviceRepository.delete(user, request.platformId()))
             .doOnNext(saved -> log.info("saved {}", saved))
             .filter(paired -> paired > 0)
             .map(paired -> deviceRepository.setUserDevice(user, request))

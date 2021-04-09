@@ -40,4 +40,7 @@ public class Device {
 
     @JsonProperty("uptime")
     private LocalDateTime uptime;
+
+    @JsonProperty
+    private String status;
 }
