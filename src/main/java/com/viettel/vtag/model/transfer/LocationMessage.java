@@ -15,7 +15,7 @@ import java.util.List;
 @Accessors(fluent = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(using = CellIdSerializer.class)
-public class LocationMessage implements ILocation {
+public class LocationMessage {
 
     @JsonProperty("Type")
     private String type;
@@ -34,15 +34,6 @@ public class LocationMessage implements ILocation {
 
     @JsonProperty("Ver")
     private String version;
-
-    @JsonProperty("Lat")
-    private double latitude;
-
-    @JsonProperty("Lon")
-    private double longitude;
-
-    @JsonProperty("TS")
-    private String timestamp;
 
     @Data
     @Accessors(fluent = true)

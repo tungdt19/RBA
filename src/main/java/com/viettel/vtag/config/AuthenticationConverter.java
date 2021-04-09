@@ -16,10 +16,9 @@ import reactor.core.publisher.Mono;
 public class AuthenticationConverter implements ServerAuthenticationConverter {
 
     private static final String BEARER = "Bearer ";
-    // private final FirebaseAuth firebaseAuth;
 
     @Override
-    public Mono<Authentication> convert(final ServerWebExchange exchange) {
+    public Mono<Authentication> convert(ServerWebExchange exchange) {
         return Mono.justOrEmpty(exchange)
             .flatMap(this::extract)
             .filter(authValue -> authValue.length() > BEARER.length())
@@ -57,7 +56,7 @@ public class AuthenticationConverter implements ServerAuthenticationConverter {
     //         .build());
     // }
 
-    private Mono<Authentication> create(final UserDetails userDetails) {
+    private Mono<Authentication> create(UserDetails userDetails) {
         return Mono.justOrEmpty(
             new UsernamePasswordAuthenticationToken(userDetails.getUsername(), null, userDetails.getAuthorities()));
     }
