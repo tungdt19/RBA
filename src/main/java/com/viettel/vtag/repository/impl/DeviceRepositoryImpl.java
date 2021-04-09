@@ -105,10 +105,15 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public int updateConfig(UUID platformDeviceId, ConfigMessage config) {
-        var sql = "UPDATE device SET status = ? WHERE platform_device_id = ?";
-        log.info("Device {}; MMC {}", platformDeviceId, config.MMC());
-        log.info("MMC mode {}", config.MMC().modeString());
-        return jdbc.update(sql, config.MMC().modeString(), platformDeviceId);
+        try {
+            var sql = "UPDATE device SET status = ? WHERE platform_device_id = ?";
+            log.info("Device {}; MMC {}", platformDeviceId, config.MMC());
+            log.info("MMC mode {}", config.MMC().modeString());
+            return jdbc.update(sql, config.MMC().modeString(), platformDeviceId);
+        } catch (Exception e) {
+            log.error("updateConfig", e);
+            return 0;
+        }
     }
 
     @Override

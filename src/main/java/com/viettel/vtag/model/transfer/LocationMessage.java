@@ -1,10 +1,13 @@
 package com.viettel.vtag.model.transfer;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Location;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import java.util.Map;
 
 @Data
 @Accessors(fluent = true)
@@ -30,6 +33,13 @@ public class LocationMessage implements ILocation {
 
     @JsonProperty
     public Integer accuracy;
+
+    private Map<String, Object> properties;
+
+    @JsonAnySetter
+    public void add(String key, Object value) {
+        properties.put(key, value);
+    }
 
     public static LocationMessage fromLocation(Location location) {
         return new LocationMessage().type("CPOS").latitude(location.latitude()).longitude(location.longitude());

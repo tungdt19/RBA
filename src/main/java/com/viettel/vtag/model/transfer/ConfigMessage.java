@@ -1,8 +1,11 @@
 package com.viettel.vtag.model.transfer;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import java.util.Map;
 
 @Data
 @Accessors(fluent = true)
@@ -22,6 +25,13 @@ public class ConfigMessage {
 
     @JsonProperty("MMC") // {"Per":{"V":2,"U":"m"},"Mod":0}
     private PeriodConfig MMC;
+
+    private Map<String, Object> properties;
+
+    @JsonAnySetter
+    public void add(String key, Object value) {
+        properties.put(key, value);
+    }
 
     @Data
     @Accessors(fluent = true)

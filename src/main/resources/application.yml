@@ -64,9 +64,9 @@ vtag:
   platform:
     base-url: https://api.iotcloud.com.vn:4438
   mqtt:
-    enable: false
     url: tcp://203.113.138.21:4439
-    username: vtag_backend
+    username: vtag_backend_test
+    client-id: vtag_backend_test
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc
 
 ---
@@ -86,5 +86,6 @@ vtag:
   mqtt:
     enable: false
     url: tcp://10.55.123.124:4439
-    username: vtag_backend
+    username: vtag_backend_production
+    client-id: vtag_backend_production
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc

@@ -1,12 +1,15 @@
 package com.viettel.vtag.model.transfer;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.Map;
+
 @Data
 @Accessors(fluent = true)
-public class DeviceFirmwareUpdate {
+public class FirmwareUpdateMessage {
 
     @JsonProperty("Type")
     private final String type = "MFO";
@@ -19,4 +22,11 @@ public class DeviceFirmwareUpdate {
 
     @JsonProperty("Ver")
     private String version;
+
+    private Map<String, Object> properties;
+
+    @JsonAnySetter
+    public void add(String key, Object value) {
+        properties.put(key, value);
+    }
 }

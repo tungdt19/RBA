@@ -54,7 +54,7 @@ public class DeviceServiceImpl implements DeviceService {
         return Mono.justOrEmpty(uuid)
             .map(id -> "/api/devices/" + id + "/active")
             .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "MAD")))
-            .doOnNext(response -> log.info("{}: {}", uuid, response.statusCode()))
+            .doOnNext(response -> log.info("activate {}: {}", uuid, response.statusCode()))
             .map(response -> response.statusCode().is2xxSuccessful())
             .filter(paired -> paired)
             .doOnNext(response -> mqttService.subscribe(new String[] {
@@ -85,7 +85,7 @@ public class DeviceServiceImpl implements DeviceService {
         return Mono.justOrEmpty(uuid)
             .map(id -> "/api/devices/" + id + "/deactive")
             .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
-            .doOnNext(response -> log.info("{}: {}", uuid, response.statusCode()))
+            .doOnNext(response -> log.info("deactive {}: {}", uuid, response.statusCode()))
             .map(response -> response.statusCode().is2xxSuccessful())
             .filter(paired -> paired)
             .doOnNext(response -> mqttService.unsubscribe(new String[] {

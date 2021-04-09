@@ -127,9 +127,9 @@ public class DeviceController {
             .doOnNext(user -> log.info("unpair device {} from user {}", detail.platformId(), user.phoneNo()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
             .then(deviceService.deactivate(detail))
-            .map(activated -> ok(of(0, "Paired device successfully!")))
+            .map(activated -> ok(of(0, "Unpaired device successfully!")))
             .doOnError(e -> log.error("Error on unpair {}", detail.platformId(), e))
-            .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
+            .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't unpair device!")));
     }
 
     @GetMapping("/messages")
