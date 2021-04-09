@@ -34,7 +34,7 @@ public class LocationMessage implements ILocation {
     @JsonProperty
     public Integer accuracy;
 
-    private Map<String, Object> properties;
+    private Map<String, Object> properties = new HashMap<>();
 
     @JsonAnySetter
     public void add(String key, Object value) {

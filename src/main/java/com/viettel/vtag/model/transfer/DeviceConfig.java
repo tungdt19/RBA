@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -23,7 +24,7 @@ public class DeviceConfig {
     @JsonProperty("Per")
     private Period period;
 
-    private Map<String, Object> properties;
+    private Map<String, Object> properties = new HashMap<>();
 
     @JsonAnySetter
     public void add(String key, Object value) {

@@ -7,6 +7,7 @@ import com.viettel.vtag.utils.CellIdSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -65,7 +66,7 @@ public class CellWifiMessage {
         private int ss;
     }
 
-    private Map<String, Object> properties;
+    private Map<String, Object> properties = new HashMap<>();
 
     @JsonAnySetter
     public void add(String key, Object value) {

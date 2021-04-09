@@ -23,7 +23,7 @@ public class FirmwareUpdateMessage {
     @JsonProperty("Ver")
     private String version;
 
-    private Map<String, Object> properties;
+    private Map<String, Object> properties = new HashMap<>();
 
     @JsonAnySetter
     public void add(String key, Object value) {

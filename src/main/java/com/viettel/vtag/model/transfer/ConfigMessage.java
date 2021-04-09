@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -26,7 +27,7 @@ public class ConfigMessage {
     @JsonProperty("MMC") // {"Per":{"V":2,"U":"m"},"Mod":0}
     private PeriodConfig MMC;
 
-    private Map<String, Object> properties;
+    private Map<String, Object> properties = new HashMap<>();
 
     @JsonAnySetter
     public void add(String key, Object value) {
