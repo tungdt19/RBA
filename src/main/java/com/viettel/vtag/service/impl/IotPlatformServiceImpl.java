@@ -2,8 +2,8 @@ package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.transfer.PlatformToken;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -24,7 +24,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class IotPlatformServiceImpl implements IotPlatformService {
 
     private final ThreadPoolTaskScheduler scheduler;
@@ -47,6 +46,16 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
     @Value("${vtag.mqtt.password}")
     private String deviceToken;
+
+    public IotPlatformServiceImpl(
+        ThreadPoolTaskScheduler scheduler,
+        PlatformToken platformToken,
+        @Qualifier("insecure-httpclient") HttpClient httpClient
+    ) {
+        this.scheduler = scheduler;
+        this.platformToken = platformToken;
+        this.httpClient = httpClient;
+    }
 
     @PostConstruct
     public void init() {
