@@ -3,7 +3,7 @@ POST http://{{host}}/vtag/device/pair
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
 
-{"platform_id": "7b762bf8-f157-467c-8f3d-a9d1eb342e35"}
+{"platform_id": "15297f14-525f-4653-9991-b2b56e2813f7"}
 
 ### {"platform_id": "d86c8f22-e026-440f-bc17-ca77cee811c2"}
 ### 200: {"code": 0, "message": "Paired device successfully!"}
@@ -16,7 +16,7 @@ POST http://{{host}}/vtag/device/unpair
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
 
-{"platform_id": "7b762bf8-f157-467c-8f3d-a9d1eb342e35"}
+{"platform_id": "691e700f-9b1c-477f-a2fc-3699de6e3d15"}
 
 
 

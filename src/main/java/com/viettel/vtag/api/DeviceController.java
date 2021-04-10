@@ -149,4 +149,15 @@ public class DeviceController {
             .map(content -> ok(ResponseJson.of(0, "Okie dokie!").json(content)))
             .defaultIfEmpty(status(NO_CONTENT).body(ResponseJson.of(1, "Couldn't get any response")));
     }
+
+    // @GetMapping("/geo")
+    public Mono<ResponseEntity<ResponseJson>> getGeoFencing() { return null; }
+
+    // @PostMapping("/geo")
+    public Mono<ResponseEntity<ResponseJson>> createOrUpdateGeoFencing() { return null; }
+
+    // @PutMapping("/geo")
+    // public Mono<ResponseEntity<ResponseJson>> getGeoFencing() { return null; }
+    // @DeleteMapping("/geo")
+    public Mono<ResponseEntity<ResponseJson>> deleteGeoFencing() { return null; }
 }

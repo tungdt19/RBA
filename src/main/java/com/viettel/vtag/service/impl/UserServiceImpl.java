@@ -29,8 +29,8 @@ public class UserServiceImpl implements UserService {
 
     /** {@link UserRepositoryImpl#register(User)} */
     @Override
-    public Mono<Integer> save(User user) {
-        var phone = PhoneUtils.standardize(user);
+    public Mono<Integer> register(RegisterRequest request) {
+        var phone = PhoneUtils.standardize(request.phone());
         return iotPlatformService.post("/api/groups", Map.of("name", phone))
             .doOnNext(response -> log.info("register user {}: {}", phone, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())

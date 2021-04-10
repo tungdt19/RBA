@@ -3,7 +3,7 @@ package com.viettel.vtag.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.Notification;
-import com.viettel.vtag.config.MqttConfig;
+import com.viettel.vtag.config.MqttSubscriberConfig;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Location;
 import com.viettel.vtag.model.transfer.*;
@@ -11,11 +11,9 @@ import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.repository.interfaces.LocationHistoryRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
-import com.viettel.vtag.service.interfaces.MqttService;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
@@ -28,10 +26,9 @@ import reactor.netty.http.client.HttpClient;
 
 import java.util.*;
 
-/** @see MqttConfig#mqttClient(MqttCallback) */
+/** @see MqttSubscriberConfig#mqttSubscriberClient(MqttCallback) */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class MqttHandler implements MqttCallback {
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -42,18 +39,34 @@ public class MqttHandler implements MqttCallback {
     private final UserRepository userRepository;
     private final LocationHistoryRepository locationHistory;
     private final MessageSource messageSource;
+    private final MqttClient publisher;
+    private final String convertAddress;
+    private final String convertUri;
+    private final String convertToken;
 
-    @Setter
-    private MqttService mqttService;
-
-    @Value("${vtag.unwired.base-url}")
-    private String convertAddress;
-
-    @Value("${vtag.unwired.uri}")
-    private String convertUri;
-
-    @Value("${vtag.unwired.token}")
-    private String convertToken;
+    public MqttHandler(
+        HttpClient httpClient,
+        DeviceRepository deviceRepository,
+        FirebaseService firebaseService,
+        UserRepository userRepository,
+        LocationHistoryRepository locationHistory,
+        MessageSource messageSource,
+        @Qualifier("mqtt-publisher-client") MqttClient publisher,
+        @Value("${vtag.unwired.base-url}") String convertAddress,
+        @Value("${vtag.unwired.uri}") String convertUri,
+        @Value("${vtag.unwired.token}") String convertToken
+    ) {
+        this.httpClient = httpClient;
+        this.deviceRepository = deviceRepository;
+        this.firebaseService = firebaseService;
+        this.userRepository = userRepository;
+        this.locationHistory = locationHistory;
+        this.messageSource = messageSource;
+        this.publisher = publisher;
+        this.convertAddress = convertAddress;
+        this.convertUri = convertUri;
+        this.convertToken = convertToken;
+    }
 
     /** @see MqttCallback#connectionLost(Throwable) */
     @Override
@@ -77,7 +90,7 @@ public class MqttHandler implements MqttCallback {
                     handleGpsMessage(deviceId, payload);
                     break;
                 case "userdefined/wificell":
-                    handleWificellMessage(deviceId, payload);
+                    handleWifiCellMessage(deviceId, payload);
                     break;
                 case "userdefined/battery":
                     updateBattery(deviceId, payload);
@@ -96,18 +109,20 @@ public class MqttHandler implements MqttCallback {
     private void handleGpsMessage(UUID deviceId, String payload) throws JsonProcessingException {
         log.info("Received an GPS message: {}", payload);
         var gps = mapper.readValue(payload, LocationMessage.class);
-        locationHistory.save(deviceId, gps);
+        if ("DPOS".equals(gps.type())) {
+            locationHistory.save(deviceId, gps);
+        }
     }
 
-    private void handleWificellMessage(UUID deviceId, String payload) throws JsonProcessingException {
+    private void handleWifiCellMessage(UUID deviceId, String payload) throws JsonProcessingException {
         var data = mapper.readValue(payload, CellWifiMessage.class);
 
         switch (data.type()) {
             case "DSOS":
-                convertWifiCell(deviceId, data).doOnNext(locationMessage -> notifyApp(deviceId, locationMessage));
+                convertWifiCell(deviceId, data).subscribe(locationMessage -> notifyApp(deviceId, locationMessage));
                 break;
             case "DWFC":
-                convertWifiCell(deviceId, data);
+                convertWifiCell(deviceId, data).subscribe(locationMessage -> log.info("converted {}", locationMessage));
                 break;
             default:
                 log.info("Do not recognize message {}", payload);
@@ -135,17 +150,22 @@ public class MqttHandler implements MqttCallback {
     }
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, CellWifiMessage payload) {
-        return convert(payload).doOnNext(location -> log.info("Converted message from {}: {}", deviceId, location))
+        log.info("Converting wificell info from {}: {}", deviceId, payload.type());
+        return convert(deviceId, payload).doOnNext(
+            location -> log.info("Converted message from {}: {}", deviceId, location))
             .doOnNext(location -> locationHistory.save(deviceId, location))
             .map(LocationMessage::fromLocation)
             .doOnNext(location -> {
                 var topic = "messages/" + deviceId + "/data";
                 try {
-                    mqttService.publish(topic, location);
-                } catch (MqttException e) {
+                    var bytes = new MqttMessage();
+                    bytes.setPayload(mapper.writeValueAsBytes(location));
+                    publisher.publish(topic, bytes);
+                } catch (MqttException | JsonProcessingException e) {
                     log.error("Couldn't publish location {} to topic '{}'", location, topic, e);
                 }
-            });
+            })
+            .doOnError(e -> log.error("Error converting", e));
     }
 
     private void notifyApp(UUID deviceId, ILocation location) {
@@ -162,7 +182,7 @@ public class MqttHandler implements MqttCallback {
         //@formatter:off
     }
 
-    public Mono<Location> convert(CellWifiMessage json) {
+    public Mono<Location> convert(UUID deviceId, CellWifiMessage json) {
         return WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(httpClient))
             .baseUrl(convertAddress)
@@ -172,8 +192,10 @@ public class MqttHandler implements MqttCallback {
             .uri(convertUri)
             .bodyValue(json.token(convertToken))
             .exchange()
+            .doOnNext(response -> log.info("converted {} -> {}", deviceId, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
-            .flatMap(response -> response.bodyToMono(Location.class));
+            .flatMap(response -> response.bodyToMono(Location.class))
+            .doOnNext(location -> log.info("location {}: {}", deviceId, location));
     }
 
     /**

@@ -2,11 +2,14 @@ package com.viettel.vtag.api;
 
 import com.viettel.vtag.service.interfaces.CommunicationService;
 import com.viettel.vtag.service.interfaces.DeviceService;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,13 +18,15 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+@Data
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/test")
 public class TestController {
 
-    private final MqttClient mqttClient;
+    @Qualifier("mqtt-subscriber-client")
+    private MqttClient mqttClient;
     private final CommunicationService communicationService;
     private final DeviceService deviceService;
     private final JdbcTemplate jdbc;
@@ -73,8 +78,7 @@ public class TestController {
             var updated = jdbc.update(sql);
             return ResponseEntity.ok(Map.of("updated", updated));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("msg", String.valueOf(e.getMessage())));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("msg", String.valueOf(e.getMessage())));
         }
     }
 }

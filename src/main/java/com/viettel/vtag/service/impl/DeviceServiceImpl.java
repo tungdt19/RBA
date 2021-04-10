@@ -39,7 +39,7 @@ public class DeviceServiceImpl implements DeviceService {
         var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
         return iotPlatformService.put(endpoint, request)
             .filter(response -> response.statusCode().is2xxSuccessful())
-            .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
+            .doOnNext(response -> log.info("put {}: {}", endpoint, response.statusCode()))
             .map(response -> deviceRepository.save(new Device().name("VTAG").platformId(request.platformId())))
             .doOnNext(saved -> log.info("saved {}", saved))
             .filter(paired -> paired > 0)
@@ -62,7 +62,8 @@ public class DeviceServiceImpl implements DeviceService {
                 "messages/" + uuid + "/data",
                 "messages/" + uuid + "/userdefined/battery",
                 "messages/" + uuid + "/userdefined/wificell",
-                "messages/" + uuid + "/userdefined/devconf"}));
+                "messages/" + uuid + "/userdefined/devconf"}))
+            .doOnError(e -> log.error("Error on pairing device", e));
         // @formatter:on
     }
 
@@ -86,7 +87,7 @@ public class DeviceServiceImpl implements DeviceService {
         return Mono.justOrEmpty(uuid)
             .map(id -> "/api/devices/" + id + "/deactive")
             .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
-            .doOnNext(response -> log.info("deactive {}: {}", uuid, response.statusCode()))
+            .doOnNext(response -> log.info("deactivate {}: {}", uuid, response.statusCode()))
             // .map(response -> response.statusCode().is2xxSuccessful())
             // .filter(paired -> paired)
             .map(response -> true)

@@ -45,20 +45,19 @@ public class UserController {
         }
     }
 
-    /** {@link UserServiceImpl#save(User)} */
+    /** {@link UserServiceImpl#register(User)} */
     @PostMapping("/register")
-    public Mono<ResponseEntity<ResponseBody>> register(@RequestBody User user) {
-        return userService.save(user)
-            .map(registered -> {
-                switch (registered) {
-                    case 1:
-                        return ok(of(0, "Created user successfully!"));
-                    case -1:
-                        return status(CONFLICT).body(of(1, "User's already existed!"));
-                    default:
-                        return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!"));
-                }
-            })
+    public Mono<ResponseEntity<ResponseBody>> register(@RequestBody RegisterRequest request) {
+        return userService.register(request).map(registered -> {
+            switch (registered) {
+                case 1:
+                    return ok(of(0, "Created user successfully!"));
+                case -1:
+                    return status(CONFLICT).body(of(1, "User's already existed!"));
+                default:
+                    return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!"));
+            }
+        })
             .defaultIfEmpty(status(CONFLICT).body(of(1, "Couldn't create platform user!")))
             .onErrorReturn(status(BAD_REQUEST).body(of(1, "Couldn't create user!")));
     }

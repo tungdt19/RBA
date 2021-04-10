@@ -4,19 +4,13 @@ Content-Type: application/json
 
 {"type": "phone", "value": "84365819777"}
 
-### 200: {"code": 0, "message": "Created OTP successfully!", "data": {"otp": "123456", "expire": "2020-12-31T12:59:59.123456"}}
-### 500: {"code": 1, "message": "Some error!"}
-
 
 
 ### Register new account -----------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/user/register
 Content-Type: application/json
 
-{"phone": "0000000001", "password": "test"}
-
-### {"code": 0, "message": "Created user successfully!"}
-### {"code": 1, "message": "Some error!"}
+{"phone": "0365819777", "password": "test"}
 
 
 ### check token --------------------------------------------------------------------------------------------------------
@@ -31,8 +25,8 @@ POST http://{{host}}/vtag/user/token
 Content-Type: application/json
 
 {
-    "username": "84985325930",
-    "password": "123456aA@"
+    "username": "84365819777",
+    "password": "test"
 }
 
 > {%
@@ -42,8 +36,6 @@ client.test("Request executed successfully", function() {
   client.global.set("vtag_token", token)
 });
 %}
-
-### {"code": 0, "message": "Get token successfully!", "data": {"token": "13143534-123-423-142-132132"}}
 
 
 ### --------------------------------------------------------------------------------------------------------------------
