@@ -11,12 +11,12 @@ import java.util.Arrays;
 
 @Slf4j
 @Configuration
-public class MqttConfig {
+public class MqttSubscriberConfig {
 
     @Value("${vtag.mqtt.url}")
     private String url;
 
-    @Value("${vtag.mqtt.client-id}")
+    @Value("${vtag.mqtt.subscriber-client-id}")
     private String clientId;
 
     @Value("${vtag.mqtt.username}")
@@ -25,17 +25,11 @@ public class MqttConfig {
     @Value("${vtag.mqtt.password}")
     private String password;
 
-    // @Value("${vtag.mqtt.topic}")
-    // private String topic;
-
-    // @Value("${vtag.mqtt.qos}")
-    // private int qos;
-
     @Value("${vtag.mqtt.timeout}")
     private int timeout;
 
-    @Bean
-    public MqttClient mqttClient(MqttCallback handler) throws MqttException {
+    @Bean("mqtt-subscriber-client")
+    public MqttClient mqttSubscriberClient(MqttCallback handler) throws MqttException {
         var client = new MqttClient(url, clientId, new MemoryPersistence());
         client.connect(connectOptions());
         client.setCallback(handler);

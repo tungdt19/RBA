@@ -1,6 +1,7 @@
 package com.viettel.vtag.model.transfer;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Location;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 @Data
 @Accessors(fluent = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class LocationMessage implements ILocation {
 
     @JsonProperty("Type")
@@ -43,6 +45,9 @@ public class LocationMessage implements ILocation {
     }
 
     public static LocationMessage fromLocation(Location location) {
-        return new LocationMessage().type("CPOS").latitude(location.latitude()).longitude(location.longitude());
+        return new LocationMessage().type("CPOS")
+            .latitude(location.latitude())
+            .longitude(location.longitude())
+            .accuracy(location.accuracy());
     }
 }

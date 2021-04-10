@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 public interface UserService {
 
-    Mono<Integer> save(User user);
+    Mono<Integer> register(RegisterRequest request);
 
     String createToken(TokenRequest request);
 

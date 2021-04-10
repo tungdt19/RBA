@@ -66,7 +66,8 @@ vtag:
   mqtt:
     url: tcp://203.113.138.21:4439
     username: vtag_backend_test
-    client-id: vtag_backend_test
+    publisher-client-id: vtag_test_publisher
+    subscriber-client-id: vtag_test_subscriber
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc
 
 ---
@@ -87,5 +88,6 @@ vtag:
     enable: false
     url: tcp://10.55.123.124:4439
     username: vtag_backend_production
-    client-id: vtag_backend_production
+    publisher-client-id: vtag_production_publisher
+    subscriber-client-id: vtag_production_subscriber
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc
