@@ -7,8 +7,8 @@ public class PhoneUtils {
     private PhoneUtils() { }
 
     public static String standardize(User user) {
-        var phone = standardize(user.phoneNo());
-        user.phoneNo(phone);
+        var phone = standardize(user.phone());
+        user.phone(phone);
         return phone;
     }
 

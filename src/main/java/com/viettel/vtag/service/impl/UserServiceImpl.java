@@ -36,9 +36,11 @@ public class UserServiceImpl implements UserService {
             .doOnNext(response -> log.info("register user {}: {}", phone, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(entity -> entity.bodyToMono(Identity.class))
-            .map(identity -> user.platformId(UUID.fromString(identity.id())))
+            .map(identity -> new User().phone(phone)
+                .password(request.password())
+                .platformId(UUID.fromString(identity.id())))
             .map(userRepository::register)
-            .doOnError(e -> log.error("Couldn't register user with phone {}", user.phoneNo()))
+            .doOnError(e -> log.error("Couldn't register user with phone {}", phone))
             .onErrorReturn(DuplicateKeyException.class::isInstance, -1);
     }
 
@@ -63,7 +65,7 @@ public class UserServiceImpl implements UserService {
     public Mono<Integer> changePassword(User user, ChangePasswordRequest request) {
         return Mono.just(bCrypt.matches(request.oldPassword(), user.encryptedPassword()))
             .filter(matched -> matched)
-            .map(matched -> userRepository.updatePassword(user.phoneNo(), request.newPassword()));
+            .map(matched -> userRepository.updatePassword(user.phone(), request.newPassword()));
     }
 
     @Override

@@ -63,7 +63,7 @@ public class UserRepositoryImpl implements UserRepository {
             + "platform_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         var password = bCrypt.encode(user.password());
         return jdbc.update(sql, user.username(), password, user.firstName(), user.lastName(), user.email(),
-            user.phoneNo(), user.avatar(), user.platformId());
+            user.phone(), user.avatar(), user.platformId());
     }
 
     @Override
@@ -72,7 +72,7 @@ public class UserRepositoryImpl implements UserRepository {
             + " WHERE username = ?";
         var password = bCrypt.encode(user.password());
         return jdbc.update(sql, user.username(), password, user.firstName(), user.lastName(), user.email(),
-            user.phoneNo(), user.avatar());
+            user.phone(), user.avatar());
     }
 
     @Override
@@ -125,7 +125,7 @@ public class UserRepositoryImpl implements UserRepository {
             .firstName(rs.getString("first_name"))
             .lastName(rs.getString("last_name"))
             .email(rs.getString("email"))
-            .phoneNo(rs.getString("phone_no"))
+            .phone(rs.getString("phone_no"))
             .avatar(rs.getString("avatar"))
             .fcmToken(rs.getString("fcm_token"))
             .platformId(rs.getObject("platform_group_id", UUID.class));

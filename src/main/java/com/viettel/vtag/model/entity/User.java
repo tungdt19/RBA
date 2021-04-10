@@ -16,7 +16,7 @@ public class User {
     private Integer id;
 
     @JsonProperty("phone")
-    private String phoneNo;
+    private String phone;
 
     @JsonProperty("username")
     private String username;

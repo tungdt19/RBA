@@ -71,7 +71,7 @@ public class DeviceController {
     ) {
         return Mono.justOrEmpty(TokenUtils.getToken(request))
             .map(userService::checkToken)
-            .doOnNext(user -> log.info("pair device {} to user {}", detail.platformId(), user.phoneNo()))
+            .doOnNext(user -> log.info("pair device {} to user {}", detail.platformId(), user.phone()))
             .flatMap(user -> deviceService.pairDevice(user, detail))
             .doOnNext(paired -> log.info("paired {}", paired))
             .then(deviceService.activate(detail))
@@ -120,7 +120,7 @@ public class DeviceController {
         @RequestBody PairDeviceRequest detail, ServerHttpRequest request
     ) {
         return Mono.justOrEmpty(userService.checkToken(request))
-            .doOnNext(user -> log.info("unpair device {} from user {}", detail.platformId(), user.phoneNo()))
+            .doOnNext(user -> log.info("unpair device {} from user {}", detail.platformId(), user.phone()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
             .then(deviceService.deactivate(detail))
             .map(activated -> ok(of(0, "Unpaired device successfully!")))
