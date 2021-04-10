@@ -82,8 +82,8 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public int delete(User user) {
-        var sql = "DELETE FROM end_user WHERE username = ?";
-        return jdbc.update(sql, user.username());
+        var sql = "DELETE FROM end_user WHERE platform_group_id = ?";
+        return jdbc.update(sql, user.platformId());
     }
 
     @Override

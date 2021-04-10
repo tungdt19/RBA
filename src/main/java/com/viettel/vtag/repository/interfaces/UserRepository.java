@@ -2,7 +2,6 @@ package com.viettel.vtag.repository.interfaces;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
-import com.viettel.vtag.model.request.ResetPasswordRequest;
 
 import java.util.List;
 import java.util.UUID;

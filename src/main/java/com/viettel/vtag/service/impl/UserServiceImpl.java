@@ -1,6 +1,5 @@
 package com.viettel.vtag.service.impl;
 
-import com.google.firestore.v1.UpdateDocumentRequest;
 import com.viettel.vtag.model.entity.Identity;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
@@ -72,8 +71,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int delete(User user) {
-        return 0;
+    public Mono<Integer> delete(User user) {
+        return Mono.just(userRepository.delete(user));
     }
 
     @Override

@@ -16,7 +16,7 @@ public interface UserService {
 
     int resetPassword(ResetPasswordRequest request);
 
-    int delete(User user);
+    Mono<Integer> delete(User user);
 
     default User checkToken(ServerHttpRequest request) {
         return checkToken(TokenUtils.getToken(request));
