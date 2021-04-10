@@ -1,14 +1,15 @@
 package com.viettel.vtag.service.impl;
 
 import com.google.firebase.messaging.*;
+import com.viettel.vtag.model.ILocation;
+import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -18,6 +19,23 @@ import java.util.stream.IntStream;
 public class FirebaseServiceImpl implements FirebaseService {
 
     private final FirebaseMessaging fcm;
+    private final MessageSource messageSource;
+    private final UserRepository userRepository;
+
+    @Override
+    public void sos(UUID deviceId, ILocation location) {
+        //@formatter:off
+        var notification= Notification.builder()
+            .setTitle(messageSource.getMessage("message.sos.title", new Object[] {}, Locale.ENGLISH))
+            .setBody(messageSource.getMessage("message.sos.content", new Object[] {}, Locale.ENGLISH))
+            .build();
+        var tokens = userRepository.fetchAllViewers(deviceId);
+        var data = Map.of(
+            "latitude", String.valueOf(location.latitude()),
+            "longitude", String.valueOf(location.longitude()));
+        message(tokens, notification, data);
+        //@formatter:off
+    }
 
     @Override
     public void message(List<String> tokens, Notification notification, Map<String, String> data) {

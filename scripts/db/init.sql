@@ -18,8 +18,6 @@ CREATE TABLE IF NOT EXISTS device (
     platform_device_id UUID UNIQUE,
     battery            INT,
     status             VARCHAR,
-    last_lat           FLOAT8,
-    last_lon           FLOAT8,
     geo_status         BOOLEAN,
     geo_count          INT,
     geo_data           JSONB
@@ -54,19 +52,6 @@ CREATE TABLE IF NOT EXISTS otp (
     expired_instant TIMESTAMP,
     otp_type        OTP_TYPE,
     PRIMARY KEY (otp, phone, expired_instant)
-);
-
-CREATE TABLE IF NOT EXISTS cell_id (
-    mcc      INT,
-    mnc      INT,
-    lac      INT,
-    cell_id  INT,
-    unit     INT,
-    lon      FLOAT8,
-    lat      FLOAT8,
-    accuracy DECIMAL,
-    address  TEXT,
-    PRIMARY KEY (mcc, mnc, cell_id, lac)
 );
 
 CREATE TABLE location_history (

@@ -27,3 +27,29 @@ SELECT phone_no, platform_group_id, d.id, d.name, platform_device_id
 FROM user_role ur
          JOIN device d ON ur.device_id = d.id
          JOIN end_user eu ON eu.id = ur.user_id;
+
+
+
+SELECT latitude, longitude, trigger_instant
+FROM location_history lh
+         JOIN user_role ur ON lh.device_id = ur.device_id
+         JOIN device d ON d.id = ur.device_id
+WHERE platform_device_id = '7b762bf8-f157-467c-8f3d-a9d1eb342e25'
+ORDER BY trigger_instant
+LIMIT 1 OFFSET 0;
+
+
+SELECT id, name, imei, platform_device_id, battery, latitude, longitude, trigger_instant
+FROM device d
+         LEFT JOIN location_history lh ON d.id = lh.device_id
+         JOIN user_role ur ON d.id = ur.device_id
+
+WHERE platform_device_id = '691e700f-9b1c-477f-a2fc-3699de6e3d15'
+ORDER BY trigger_instant
+LIMIT 1 OFFSET 0;
+
+
+
+SELECT id, name, imei, platform_device_id, battery
+FROM device d
+WHERE platform_device_id = ?;

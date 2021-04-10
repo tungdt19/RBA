@@ -47,8 +47,8 @@ public class UserServiceImpl implements UserService {
         try {
             var phone = PhoneUtils.standardize(request.username());
             var user = userRepository.findByPhone(phone);
-            log.info("create token {}", user);
             if (user == null || !bCrypt.matches(request.password(), user.encryptedPassword())) return null;
+            log.info("User({}, {}, {})", user.id(), user.phone(), user.platformId());
 
             var token = Token.generate();
             var updated = userRepository.saveToken(token, user.id());

@@ -146,6 +146,11 @@ public class DeviceController {
             .defaultIfEmpty(status(NO_CONTENT).body(ResponseJson.of(1, "Couldn't get any response")));
     }
 
+    // @PostMapping("/config")
+    // public Mono<ResponseEntity<ResponseBody>> getGeoFencing(ServerHttpRequest request) {
+    //
+    // }
+
     @GetMapping("/geo")
     public Mono<ResponseEntity<ResponseJson>> getGeoFencing(
         @RequestParam("device_id") String deviceId, ServerHttpRequest request

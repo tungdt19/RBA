@@ -1,6 +1,8 @@
 package com.viettel.vtag.repository.interfaces;
 
+import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
+import com.viettel.vtag.model.entity.LocationHistory;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.transfer.BatteryMessage;
@@ -33,9 +35,7 @@ public interface DeviceRepository {
 
     int setUserDevice(User user, PairDeviceRequest request);
 
-    int updateBattery(UUID platformDeviceId, BatteryMessage battery);
-
-    int updateConfig(UUID platformDeviceId, ConfigMessage config);
-
     int delete(User user, UUID platformId);
+
+    List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request);
 }

@@ -1,10 +1,9 @@
 package com.viettel.vtag.repository.impl;
 
 import com.viettel.vtag.model.entity.Device;
+import com.viettel.vtag.model.entity.LocationHistory;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
-import com.viettel.vtag.model.transfer.BatteryMessage;
-import com.viettel.vtag.model.transfer.ConfigMessage;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,9 +91,13 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public List<Device> getUserDevice(User user) {
-        var sql = "SELECT id, name, imei, platform_device_id, battery FROM device "
-            + "JOIN user_role ur ON device.id = ur.device_id WHERE user_id = ?";
-        return jdbc.query(sql, new Object[] {user.id()}, this::mapDevice);
+        var sql = "SELECT id, name, imei, platform_device_id, battery, latitude, longitude, trigger_instant FROM device"
+            + " d " + "LEFT JOIN location_history lh ON d.id = lh.device_id JOIN user_role ur ON d.id = ur.device_id "
+            + "WHERE user_id = ? AND platform_device_id = ? ORDER BY trigger_instant LIMIT 1 OFFSET 0;";
+        return jdbc.query(sql, new Object[] {user.id()},
+            (rs, i) -> mapDevice(rs, i).latitude(rs.getObject("latitude", Double.class))
+                .longitude(rs.getObject("longitude", Double.class))
+                .uptime(rs.getTimestamp("trigger_instant").toLocalDateTime()));
     }
 
     @Override
@@ -105,29 +108,21 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public int updateBattery(UUID platformDeviceId, BatteryMessage battery) {
-        var sql = "UPDATE device SET battery = ? WHERE platform_device_id = ?";
-        return jdbc.update(sql, battery.level(), platformDeviceId);
-    }
-
-    @Override
-    public int updateConfig(UUID platformDeviceId, ConfigMessage config) {
-        try {
-            var sql = "UPDATE device SET status = ? WHERE platform_device_id = ?";
-            log.info("Device {}; MMC {}", platformDeviceId, config.MMC());
-            log.info("MMC mode {}", config.MMC().modeString());
-            return jdbc.update(sql, config.MMC().modeString(), platformDeviceId);
-        } catch (Exception e) {
-            log.error("updateConfig", e);
-            return 0;
-        }
-    }
-
-    @Override
     public int delete(User user, UUID platformID) {
         var sql = "DELETE FROM user_role ur USING device d WHERE d.id = ur.device_id AND ur.user_id = ? "
             + "AND platform_device_id = ?";
         return jdbc.update(sql, user.id(), platformID);
+    }
+
+    @Override
+    public List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request) {
+        var sql = "SELECT latitude, longitude, trigger_instant FROM location_history lh JOIN user_role ur "
+            + "ON lh.device_id = ur.device_id JOIN device d ON d.id = ur.device_id WHERE ur.user_id = ? "
+            + "AND trigger_instant > ? AND trigger_instant < ? AND platform_device_id = ?";
+        return jdbc.query(sql, new Object[] {user.id(), request.from(), request.to(), request.deviceId()},
+            (rs, num) -> new LocationHistory().latitude(rs.getDouble("latitude"))
+                .longitude(rs.getDouble("longitude"))
+                .time(rs.getTimestamp("trigger_instant").toLocalDateTime()));
     }
 
     private Device mapDevice(ResultSet rs, int i) throws SQLException {

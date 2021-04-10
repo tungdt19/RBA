@@ -1,18 +1,21 @@
 package com.viettel.vtag.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.model.entity.LocationHistory;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.model.transfer.BatteryMessage;
+import com.viettel.vtag.model.transfer.ConfigMessage;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
-import com.viettel.vtag.repository.interfaces.LocationHistoryRepository;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
-import com.viettel.vtag.service.interfaces.MqttService;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
@@ -24,15 +27,23 @@ import java.util.UUID;
 @Data
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class DeviceServiceImpl implements DeviceService {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     private final DeviceRepository deviceRepository;
     private final IotPlatformService iotPlatformService;
-    private final LocationHistoryRepository locationHistory;
-    private final MqttService mqttService;
+    private final MqttClient mqttClient;
+
+    public DeviceServiceImpl(
+        DeviceRepository deviceRepository,
+        IotPlatformService iotPlatformService,
+        @Qualifier("mqtt-subscriber-client") MqttClient mqttClient
+    ) {
+        this.deviceRepository = deviceRepository;
+        this.iotPlatformService = iotPlatformService;
+        this.mqttClient = mqttClient;
+    }
 
     @Override
     public Mono<Integer> pairDevice(User user, PairDeviceRequest request) {
@@ -55,14 +66,18 @@ public class DeviceServiceImpl implements DeviceService {
             .map(id -> "/api/devices/" + id + "/active")
             .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "MAD")))
             .doOnNext(response -> log.info("activate {}: {}", uuid, response.statusCode()))
-            // .map(response -> response.statusCode().is2xxSuccessful())
-            // .filter(paired -> paired)
-            .map(response -> true)
-            .doOnNext(response -> mqttService.subscribe(new String[] {
-                "messages/" + uuid + "/data",
-                "messages/" + uuid + "/userdefined/battery",
-                "messages/" + uuid + "/userdefined/wificell",
-                "messages/" + uuid + "/userdefined/devconf"}))
+            .map(response -> response.statusCode().is2xxSuccessful())
+            .filter(paired -> paired)
+            .doOnNext(response -> {
+                try {
+                    mqttClient.subscribe(new String[] {
+                        "messages/" + uuid + "/data",
+                        "messages/" + uuid + "/userdefined/battery",
+                        "messages/" + uuid + "/userdefined/wificell",
+                        "messages/" + uuid + "/userdefined/devconf"});
+                } catch (MqttException e) {
+                        log.error("Couldn't sub", e);
+                    }})
             .doOnError(e -> log.error("Error on pairing device", e));
         // @formatter:on
     }
@@ -88,14 +103,19 @@ public class DeviceServiceImpl implements DeviceService {
             .map(id -> "/api/devices/" + id + "/deactive")
             .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
             .doOnNext(response -> log.info("deactivate {}: {}", uuid, response.statusCode()))
-            // .map(response -> response.statusCode().is2xxSuccessful())
-            // .filter(paired -> paired)
-            .map(response -> true)
-            .doOnNext(response -> mqttService.unsubscribe(new String[] {
-                "messages/" + uuid + "/data",
-                "messages/" + uuid + "/userdefined/battery",
-                "messages/" + uuid + "/userdefined/wificell",
-                "messages/" + uuid + "/userdefined/devconf"}));
+            .map(response -> response.statusCode().is2xxSuccessful())
+            .filter(paired -> paired)
+            .doOnNext(response -> {
+                try {
+                    mqttClient.unsubscribe(new String[] {
+                        "messages/" + uuid + "/data",
+                        "messages/" + uuid + "/userdefined/battery",
+                        "messages/" + uuid + "/userdefined/wificell",
+                        "messages/" + uuid + "/userdefined/devconf"});
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            });
         //@formatter:on
     }
 
@@ -121,12 +141,12 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest detail) {
-        return Mono.justOrEmpty(locationHistory.fetch(user, detail));
+        return Mono.justOrEmpty(deviceRepository.fetchHistory(user, detail));
     }
 
     @Override
     public Mono<ClientResponse> getMessages(User user, UUID deviceId, int offset, int limit) {
-        var endpoint = "/api/messages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
+        var endpoint = "/api=ages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
             + "&topic=data,battery,wificell&offset=" + offset + "&limit=" + limit;
         log.info("msg endpoint {}", endpoint);
         return iotPlatformService.getWithToken(endpoint);

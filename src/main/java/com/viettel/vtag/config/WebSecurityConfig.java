@@ -2,9 +2,12 @@ package com.viettel.vtag.config;
 
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -17,15 +20,23 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.ProxyProvider;
 
 import javax.net.ssl.SSLException;
 
+@Data
 @Configuration
 @EnableWebFluxSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
     private final ServerAuthenticationConverter authenticationConverter;
+
+    @Value("${vtag.proxy.host}")
+    private String host;
+
+    @Value("${vtag.proxy.port}")
+    private int port;
 
     @Bean
     public SecurityWebFilterChain configure(ServerHttpSecurity http) {
@@ -59,11 +70,17 @@ public class WebSecurityConfig {
         return new InMemoryTokenRepositoryImpl();
     }
 
+    @Bean
+    @Primary
+    public HttpClient proxyHttpClient() {
+        return HttpClient.create()
+            .tcpConfiguration(
+                tcpClient -> tcpClient.proxy(proxy -> proxy.type(ProxyProvider.Proxy.HTTP).host(host).port(port)));
+    }
+
     @Bean("insecure-httpclient")
     public HttpClient httpClient() throws SSLException {
-        var sslContext = SslContextBuilder.forClient()
-            .trustManager(InsecureTrustManagerFactory.INSTANCE)
-            .build();
+        var sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         return HttpClient.create().secure(t -> t.sslContext(sslContext));
     }
 }

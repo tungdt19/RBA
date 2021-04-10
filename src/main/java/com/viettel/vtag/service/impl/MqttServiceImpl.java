@@ -22,21 +22,17 @@ public class MqttServiceImpl implements MqttService {
     private final ObjectMapper mapper = new ObjectMapper();
 
     private final DeviceRepository deviceRepository;
-
     private final MqttClient subscriber;
     private final MqttClient publisher;
-    private final int qos;
 
     public MqttServiceImpl(
         DeviceRepository deviceRepository,
         @Qualifier("mqtt-subscriber-client") MqttClient subscriber,
-        @Qualifier("mqtt-publisher-client") MqttClient publisher,
-        @Value("${vtag.mqtt.qos}") int qos
+        @Qualifier("mqtt-publisher-client") MqttClient publisher
     ) {
         this.deviceRepository = deviceRepository;
         this.subscriber = subscriber;
         this.publisher = publisher;
-        this.qos = qos;
     }
 
     @PostConstruct

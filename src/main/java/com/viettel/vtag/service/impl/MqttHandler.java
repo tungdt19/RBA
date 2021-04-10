@@ -2,69 +2,42 @@ package com.viettel.vtag.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.firebase.messaging.Notification;
 import com.viettel.vtag.config.MqttSubscriberConfig;
-import com.viettel.vtag.model.ILocation;
-import com.viettel.vtag.model.entity.Location;
 import com.viettel.vtag.model.transfer.*;
-import com.viettel.vtag.repository.interfaces.DeviceRepository;
-import com.viettel.vtag.repository.interfaces.LocationHistoryRepository;
-import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
+import com.viettel.vtag.service.interfaces.GeoConvertService;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
 
-import java.util.*;
-
-import static reactor.netty.tcp.ProxyProvider.Proxy;
+import java.util.Arrays;
+import java.util.UUID;
 
 /** @see MqttSubscriberConfig#mqttSubscriberClient(MqttCallback) */
 @Slf4j
 @Service
+// @RequiredArgsConstructor
 public class MqttHandler implements MqttCallback {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final DeviceRepository deviceRepository;
-    private final FirebaseService firebaseService;
-    private final UserRepository userRepository;
-    private final LocationHistoryRepository locationHistory;
-    private final MessageSource messageSource;
     private final MqttClient publisher;
-    private final String convertAddress;
-    private final String convertUri;
-    private final String convertToken;
+    private final DeviceMessageServiceImpl deviceService;
+    private final FirebaseService firebaseService;
+    private final GeoConvertService geoConvertService;
 
     public MqttHandler(
-        DeviceRepository deviceRepository,
-        FirebaseService firebaseService,
-        UserRepository userRepository,
-        LocationHistoryRepository locationHistory,
-        MessageSource messageSource,
         @Qualifier("mqtt-publisher-client") MqttClient publisher,
-        @Value("${vtag.unwired.base-url}") String convertAddress,
-        @Value("${vtag.unwired.uri}") String convertUri,
-        @Value("${vtag.unwired.token}") String convertToken
+        DeviceMessageServiceImpl deviceService,
+        FirebaseService firebaseService,
+        GeoConvertService geoConvertService
     ) {
-        this.deviceRepository = deviceRepository;
-        this.firebaseService = firebaseService;
-        this.userRepository = userRepository;
-        this.locationHistory = locationHistory;
-        this.messageSource = messageSource;
         this.publisher = publisher;
-        this.convertAddress = convertAddress;
-        this.convertUri = convertUri;
-        this.convertToken = convertToken;
+        this.deviceService = deviceService;
+        this.firebaseService = firebaseService;
+        this.geoConvertService = geoConvertService;
     }
 
     /** @see MqttCallback#connectionLost(Throwable) */
@@ -109,7 +82,7 @@ public class MqttHandler implements MqttCallback {
         log.info("Received an GPS message: {}", payload);
         var gps = mapper.readValue(payload, LocationMessage.class);
         if ("DPOS".equals(gps.type())) {
-            locationHistory.save(deviceId, gps);
+            deviceService.saveLocation(deviceId, gps);
         }
     }
 
@@ -118,7 +91,8 @@ public class MqttHandler implements MqttCallback {
 
         switch (data.type()) {
             case "DSOS":
-                convertWifiCell(deviceId, data).subscribe(locationMessage -> notifyApp(deviceId, locationMessage));
+                convertWifiCell(deviceId, data).subscribe(
+                    locationMessage -> firebaseService.sos(deviceId, locationMessage));
                 break;
             case "DWFC":
                 convertWifiCell(deviceId, data).subscribe(locationMessage -> log.info("converted {}", locationMessage));
@@ -130,19 +104,17 @@ public class MqttHandler implements MqttCallback {
 
     private void updateBattery(UUID deviceId, String payload) throws JsonProcessingException {
         var data = mapper.readValue(payload, BatteryMessage.class);
-        var updated = deviceRepository.updateBattery(deviceId, data);
-        if (updated > 0) {
-            log.info("Updated battery info ({}) for {}", data.level(), deviceId);
-        }
+        deviceService.updateBattery(deviceId, data)
+            .filter(updated -> updated > 0)
+            .subscribe(updated -> log.info("Updated battery info ({}) for {}", data.level(), deviceId));
     }
 
     private void updateConfig(UUID deviceId, String payload) {
         try {
             var data = mapper.readValue(payload, ConfigMessage.class);
-            var updated = deviceRepository.updateConfig(deviceId, data);
-            if (updated > 0) {
-                log.info("Updated config info ({}) for {}", data.MMC().modeString(), deviceId);
-            }
+            deviceService.updateConfig(deviceId, data)
+                .filter(updated -> updated > 0)
+                .subscribe(updated -> log.info("Updated config info ({}) for {}", data.MMC().modeString(), deviceId));
         } catch (JsonProcessingException e) {
             log.error("Couldn't parse MQTT config payload: {}", e.getMessage());
         }
@@ -150,10 +122,11 @@ public class MqttHandler implements MqttCallback {
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, CellWifiMessage payload) {
         log.info("Converting wificell info from {}: {}", deviceId, payload.type());
-        return convert(deviceId, payload).doOnNext(
-            location -> log.info("Converted message from {}: {}", deviceId, location))
-            .doOnNext(location -> locationHistory.save(deviceId, location))
-            .map(LocationMessage::fromLocation).doOnNext(location -> {
+        return geoConvertService.convert(deviceId, payload)
+            .doOnNext(location -> log.info("Converted message from {}: {}", deviceId, location))
+            .doOnNext(location -> deviceService.saveLocation(deviceId, location))
+            .map(LocationMessage::fromLocation)
+            .doOnNext(location -> {
                 var topic = "messages/" + deviceId + "/data";
                 try {
                     var bytes = new MqttMessage();
@@ -162,43 +135,8 @@ public class MqttHandler implements MqttCallback {
                 } catch (MqttException | JsonProcessingException e) {
                     log.error("Couldn't publish location {} to topic '{}'", location, topic, e);
                 }
-            }).doOnError(e -> log.error("Error converting: {}", e.getMessage()));
-    }
-
-    private void notifyApp(UUID deviceId, ILocation location) {
-        //@formatter:off
-        var notification= Notification.builder()
-            .setTitle(messageSource.getMessage("message.sos.title", new Object[] {}, Locale.ENGLISH))
-            .setBody(messageSource.getMessage("message.sos.content", new Object[] {}, Locale.ENGLISH))
-            .build();
-        var tokens = userRepository.fetchAllViewers(deviceId);
-        var data = Map.of(
-            "latitude", String.valueOf(location.latitude()),
-            "longitude", String.valueOf(location.longitude()));
-        firebaseService.message(tokens, notification, data);
-        //@formatter:off
-    }
-
-    public Mono<Location> convert(UUID deviceId, CellWifiMessage json) {
-        return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(proxyHttpClient()))
-            .baseUrl(convertAddress)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build()
-            .post()
-            .uri(convertUri)
-            .bodyValue(json.token(convertToken))
-            .exchange()
-            .doOnNext(response -> log.info("converted {} -> {}", deviceId, response.statusCode()))
-            .filter(response -> response.statusCode().is2xxSuccessful())
-            .flatMap(response -> response.bodyToMono(Location.class))
-            .doOnNext(location -> log.info("location {}: {}", deviceId, location));
-    }
-
-    private HttpClient proxyHttpClient() {
-        return HttpClient.create()
-            .tcpConfiguration(tcpClient -> tcpClient
-                .proxy(proxy -> proxy.type(Proxy.HTTP).host("10.55.123.98").port(3128)));
+            })
+            .doOnError(e -> log.error("Error converting: {}", e.getMessage()));
     }
 
     /**

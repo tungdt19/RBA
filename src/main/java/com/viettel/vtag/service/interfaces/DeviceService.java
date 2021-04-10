@@ -1,9 +1,13 @@
 package com.viettel.vtag.service.interfaces;
 
+import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.model.entity.LocationHistory;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.model.transfer.BatteryMessage;
+import com.viettel.vtag.model.transfer.ConfigMessage;
+import com.viettel.vtag.model.transfer.LocationMessage;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
