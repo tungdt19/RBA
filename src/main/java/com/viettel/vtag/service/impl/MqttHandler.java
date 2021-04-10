@@ -26,6 +26,8 @@ import reactor.netty.http.client.HttpClient;
 
 import java.util.*;
 
+import static reactor.netty.tcp.ProxyProvider.Proxy;
+
 /** @see MqttSubscriberConfig#mqttSubscriberClient(MqttCallback) */
 @Slf4j
 @Service
@@ -33,7 +35,6 @@ public class MqttHandler implements MqttCallback {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final HttpClient httpClient;
     private final DeviceRepository deviceRepository;
     private final FirebaseService firebaseService;
     private final UserRepository userRepository;
@@ -45,7 +46,6 @@ public class MqttHandler implements MqttCallback {
     private final String convertToken;
 
     public MqttHandler(
-        HttpClient httpClient,
         DeviceRepository deviceRepository,
         FirebaseService firebaseService,
         UserRepository userRepository,
@@ -56,7 +56,6 @@ public class MqttHandler implements MqttCallback {
         @Value("${vtag.unwired.uri}") String convertUri,
         @Value("${vtag.unwired.token}") String convertToken
     ) {
-        this.httpClient = httpClient;
         this.deviceRepository = deviceRepository;
         this.firebaseService = firebaseService;
         this.userRepository = userRepository;
@@ -154,8 +153,7 @@ public class MqttHandler implements MqttCallback {
         return convert(deviceId, payload).doOnNext(
             location -> log.info("Converted message from {}: {}", deviceId, location))
             .doOnNext(location -> locationHistory.save(deviceId, location))
-            .map(LocationMessage::fromLocation)
-            .doOnNext(location -> {
+            .map(LocationMessage::fromLocation).doOnNext(location -> {
                 var topic = "messages/" + deviceId + "/data";
                 try {
                     var bytes = new MqttMessage();
@@ -164,8 +162,7 @@ public class MqttHandler implements MqttCallback {
                 } catch (MqttException | JsonProcessingException e) {
                     log.error("Couldn't publish location {} to topic '{}'", location, topic, e);
                 }
-            })
-            .doOnError(e -> log.error("Error converting", e));
+            }).doOnError(e -> log.error("Error converting: {}", e.getMessage()));
     }
 
     private void notifyApp(UUID deviceId, ILocation location) {
@@ -184,7 +181,7 @@ public class MqttHandler implements MqttCallback {
 
     public Mono<Location> convert(UUID deviceId, CellWifiMessage json) {
         return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .clientConnector(new ReactorClientHttpConnector(proxyHttpClient()))
             .baseUrl(convertAddress)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build()
@@ -196,6 +193,12 @@ public class MqttHandler implements MqttCallback {
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(Location.class))
             .doOnNext(location -> log.info("location {}: {}", deviceId, location));
+    }
+
+    private HttpClient proxyHttpClient() {
+        return HttpClient.create()
+            .tcpConfiguration(tcpClient -> tcpClient
+                .proxy(proxy -> proxy.type(Proxy.HTTP).host("10.55.123.98").port(3128)));
     }
 
     /**

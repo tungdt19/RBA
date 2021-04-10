@@ -150,14 +150,16 @@ public class DeviceController {
             .defaultIfEmpty(status(NO_CONTENT).body(ResponseJson.of(1, "Couldn't get any response")));
     }
 
-    // @GetMapping("/geo")
-    public Mono<ResponseEntity<ResponseJson>> getGeoFencing() { return null; }
+    @GetMapping("/geo")
+    public Mono<ResponseEntity<ResponseJson>> getGeoFencing(
+        @RequestParam("device_id") String deviceId, ServerHttpRequest request
+    ) {
+        return null;
+    }
 
-    // @PostMapping("/geo")
+    @PostMapping("/geo")
     public Mono<ResponseEntity<ResponseJson>> createOrUpdateGeoFencing() { return null; }
 
-    // @PutMapping("/geo")
-    // public Mono<ResponseEntity<ResponseJson>> getGeoFencing() { return null; }
-    // @DeleteMapping("/geo")
+    @DeleteMapping("/geo")
     public Mono<ResponseEntity<ResponseJson>> deleteGeoFencing() { return null; }
 }
