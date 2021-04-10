@@ -30,6 +30,9 @@ vtag:
     allowed-chars: "0123456789"
   storage:
     location: ~/storage/
+  proxy:
+    host: 10.55.123.98
+    port: 3128
 
 ---
 spring:
@@ -43,6 +46,8 @@ spring:
     username: root
     password: 1
 vtag:
+  proxy:
+    enable: false
   mqtt:
     url: tcp://127.0.0.1:1883
     topic: messages/+/wildcard
@@ -61,6 +66,8 @@ spring:
     username: root
     password: 1
 vtag:
+  proxy:
+    enable: false
   platform:
     base-url: https://api.iotcloud.com.vn:4438
   mqtt:
@@ -82,6 +89,8 @@ spring:
     username: hrmuser
     password: 123456a@
 vtag:
+  proxy:
+    enable: true
   platform:
     base-url: https://api.iotcloud.com.vn:4438
   mqtt:

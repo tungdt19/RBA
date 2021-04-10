@@ -61,7 +61,7 @@ public class MqttServiceImpl implements MqttService {
     @Override
     public void subscribe(String[] topics) {
         try {
-            subscriber.subscribe(topics, new int[] {qos});
+            subscriber.subscribe(topics);
         } catch (MqttException e) {
             log.error("Couldn't subscribe to topics {}", Arrays.toString(topics), e);
         }

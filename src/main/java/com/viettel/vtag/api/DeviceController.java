@@ -32,8 +32,7 @@ public class DeviceController {
 
     @GetMapping("/list")
     public Mono<ResponseEntity<ResponseBody>> getDevices(ServerHttpRequest request) {
-        return Mono.justOrEmpty(TokenUtils.getToken(request))
-            .map(userService::checkToken)
+        return Mono.justOrEmpty(userService.checkToken(request))
             .flatMap(deviceService::getList)
             .map(devices -> ok(of(0, "Okie dokie!", devices)))
             .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't get user's device")))
@@ -45,8 +44,7 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseBody>> addViewer(
         @RequestBody AddViewerRequest detail, ServerHttpRequest request
     ) {
-        return Mono.justOrEmpty(TokenUtils.getToken(request))
-            .map(userService::checkToken)
+        return Mono.justOrEmpty(userService.checkToken(request))
             .flatMap(user -> deviceService.addViewer(user, detail))
             .map(added -> ok(of(0, "Add viewer successfully!")))
             .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't add user as viewer")))
@@ -58,8 +56,7 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseBody>> deleteViewer(
         @RequestBody RemoveViewerRequest detail, ServerHttpRequest request
     ) {
-        return Mono.justOrEmpty(TokenUtils.getToken(request))
-            .map(userService::checkToken)
+        return Mono.justOrEmpty(userService.checkToken(request))
             .flatMap(user -> deviceService.removeViewer(user, detail))
             .filter(removed -> removed > 0)
             .map(removed -> ok(of(0, "Add viewer successfully!")))
@@ -106,8 +103,7 @@ public class DeviceController {
             var requestMono = Mono.just(new LocationHistoryRequest().deviceId(UUID.fromString(deviceId))
                 .from(LocalDateTime.parse(from))
                 .to(LocalDateTime.parse(to)));
-            return Mono.justOrEmpty(TokenUtils.getToken(request))
-                .map(userService::checkToken)
+            return Mono.justOrEmpty(userService.checkToken(request))
                 .zipWith(requestMono)
                 .flatMap(req -> deviceService.fetchHistory(req.getT1(), req.getT2()))
                 .map(history -> ok(of(0, "Okie dokie!", history)))
@@ -154,6 +150,7 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseJson>> getGeoFencing(
         @RequestParam("device_id") String deviceId, ServerHttpRequest request
     ) {
+
         return null;
     }
 

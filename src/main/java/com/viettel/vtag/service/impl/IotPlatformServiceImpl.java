@@ -56,9 +56,8 @@ public class IotPlatformServiceImpl implements IotPlatformService {
 
         fetchToken().map(PlatformToken::expiresIn)
             .doOnNext(expire -> log.info("Setting up token schedule for each {}s", expire))
-            .subscribe(expire -> scheduler.schedule(
-                () -> fetchToken().doOnNext(token -> log.info("Renew platform token: {}", token)),
-                new PeriodicTrigger(60, TimeUnit.SECONDS)));
+            .subscribe(expire -> scheduler.schedule(() -> fetchToken().subscribe(),
+                new PeriodicTrigger(expire, TimeUnit.SECONDS)));
     }
 
     private Mono<PlatformToken> fetchToken() {

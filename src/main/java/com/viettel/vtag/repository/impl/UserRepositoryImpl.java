@@ -1,5 +1,6 @@
 package com.viettel.vtag.repository.impl;
 
+import com.viettel.vtag.model.entity.Token;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 import com.viettel.vtag.repository.interfaces.UserRepository;
@@ -87,9 +88,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public int saveToken(Object token, int userId) {
-        var sql = "INSERT INTO token (token, user_id) VALUES (?, ?)";
-        return jdbc.update(sql, token, userId);
+    public int saveToken(Token token, int userId) {
+        var sql = "INSERT INTO token (user_id, token, expired_instant) VALUES (?, ?, ?)";
+        return jdbc.update(sql, userId, token.uuid(), token.expire());
     }
 
     @Override

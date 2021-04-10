@@ -1,5 +1,6 @@
 package com.viettel.vtag.service.interfaces;
 
+import com.viettel.vtag.model.entity.Token;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.utils.TokenUtils;
@@ -10,7 +11,7 @@ public interface UserService {
 
     Mono<Integer> register(RegisterRequest request);
 
-    String createToken(TokenRequest request);
+    Token createToken(TokenRequest request);
 
     Mono<Integer> changePassword(User user, ChangePasswordRequest password);
 
@@ -19,10 +20,10 @@ public interface UserService {
     Mono<Integer> delete(User user);
 
     default User checkToken(ServerHttpRequest request) {
-        return checkToken(TokenUtils.getToken(request));
+        return checkUserToken(TokenUtils.getToken(request));
     }
 
-    User checkToken(String token);
+    User checkUserToken(String token);
 
     int updateNotificationToken(User user, FcmTokenUpdateRequest request);
 }

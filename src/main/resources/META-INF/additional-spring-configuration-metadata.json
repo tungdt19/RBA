@@ -92,6 +92,26 @@
             "name": "vtag.unwired.uri",
             "type": "java.lang.String",
             "description": "Description for vtag.unwired.base-url."
+        }, {
+            "name": "vtag.proxy.enable",
+            "type": "java.lang.Boolean",
+            "description": "Description for vtag.proxy.enable."
+        }, {
+            "name": "vtag.proxy.host",
+            "type": "java.lang.String",
+            "description": "Description for vtag.proxy.enable."
+        }, {
+            "name": "vtag.proxy.port",
+            "type": "java.lang.Integer",
+            "description": "Description for vtag.proxy.enable."
+        }, {
+            "name": "vtag.mqtt.publisher-client-id",
+            "type": "java.lang.String",
+            "description": "Description for vtag.mqtt.publisher-client-id."
+        }, {
+            "name": "vtag.mqtt.subscriber-client-id",
+            "type": "java.lang.String",
+            "description": "Description for vtag.mqtt.subscriber-client-id."
         }
     ]
 }

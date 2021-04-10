@@ -1,6 +1,7 @@
 package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.entity.Identity;
+import com.viettel.vtag.model.entity.Token;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.repository.impl.UserRepositoryImpl;
@@ -42,16 +43,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String createToken(TokenRequest request) {
+    public Token createToken(TokenRequest request) {
         try {
             var phone = PhoneUtils.standardize(request.username());
             var user = userRepository.findByPhone(phone);
             log.info("create token {}", user);
             if (user == null || !bCrypt.matches(request.password(), user.encryptedPassword())) return null;
 
-            var token = UUID.randomUUID();
+            var token = Token.generate();
             var updated = userRepository.saveToken(token, user.id());
-            return updated > 0 ? token.toString() : null;
+            return updated > 0 ? token : null;
         } catch (Exception e) {
             log.error("cannot create token {}", e.getMessage());
             return null;
@@ -72,11 +73,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Integer> delete(User user) {
-        return Mono.just(userRepository.delete(user));
+        return Mono.just(userRepository.delete(user)).filter(deleted -> deleted > 0);
     }
 
     @Override
-    public User checkToken(String token) {
+    public User checkUserToken(String token) {
         return userRepository.findByToken(token);
     }
 

@@ -45,19 +45,17 @@ public class UserController {
         }
     }
 
-    /** {@link UserServiceImpl#register(User)} */
+    /** {@link UserServiceImpl#register} */
     @PostMapping("/register")
     public Mono<ResponseEntity<ResponseBody>> register(@RequestBody RegisterRequest request) {
-        return userService.register(request).map(registered -> {
-            switch (registered) {
-                case 1:
-                    return ok(of(0, "Created user successfully!"));
-                case -1:
-                    return status(CONFLICT).body(of(1, "User's already existed!"));
-                default:
-                    return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!"));
-            }
-        })
+        return userService.register(request)
+            .map(registered -> {
+                switch (registered) {
+                    case 1: return ok(of(0, "Created user successfully!"));
+                    case -1: return status(CONFLICT).body(of(1, "User's already existed!"));
+                    default: return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create user!"));
+                }
+            })
             .defaultIfEmpty(status(CONFLICT).body(of(1, "Couldn't create platform user!")))
             .onErrorReturn(status(BAD_REQUEST).body(of(1, "Couldn't create user!")));
     }
@@ -149,18 +147,12 @@ public class UserController {
     }
 
     @DeleteMapping
-    public ResponseEntity<ResponseBody> deleteUser(ServerHttpRequest request) {
-        try {
-            var user = userService.checkToken(request);
-            var deleted = userService.delete(user);
-            if (deleted > 0) {
-                return ok(of(0, "Delete user successfully!"));
-            } else {
-                return ok(of(1, "Couldn't delete user!"));
-            }
-        } catch (Exception e) {
-            var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't delete user!", detail));
-        }
+    public Mono<ResponseEntity<ResponseBody>> deleteUser(ServerHttpRequest request) {
+        var user = userService.checkToken(request);
+        return userService.delete(user)
+            .map(deleted -> ok(of(0, "Delete user successfully!")))
+            .defaultIfEmpty(ok(of(1, "Couldn't delete user!")))
+            .onErrorContinue(Exception.class, (e, o) -> status(INTERNAL_SERVER_ERROR).body(
+                of(1, "Couldn't delete user!", Map.of("detail", String.valueOf(e.getMessage())))));
     }
 }

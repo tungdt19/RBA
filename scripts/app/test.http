@@ -58,7 +58,7 @@ Content-Type: application/json
 
 
 ### wifi cell ----------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/device/test
+POST http://{{host}}/vtag/device/test
 Content-Type: application/json
 
 {
@@ -81,7 +81,7 @@ Content-Type: application/json
 
 
 ### GPS ----------------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/device/test
+POST http://{{host}}/vtag/device/test
 Content-Type: application/json
 
 {
@@ -96,7 +96,7 @@ Content-Type: application/json
 
 
 ### SOS ----------------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/device/test
+POST http://{{host}}/vtag/device/test
 Content-Type: application/json
 
 {
@@ -117,10 +117,12 @@ Content-Type: application/json
 }
 
 ### SMS
-GET http://{{host}}/vtag/test/sms?recipient=0365819777&content="Hello world"
+POST http://{{host}}/vtag/test/sms
+    ?recipient=0365819777
+    &content="Hello world"
 
 
 ### wifi cell ----------------------------------------------------------------------------------------------------------
-POST http://{{host}}:8080/vtag/test/json
-Content-Type: application/json
+POST http://{{host}}/vtag/test/fcm
+
 

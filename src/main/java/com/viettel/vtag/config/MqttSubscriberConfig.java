@@ -6,6 +6,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.util.Arrays;
 
@@ -28,6 +29,7 @@ public class MqttSubscriberConfig {
     @Value("${vtag.mqtt.timeout}")
     private int timeout;
 
+    @Primary
     @Bean("mqtt-subscriber-client")
     public MqttClient mqttSubscriberClient(MqttCallback handler) throws MqttException {
         var client = new MqttClient(url, clientId, new MemoryPersistence());
