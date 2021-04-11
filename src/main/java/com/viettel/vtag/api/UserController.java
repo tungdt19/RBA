@@ -13,6 +13,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.Locale;
 import java.util.Map;
 
 import static com.viettel.vtag.model.response.ResponseBody.of;
@@ -30,14 +31,14 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/otp/register")
-    public ResponseEntity<ResponseBody> registerOtp(@RequestBody OtpRequest request) {
+    public ResponseEntity<ResponseBody> registerOtp(@RequestBody OtpRequest request, Locale locale) {
         try {
             var otp = otpService.generateRegisterOtp(request);
             if (otp == null) {
                 return status(CONFLICT).body(of(1, "User's already existed!"));
             }
 
-            otpService.sendOtp(request, otp);
+            otpService.sendOtp(request, otp, locale);
             return ok(of(0, "Created OTP successfully!", otp));
         } catch (Exception e) {
             var detail = Map.of("detail", String.valueOf(e.getMessage()));
@@ -61,14 +62,14 @@ public class UserController {
     }
 
     @PostMapping("/otp/reset")
-    public ResponseEntity<ResponseBody> resetOtp(@RequestBody OtpRequest request) {
+    public ResponseEntity<ResponseBody> resetOtp(@RequestBody OtpRequest request, Locale locale) {
         try {
             var otp = otpService.generateResetOtp(request);
             if (otp == null) {
                 return status(NOT_FOUND).body(of(1, "User does not exist!"));
             }
 
-            otpService.sendOtp(request, otp);
+            otpService.sendOtp(request, otp, locale);
             var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
             return ok(of(0, "Created OTP successfully!", data));
         } catch (Exception e) {
@@ -94,12 +95,15 @@ public class UserController {
         @RequestBody FcmTokenUpdateRequest detail, ServerHttpRequest request
     ) {
         var user = userService.checkToken(request);
+        if (user == null) {
+            return status(UNAUTHORIZED).body(of(1, "Invalid username or password!"));
+        }
         var updated = userService.updateNotificationToken(user, detail);
         if (updated > 0) {
-            return ok(of(0, "Get token successfully!", Map.of("token", updated)));
+            return ok(of(0, "Okie dokie!"));
         }
 
-        return status(UNAUTHORIZED).body(of(1, "Invalid username or password!"));
+        return ok(of(0, "Couldn't update FCM token!"));
     }
 
     @GetMapping("/info")
@@ -143,7 +147,7 @@ public class UserController {
 
     @DeleteMapping("/token")
     public ResponseEntity<ResponseBody> signout(ServerHttpRequest request) {
-        return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't delete token!"));
+        return status(BAD_REQUEST).body(of(1, "Couldn't delete token!"));
     }
 
     @DeleteMapping

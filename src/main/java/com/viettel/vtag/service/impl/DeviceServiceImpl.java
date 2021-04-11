@@ -1,13 +1,10 @@
 package com.viettel.vtag.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.model.entity.LocationHistory;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
-import com.viettel.vtag.model.transfer.BatteryMessage;
-import com.viettel.vtag.model.transfer.ConfigMessage;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
@@ -16,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
@@ -68,8 +64,8 @@ public class DeviceServiceImpl implements DeviceService {
                         "messages/" + uuid + "/userdefined/wificell",
                         "messages/" + uuid + "/userdefined/devconf"});
                 } catch (MqttException e) {
-                        log.error("Couldn't sub", e);
-                    }})
+                    log.error("Couldn't sub", e);
+                }})
             .doOnError(e -> log.error("Error on pairing device", e));
         // @formatter:on
     }

@@ -6,11 +6,10 @@ public class TokenUtils {
     private TokenUtils() {}
 
     public static String getToken(ServerHttpRequest request) {
-        var authorizations = request.getHeaders().get("Authorization");
-        if (authorizations == null || authorizations.size() == 0) {
+        var authorization = request.getHeaders().getFirst("Authorization");
+        if (authorization == null) {
             return null;
         }
-        var token = authorizations.get(0);
-        return token.startsWith("Bearer ") ? token.substring(7) : null; // "Bearer ".length
+        return authorization.startsWith("Bearer ") ? authorization.substring(7) : null; // "Bearer ".length
     }
 }

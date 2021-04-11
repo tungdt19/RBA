@@ -94,10 +94,10 @@ public class OtpServiceImpl implements OtpService {
     }
 
     @Override
-    public void sendOtp(OtpRequest request, OTP otp) {
+    public void sendOtp(OtpRequest request, OTP otp, Locale locale) {
         log.info("{} -> {}", request, otp);
         var params = new Object[] {otp.content(), otp.expiredInstant()};
-        communicationService.send(request, messageSource.getMessage("message.otp", params, Locale.ENGLISH));
+        communicationService.send(request, messageSource.getMessage("message.otp", params, locale));
     }
 
     @PostConstruct

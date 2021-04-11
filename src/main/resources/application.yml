@@ -53,6 +53,8 @@ vtag:
     topic: messages/+/wildcard
     username: username
     password: password
+    publisher-client-id: vtag_dev_publisher
+    subscriber-client-id: vtag_dev_subscriber
 
 ---
 spring:

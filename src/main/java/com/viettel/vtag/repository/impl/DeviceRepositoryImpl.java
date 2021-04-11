@@ -85,7 +85,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public List<UUID> fetchAllDevices() {
-        var sql = "SELECT platform_device_id FROM device";
+        var sql = "SELECT platform_device_id FROM device WHERE platform_device_id IS NOT NULL";
         return jdbc.query(sql, (rs, rowNum) -> rs.getObject("platform_device_id", UUID.class));
     }
 

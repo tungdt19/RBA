@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.helpers.MessageFormatter;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Data
@@ -31,6 +34,7 @@ public class TestController {
     private final DeviceService deviceService;
     private final FirebaseService firebaseService;
     private final CommunicationService communicationService;
+    private final MessageSource messageSource;
 
     @PostMapping("/sms")
     public void sendSms(@RequestParam String recipient, @RequestParam String content) {
@@ -82,7 +86,15 @@ public class TestController {
     }
 
     @PostMapping("/fcm")
-    public void fcm(@RequestBody String sql) {
-        firebaseService.message(List.of(), Notification.builder().build(), Map.of());
+    public String fcm(@RequestBody String content, Locale locale) {
+        var title = messageSource.getMessage("message.sos.title", new Object[] { }, Locale.ENGLISH);
+        var body = messageSource.getMessage("message.sos.content", new Object[] {"content"}, Locale.ENGLISH);
+        log.info("locale {} -> title: {}; body: {}", locale, title, body);
+
+        var notification = Notification.builder().setTitle(title).setBody(body).build();
+        var response = firebaseService.message(List.of(), notification, Map.of("content", content));
+        return MessageFormatter.arrayFormat("{}/{}/{}",
+            new Object[] {response.getSuccessCount(), response.getFailureCount(), response.getResponses().size()})
+            .getMessage();
     }
 }

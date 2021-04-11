@@ -22,7 +22,7 @@ public class MqttServiceImpl implements MqttService {
     public void subscribeExistedDevices() {
         //@formatter:off
         var uuids = deviceRepository.fetchAllDevices();
-        log.info("Subscribing to topic: {}", uuids);
+        log.info("Subscribing to topics: {}", uuids);
         for (var uuid : uuids) {
             try {
                 subscriber.subscribe(new String[] {

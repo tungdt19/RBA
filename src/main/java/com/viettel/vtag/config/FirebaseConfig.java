@@ -4,6 +4,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 
+@Slf4j
 @Configuration
 public class FirebaseConfig {
 
@@ -30,11 +32,13 @@ public class FirebaseConfig {
             .setCredentials(GoogleCredentials.fromStream(new ClassPathResource("firebase-token.json").getInputStream()))
             // .setDatabaseUrl("https://vtag-39bef-default-rtdb.firebaseio.com")
             .build());
+
         return FirebaseMessaging.getInstance(app);
     }
 
     private void configProxy() {
         if (proxyEnable) {
+            log.info("Using proxy {}:{} for firebase", proxyHost, proxyPort);
             System.setProperty("http.proxyHost", proxyHost);
             System.setProperty("http.proxyPort", String.valueOf(proxyPort));
         }

@@ -122,7 +122,11 @@ POST http://{{host}}/vtag/test/sms
     &content="Hello world"
 
 
-### wifi cell ----------------------------------------------------------------------------------------------------------
+### fcm ----------------------------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/test/fcm
+Content-Type: application/json
+Accept-Language: vi-VN
+
+{"name": "$timestamp"}
 
 

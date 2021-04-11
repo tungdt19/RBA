@@ -59,7 +59,6 @@ CREATE TABLE location_history (
     latitude        FLOAT8,
     longitude       FLOAT8,
     accuracy        INT,
-    insert_instant  TIMESTAMP,
     trigger_instant TIMESTAMP
 );
 
