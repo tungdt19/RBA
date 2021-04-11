@@ -1,5 +1,6 @@
 package com.viettel.vtag.config;
 
+import com.viettel.vtag.service.impl.MqttHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -29,6 +30,7 @@ public class MqttSubscriberConfig {
     @Value("${vtag.mqtt.timeout}")
     private int timeout;
 
+    /** {@link MqttHandler} */
     @Primary
     @Bean("mqtt-subscriber-client")
     public MqttClient mqttSubscriberClient(MqttCallback handler) throws MqttException {

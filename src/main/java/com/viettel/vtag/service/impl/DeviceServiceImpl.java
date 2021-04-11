@@ -12,6 +12,7 @@ import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -27,6 +28,7 @@ import java.util.UUID;
 @Data
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DeviceServiceImpl implements DeviceService {
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -34,16 +36,6 @@ public class DeviceServiceImpl implements DeviceService {
     private final DeviceRepository deviceRepository;
     private final IotPlatformService iotPlatformService;
     private final MqttClient mqttClient;
-
-    public DeviceServiceImpl(
-        DeviceRepository deviceRepository,
-        IotPlatformService iotPlatformService,
-        @Qualifier("mqtt-subscriber-client") MqttClient mqttClient
-    ) {
-        this.deviceRepository = deviceRepository;
-        this.iotPlatformService = iotPlatformService;
-        this.mqttClient = mqttClient;
-    }
 
     @Override
     public Mono<Integer> pairDevice(User user, PairDeviceRequest request) {

@@ -105,7 +105,7 @@ public class UserController {
     @GetMapping("/info")
     public ResponseEntity<ResponseBody> getUserInfo(ServerHttpRequest request) {
         var user = userService.checkToken(request);
-        return status(OK).body(of(1, "Okie dokie!", user));
+        return status(OK).body(of(0, "Okie dokie!", user));
     }
 
     @PostMapping("/password")

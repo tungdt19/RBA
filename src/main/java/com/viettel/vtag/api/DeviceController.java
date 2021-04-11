@@ -34,9 +34,9 @@ public class DeviceController {
         return Mono.justOrEmpty(userService.checkToken(request))
             .flatMap(deviceService::getList)
             .map(devices -> ok(of(0, "Okie dokie!", devices)))
-            .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't get user's device")))
+            .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't get user's devices")))
             .doOnError(throwable -> log.error("Couldn't add user", throwable))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't add user as viewer")));
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't get user's devices")));
     }
 
     @PostMapping("/viewer")
@@ -108,6 +108,8 @@ public class DeviceController {
                 .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't find any history!")))
                 .doOnError(e -> log.error("Error fetching history", e))
                 .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
+        } catch (IllegalArgumentException e) {
+            return Mono.just(badRequest().body(of(1, "Invalid device id!")));
         } catch (DateTimeParseException e) {
             return Mono.just(badRequest().body(of(1, "Invalid date time format!")));
         }

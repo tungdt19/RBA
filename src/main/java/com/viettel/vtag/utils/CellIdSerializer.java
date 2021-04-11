@@ -20,7 +20,7 @@ public class CellIdSerializer extends JsonSerializer<CellWifiMessage> {
         json.writeStartObject();
 
         json.writeObjectField("token", value.token());
-        json.writeObjectField("radio", value.connection());
+        json.writeObjectField("radio", "nbiot"); // value.connection()
         json.writeObjectField("address", 1);
         json.writeObjectField("mcc", 452);
         json.writeObjectField("mnc", 4);

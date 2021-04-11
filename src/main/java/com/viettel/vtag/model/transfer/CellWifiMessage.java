@@ -2,7 +2,6 @@ package com.viettel.vtag.model.transfer;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.utils.CellIdSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -35,6 +34,13 @@ public class CellWifiMessage {
     @JsonProperty("Ver")
     private String version;
 
+    private Map<String, Object> properties = new HashMap<>();
+
+    @JsonAnySetter
+    public void add(String key, Object value) {
+        properties.put(key, value);
+    }
+
     @Data
     @Accessors(fluent = true)
     public static class Cell {
@@ -64,12 +70,5 @@ public class CellWifiMessage {
 
         @JsonProperty("SS")
         private int ss;
-    }
-
-    private Map<String, Object> properties = new HashMap<>();
-
-    @JsonAnySetter
-    public void add(String key, Object value) {
-        properties.put(key, value);
     }
 }

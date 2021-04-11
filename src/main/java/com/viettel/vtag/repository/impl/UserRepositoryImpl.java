@@ -104,7 +104,7 @@ public class UserRepositoryImpl implements UserRepository {
         try {
             var sql = "SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email, "
                 + "phone_no, avatar, fcm_token, platform_group_id FROM token t LEFT JOIN end_user u ON t.user_id = u.id"
-                + " WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.token = ?";
+                + " WHERE t.token = ?"; // AND (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP)
             return jdbc.queryForObject(sql, new Object[] {UUID.fromString(token)}, this::mapUser);
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;

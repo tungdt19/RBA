@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.config.MqttSubscriberConfig;
 import com.viettel.vtag.model.transfer.*;
+import com.viettel.vtag.service.interfaces.DeviceMessageService;
 import com.viettel.vtag.service.interfaces.FirebaseService;
 import com.viettel.vtag.service.interfaces.GeoConvertService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +25,13 @@ public class MqttHandler implements MqttCallback {
     private final ObjectMapper mapper = new ObjectMapper();
 
     private final MqttClient publisher;
-    private final DeviceMessageServiceImpl deviceService;
+    private final DeviceMessageService deviceService;
     private final FirebaseService firebaseService;
     private final GeoConvertService geoConvertService;
 
     public MqttHandler(
         @Qualifier("mqtt-publisher-client") MqttClient publisher,
-        DeviceMessageServiceImpl deviceService,
+        DeviceMessageService deviceService,
         FirebaseService firebaseService,
         GeoConvertService geoConvertService
     ) {
@@ -121,9 +122,7 @@ public class MqttHandler implements MqttCallback {
     }
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, CellWifiMessage payload) {
-        log.info("Converting wificell info from {}: {}", deviceId, payload.type());
-        return geoConvertService.convert(deviceId, payload)
-            .doOnNext(location -> log.info("Converted message from {}: {}", deviceId, location))
+        return geoConvertService.convert(deviceId, payload).doOnNext(location -> log.info("{}: {}", deviceId, location))
             .doOnNext(location -> deviceService.saveLocation(deviceId, location))
             .map(location -> LocationMessage.fromLocation(location, payload))
             .doOnNext(location -> {

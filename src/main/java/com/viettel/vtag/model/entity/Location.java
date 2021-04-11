@@ -33,4 +33,7 @@ public class Location implements ILocation {
 
     @JsonProperty
     private String address;
+
+    @JsonProperty
+    private String notice;
 }

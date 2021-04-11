@@ -27,9 +27,8 @@ Authorization: Bearer {{vtag_token}}
 GET http://{{host}}/vtag/device/history
     ?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
     &from=2021-03-31T00:00:00
-    &to=2021-04-10T12:59:59
+    &to=2021-12-31T12:59:59
 Authorization: Bearer {{vtag_token}}
-Content-Type: application/json
 
 
 
