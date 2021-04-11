@@ -79,9 +79,9 @@ public class MqttHandler implements MqttCallback {
     }
 
     private void handleGpsMessage(UUID deviceId, String payload) throws JsonProcessingException {
-        log.info("Received an GPS message: {}", payload);
         var gps = mapper.readValue(payload, LocationMessage.class);
         if ("DPOS".equals(gps.type())) {
+            log.info("Received an GPS message: {}", payload);
             deviceService.saveLocation(deviceId, gps);
         }
     }
@@ -125,7 +125,7 @@ public class MqttHandler implements MqttCallback {
         return geoConvertService.convert(deviceId, payload)
             .doOnNext(location -> log.info("Converted message from {}: {}", deviceId, location))
             .doOnNext(location -> deviceService.saveLocation(deviceId, location))
-            .map(LocationMessage::fromLocation)
+            .map(location -> LocationMessage.fromLocation(location, payload))
             .doOnNext(location -> {
                 var topic = "messages/" + deviceId + "/data";
                 try {

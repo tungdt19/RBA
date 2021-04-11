@@ -5,7 +5,6 @@ import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.model.response.ResponseJson;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.UserService;
-import com.viettel.vtag.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -69,8 +68,7 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseBody>> pairDevice(
         @RequestBody PairDeviceRequest detail, ServerHttpRequest request
     ) {
-        return Mono.justOrEmpty(TokenUtils.getToken(request))
-            .map(userService::checkToken)
+        return Mono.justOrEmpty(userService.checkToken(request))
             .doOnNext(user -> log.info("pair device {} to user {}", detail.platformId(), user.phone()))
             .flatMap(user -> deviceService.pairDevice(user, detail))
             .doOnNext(paired -> log.info("paired {}", paired))

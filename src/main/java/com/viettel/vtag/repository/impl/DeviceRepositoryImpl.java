@@ -92,8 +92,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     @Override
     public List<Device> getUserDevice(User user) {
         var sql = "SELECT id, name, imei, platform_device_id, battery, latitude, longitude, trigger_instant FROM device"
-            + " d " + "LEFT JOIN location_history lh ON d.id = lh.device_id JOIN user_role ur ON d.id = ur.device_id "
-            + "WHERE user_id = ? AND platform_device_id = ? ORDER BY trigger_instant LIMIT 1 OFFSET 0;";
+            + " d LEFT JOIN location_history lh ON d.id = lh.device_id JOIN user_role ur ON d.id = ur.device_id "
+            + "WHERE user_id = ? ORDER BY trigger_instant LIMIT 1 OFFSET 0;";
         return jdbc.query(sql, new Object[] {user.id()},
             (rs, i) -> mapDevice(rs, i).latitude(rs.getObject("latitude", Double.class))
                 .longitude(rs.getObject("longitude", Double.class))
@@ -118,7 +118,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     public List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request) {
         var sql = "SELECT latitude, longitude, trigger_instant FROM location_history lh JOIN user_role ur "
             + "ON lh.device_id = ur.device_id JOIN device d ON d.id = ur.device_id WHERE ur.user_id = ? "
-            + "AND trigger_instant > ? AND trigger_instant < ? AND platform_device_id = ?";
+            + "AND trigger_instant > ? AND trigger_instant < ? AND platform_device_id = ? ORDER BY trigger_instant";
         return jdbc.query(sql, new Object[] {user.id(), request.from(), request.to(), request.deviceId()},
             (rs, num) -> new LocationHistory().latitude(rs.getDouble("latitude"))
                 .longitude(rs.getDouble("longitude"))

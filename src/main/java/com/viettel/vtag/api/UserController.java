@@ -85,7 +85,7 @@ public class UserController {
             return status(UNAUTHORIZED).body(of(1, "Invalid username or password!"));
         }
 
-        return ok(of(0, "Get token successfully!", Map.of("token", token)));
+        return ok(of(0, "Get token successfully!", Map.of("token", token.uuid(), "expire", token.expire())));
     }
 
     /** {@link UserServiceImpl#updateNotificationToken(User, FcmTokenUpdateRequest)} */
