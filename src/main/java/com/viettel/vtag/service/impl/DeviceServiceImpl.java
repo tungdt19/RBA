@@ -146,7 +146,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<ClientResponse> getMessages(User user, UUID deviceId, int offset, int limit) {
-        var endpoint = "/api=ages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
+        var endpoint = "/api/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
             + "&topic=data,battery,wificell&offset=" + offset + "&limit=" + limit;
         log.info("msg endpoint {}", endpoint);
         return iotPlatformService.getWithToken(endpoint);
