@@ -38,6 +38,11 @@ WHERE platform_device_id = ?;
 
 SELECT d.id, name, platform_device_id, d.battery, lh.device_id, lh.latitude, lh.longitude, lh.trigger_instant
 FROM device d
+
+
+
+SELECT d.id, name, platform_device_id, d.battery, lh.device_id, lh.latitude, lh.longitude, lh.trigger_instant
+FROM device d
          --          JOIN user_role ur ON d.id = ur.device_id
          JOIN location_history lh ON d.id = lh.device_id
          LEFT OUTER JOIN location_history lh2 ON d.id = lh2.device_id AND (lh.trigger_instant > lh2.trigger_instant

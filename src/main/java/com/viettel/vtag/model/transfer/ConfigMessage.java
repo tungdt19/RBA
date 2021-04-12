@@ -18,7 +18,7 @@ public class ConfigMessage {
     @JsonProperty("Ver") // "7.2"
     private String version;
 
-    @JsonProperty("Conn") // "nbiot"
+    @JsonProperty("Con") // "nbiot"
     private String connection;
 
     @JsonProperty("MBC") // {"Per":{"V":600,"U":"s"},"Mod":1,"Thre":20}

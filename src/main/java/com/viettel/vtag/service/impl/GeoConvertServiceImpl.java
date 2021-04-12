@@ -57,7 +57,7 @@ public class GeoConvertServiceImpl implements GeoConvertService {
             .doOnNext(location -> log.info("{} is at {}", deviceId, location))
             .filter(location -> {
                 var error = "error".equals(location.status());
-                log.error("{} -> couldn't convert {}", deviceId, json);
+                // log.error("{}: couldn't convert '{}' -> {}", deviceId, json, location);
                 return error;
             });
     }

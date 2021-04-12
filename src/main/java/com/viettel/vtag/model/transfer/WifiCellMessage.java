@@ -22,7 +22,7 @@ public class WifiCellMessage {
     @JsonIgnore
     private String token;
 
-    @JsonProperty("Conn")
+    @JsonProperty("Con")
     private String connection;
 
     @JsonProperty("Cell")
