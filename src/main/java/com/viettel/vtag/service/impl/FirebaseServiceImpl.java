@@ -2,7 +2,6 @@ package com.viettel.vtag.service.impl;
 
 import com.google.firebase.messaging.*;
 import com.viettel.vtag.model.ILocation;
-import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
@@ -42,28 +41,35 @@ public class FirebaseServiceImpl implements FirebaseService {
             "latitude", String.valueOf(location.latitude()),
             "longitude", String.valueOf(location.longitude()));
         message(tokens, notification, data);
-        //@formatter:off
+        //@formatter:on
     }
 
     @Override
     public BatchResponse message(List<String> tokens, Notification notification, Map<String, String> data) {
         try {
             if (tokens.isEmpty()) {
-                tokens = List.of(
-                    "en7DxvC6SG-q-gEO3LQTeP:APA91bGZDQvHRMlZf84OsfQDMw658IS2D1tqHNO4u8XRKNssSIK-NAjSwhl_pqKrNik8WgzQY"
-                        + "-BSMfXmFaQFCLtP6BH9Y8FC610biJfi2s1gcc2fVrMGfWa6JJEIakdXCNhweMAIiEA6");
+                // log.info("Recipient list is empty!");
+                // return null;
+                tokens = List.of("euMOCUPWbURrjXzAR0uh7b:APA91bEEhZCz8nDABGnQ8ar6tybZWMgdDzb2wrfJqRlUGAwa9TMCj3Fk9nKLEgSas-otKgPYExeY9oWkDXTvzAYRL5nJ5TV8Ql8M6zGo2EQSUmXobsULDPhpSfF2YrxGu5nMklsCZW4a");
             }
             var message = MulticastMessage.builder()
                 .putAllData(data)
-                .setAndroidConfig(AndroidConfig.builder()
-                    .setPriority(AndroidConfig.Priority.HIGH)
+                .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
+                .setApnsConfig(ApnsConfig.builder()
+                    .setAps(Aps.builder().setAlert("sound 2").build())
+                    .setFcmOptions(ApnsFcmOptions.builder().build())
                     .build())
-                // .setApnsConfig(ApnsConfig.builder()..build())
                 .setNotification(notification)
                 .addAllTokens(tokens)
                 .build();
+
             var response = fcm.sendMulticast(message);
-            log.info("tokens {} -> success {}; failure {}", tokens, response.getSuccessCount(), response.getFailureCount());
+            if (response == null) {
+                log.error("Couldn't get any response");
+                return null;
+            }
+            log.info("success {}; failure {}", response.getSuccessCount(), response.getFailureCount());
+
             if (response.getFailureCount() <= 0) return response;
             var responses = response.getResponses();
             log.info("response {}", responses);

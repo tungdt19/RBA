@@ -112,11 +112,18 @@ public class MqttHandler implements MqttCallback {
     private void updateConfig(UUID deviceId, String payload) {
         try {
             var data = mapper.readValue(payload, ConfigMessage.class);
+            if ("DTIME".equals(data.type())) {
+                var message = new MqttMessage(TimeMessage.toBytes());
+                publisher.publish("messages/" + deviceId + "/app/controls", message);
+                return;
+            }
             deviceService.updateConfig(deviceId, data)
                 .filter(updated -> updated > 0)
                 .subscribe(updated -> log.info("{}: MMC {}", deviceId, data.MMC().modeString()));
         } catch (JsonProcessingException e) {
             log.error("Couldn't parse MQTT config payload: {}", e.getMessage());
+        } catch (MqttException e) {
+            log.error("error handling config message {}", e.getMessage());
         }
     }
 
@@ -132,8 +139,7 @@ public class MqttHandler implements MqttCallback {
     private void publishLocation(UUID deviceId, LocationMessage location) {
         var topic = "messages/" + deviceId + "/data";
         try {
-            var bytes = new MqttMessage();
-            bytes.setPayload(mapper.writeValueAsBytes(location));
+            var bytes = new MqttMessage(mapper.writeValueAsBytes(location));
             publisher.publish(topic, bytes);
         } catch (MqttException | JsonProcessingException e) {
             log.error("Couldn't publish location {} to topic '{}'", location, topic, e);

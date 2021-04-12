@@ -39,6 +39,7 @@ public class FirebaseConfig {
     private void configProxy() {
         if (proxyEnable) {
             log.info("Using proxy {}:{} for firebase", proxyHost, proxyPort);
+            System.setProperty("com.google.api.client.should_use_proxy", "true");
             System.setProperty("http.proxyHost", proxyHost);
             System.setProperty("http.proxyPort", String.valueOf(proxyPort));
         }
