@@ -30,11 +30,7 @@ public class AuthenticationConverter implements ServerAuthenticationConverter {
     }
 
     private Mono<String> extract(ServerWebExchange serverWebExchange) {
-        var authorization = serverWebExchange.getRequest().getHeaders().get("Authorization");
-        if (authorization == null || authorization.isEmpty()) {
-            return Mono.empty();
-        }
-        return Mono.justOrEmpty(authorization.get(0));
+        return Mono.justOrEmpty(serverWebExchange.getRequest().getHeaders().getFirst("Authorization"));
     }
 
     // private Mono<FirebaseToken> verifyToken(final String unverifiedToken) {

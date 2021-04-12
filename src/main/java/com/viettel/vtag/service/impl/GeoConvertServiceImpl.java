@@ -1,7 +1,7 @@
 package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.entity.Location;
-import com.viettel.vtag.model.transfer.CellWifiMessage;
+import com.viettel.vtag.model.transfer.WifiCellMessage;
 import com.viettel.vtag.service.interfaces.GeoConvertService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class GeoConvertServiceImpl implements GeoConvertService {
     private boolean proxyEnable;
 
     @Override
-    public Mono<Location> convert(UUID deviceId, CellWifiMessage json) {
+    public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
         if (proxyEnable) {
             webClientBuilder.clientConnector(new ReactorClientHttpConnector(proxyHttpClient));
         }

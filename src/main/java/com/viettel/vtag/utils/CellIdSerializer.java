@@ -3,7 +3,7 @@ package com.viettel.vtag.utils;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.viettel.vtag.model.transfer.CellWifiMessage;
+import com.viettel.vtag.model.transfer.WifiCellMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -11,11 +11,11 @@ import java.io.IOException;
 
 @Slf4j
 @Component
-public class CellIdSerializer extends JsonSerializer<CellWifiMessage> {
+public class CellIdSerializer extends JsonSerializer<WifiCellMessage> {
 
     @Override
     public void serialize(
-        CellWifiMessage value, JsonGenerator json, SerializerProvider serializers
+        WifiCellMessage value, JsonGenerator json, SerializerProvider serializers
     ) throws IOException {
         json.writeStartObject();
 

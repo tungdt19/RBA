@@ -88,7 +88,7 @@ public class MqttHandler implements MqttCallback {
     }
 
     private void handleWifiCellMessage(UUID deviceId, String payload) throws JsonProcessingException {
-        var data = mapper.readValue(payload, CellWifiMessage.class);
+        var data = mapper.readValue(payload, WifiCellMessage.class);
 
         switch (data.type()) {
             case "DSOS":
@@ -120,7 +120,7 @@ public class MqttHandler implements MqttCallback {
         }
     }
 
-    private Mono<LocationMessage> convertWifiCell(UUID deviceId, CellWifiMessage payload) {
+    private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage payload) {
         return geoConvertService.convert(deviceId, payload)
             .doOnNext(location -> log.info("{}: {}", deviceId, location))
             .doOnNext(location -> deviceService.saveLocation(deviceId, location))

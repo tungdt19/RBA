@@ -14,7 +14,7 @@ import java.util.Map;
 @Accessors(fluent = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(using = CellIdSerializer.class)
-public class CellWifiMessage {
+public class WifiCellMessage {
 
     @JsonProperty("Type")
     private String type;

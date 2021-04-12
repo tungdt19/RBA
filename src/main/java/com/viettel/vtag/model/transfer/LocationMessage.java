@@ -44,7 +44,7 @@ public class LocationMessage implements ILocation {
         properties.put(key, value);
     }
 
-    public static LocationMessage fromLocation(Location location, CellWifiMessage payload) {
+    public static LocationMessage fromLocation(Location location, WifiCellMessage payload) {
         return new LocationMessage().type("CPOS")
             .connection(payload.connection())
             .version(payload.version())
