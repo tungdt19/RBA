@@ -155,13 +155,27 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseJson>> getGeoFencing(
         @RequestParam("device_id") String deviceId, ServerHttpRequest request
     ) {
-
-        return null;
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .zipWith(Mono.just(UUID.fromString(deviceId)))
+            .doOnNext(
+                tuple -> log.info("get geo-fencing for user {} - device {}", tuple.getT1().platformId(), deviceId))
+            .flatMap(tuple -> deviceService.getGeofencing(tuple.getT1(), tuple.getT2()))
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
+            .defaultIfEmpty(status(NO_CONTENT).body(ResponseJson.of(1, "Couldn't get any response")));
     }
 
     @PostMapping("/geo")
-    public Mono<ResponseEntity<ResponseJson>> createOrUpdateGeoFencing() { return null; }
+    public Mono<ResponseEntity<ResponseJson>> createGeoFencing(
+        @RequestParam("device_id") String deviceId, ServerHttpRequest request
+    ) { return null; }
+
+    @PutMapping("/geo")
+    public Mono<ResponseEntity<ResponseJson>> updateGeoFencing(
+        @RequestParam("device_id") String deviceId, ServerHttpRequest request
+    ) { return null; }
 
     @DeleteMapping("/geo")
-    public Mono<ResponseEntity<ResponseJson>> deleteGeoFencing() { return null; }
+    public Mono<ResponseEntity<ResponseJson>> deleteGeoFencing(
+        @RequestParam("device_id") String deviceId, ServerHttpRequest request
+    ) { return null; }
 }

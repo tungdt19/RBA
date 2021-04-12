@@ -139,4 +139,9 @@ public class DeviceServiceImpl implements DeviceService {
         log.info("msg endpoint {}", endpoint);
         return iotPlatformService.getWithToken(endpoint);
     }
+
+    @Override
+    public Mono<Device> getGeofencing(User t1, UUID t2) {
+        return null;
+    }
 }
