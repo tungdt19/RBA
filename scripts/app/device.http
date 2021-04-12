@@ -18,7 +18,6 @@ Content-Type: application/json
 
 ### --------------------------------------------------------------------------------------------------------------------
 GET http://{{host}}/vtag/device/list
-Content-Type: application/json
 Authorization: Bearer {{vtag_token}}
 
 

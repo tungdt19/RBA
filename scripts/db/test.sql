@@ -36,7 +36,7 @@ WHERE platform_device_id = ?;
 
 
 
-SELECT id, name, imei, platform_device_id, lh.latitude, lh.longitude, lh.trigger_instant
+SELECT d.id, name, platform_device_id, d.battery, lh.latitude, lh.longitude, lh.trigger_instant
 FROM device d
          JOIN user_role ur ON d.id = ur.device_id
          LEFT JOIN location_history lh ON d.id = lh.device_id

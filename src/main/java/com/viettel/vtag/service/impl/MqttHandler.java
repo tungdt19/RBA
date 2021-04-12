@@ -122,20 +122,23 @@ public class MqttHandler implements MqttCallback {
     }
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, CellWifiMessage payload) {
-        return geoConvertService.convert(deviceId, payload).doOnNext(location -> log.info("{}: {}", deviceId, location))
+        return geoConvertService.convert(deviceId, payload)
+            .doOnNext(location -> log.info("{}: {}", deviceId, location))
             .doOnNext(location -> deviceService.saveLocation(deviceId, location))
             .map(location -> LocationMessage.fromLocation(location, payload))
-            .doOnNext(location -> {
-                var topic = "messages/" + deviceId + "/data";
-                try {
-                    var bytes = new MqttMessage();
-                    bytes.setPayload(mapper.writeValueAsBytes(location));
-                    publisher.publish(topic, bytes);
-                } catch (MqttException | JsonProcessingException e) {
-                    log.error("Couldn't publish location {} to topic '{}'", location, topic, e);
-                }
-            })
+            .doOnNext(location -> publishLocation(deviceId, location))
             .doOnError(e -> log.error("Error converting: {}", e.getMessage()));
+    }
+
+    private void publishLocation(UUID deviceId, LocationMessage location) {
+        var topic = "messages/" + deviceId + "/data";
+        try {
+            var bytes = new MqttMessage();
+            bytes.setPayload(mapper.writeValueAsBytes(location));
+            publisher.publish(topic, bytes);
+        } catch (MqttException | JsonProcessingException e) {
+            log.error("Couldn't publish location {} to topic '{}'", location, topic, e);
+        }
     }
 
     /**
