@@ -19,8 +19,11 @@ CREATE TABLE IF NOT EXISTS device (
     battery            INT,
     status             VARCHAR,
     geo_status         BOOLEAN,
-    geo_count          INT,
-    geo_data           JSONB
+    geo_length         INT,
+    geo_fencing        JSONB,
+    last_lat           FLOAT8,
+    last_lon           FLOAT8
+
 );
 
 CREATE TABLE IF NOT EXISTS app_role (

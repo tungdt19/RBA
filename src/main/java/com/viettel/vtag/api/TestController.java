@@ -1,6 +1,10 @@
 package com.viettel.vtag.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.Notification;
+import com.viettel.vtag.model.entity.Fencing;
 import com.viettel.vtag.service.interfaces.CommunicationService;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.FirebaseService;
@@ -96,5 +100,23 @@ public class TestController {
         return MessageFormatter.arrayFormat("{}/{}/{}",
             new Object[] {response.getSuccessCount(), response.getFailureCount(), response.getResponses().size()})
             .getMessage();
+    }
+
+    @PostMapping("/query")
+    public String query(@RequestBody String content, Locale locale) {
+        var sql = "SELECT id, content, geo_length, PG_TYPEOF(content) FROM test_json";
+        jdbc.query(sql, (rs, rowNum) -> {
+            try {
+                var id = rs.getInt("id");
+                var cont = rs.getString("content");
+                var map = new ObjectMapper().readValue(cont, new TypeReference<Map<String, Fencing>>() { });
+                var length = rs.getString("geo_length");
+                log.info("content {}", map);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+        return null;
     }
 }

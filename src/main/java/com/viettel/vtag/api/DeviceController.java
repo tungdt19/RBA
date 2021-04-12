@@ -1,5 +1,6 @@
 package com.viettel.vtag.api;
 
+import com.viettel.vtag.model.entity.Fencing;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.model.response.ResponseJson;
@@ -14,7 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.UUID;
+import java.util.*;
 
 import static com.viettel.vtag.model.response.ResponseBody.of;
 import static org.springframework.http.HttpStatus.*;
@@ -68,13 +69,14 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseBody>> pairDevice(
         @RequestBody PairDeviceRequest detail, ServerHttpRequest request
     ) {
-        return Mono.justOrEmpty(userService.checkToken(request))
-            .doOnNext(user -> log.info("pair device {} to user {}", detail.platformId(), user.phone()))
-            .flatMap(user -> deviceService.pairDevice(user, detail))
-            .doOnNext(paired -> log.info("paired {}", paired))
-            .then(deviceService.activate(detail))
+        var user = userService.checkToken(request);
+        return Mono.justOrEmpty(user)
+            .flatMap(usr -> deviceService.pairDevice(user, detail))
+            .doOnNext(response -> log.info("{}: paired to user {}", detail.platformId(), user.phone()))
+            .flatMap(response -> deviceService.saveUserDevice(user, detail))
             .map(activated -> ok(of(0, "Paired device successfully!")))
-            .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")));
+            .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't pair device!")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't pair device!")));
     }
 
     @PutMapping("/name")
@@ -123,6 +125,7 @@ public class DeviceController {
             .doOnNext(user -> log.info("unpair device {} from user {}", detail.platformId(), user.phone()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
             .then(deviceService.deactivate(detail))
+            .map(bool -> true)
             .map(activated -> ok(of(0, "Unpaired device successfully!")))
             .doOnError(e -> log.error("Error on unpair {}", detail.platformId(), e))
             .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't unpair device!")));
@@ -137,9 +140,8 @@ public class DeviceController {
     ) {
         return Mono.justOrEmpty(userService.checkToken(request))
             .zipWith(Mono.just(UUID.fromString(deviceId)))
-            .doOnNext(tuple -> log.info("get messages for user {} - device {}", tuple.getT1().platformId(), deviceId))
             .flatMap(tuple -> deviceService.getMessages(tuple.getT1(), tuple.getT2(), offset, limit))
-            .doOnNext(response -> log.info("get msg response {}", response.statusCode()))
+            .doOnNext(response -> log.info("{}: msg {}", deviceId, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(String.class))
             .map(content -> ok(ResponseJson.of(0, "Okie dokie!").json(content)))
@@ -151,31 +153,75 @@ public class DeviceController {
     //
     // }
 
-    @GetMapping("/geo")
-    public Mono<ResponseEntity<ResponseJson>> getGeoFencing(
-        @RequestParam("device_id") String deviceId, ServerHttpRequest request
+    @PostMapping("/geo")
+    public Mono<ResponseEntity<ResponseJson>> createGeoFencing(
+        @RequestParam("device_id") String deviceId, @RequestBody Fencing fencing, ServerHttpRequest request
     ) {
         return Mono.justOrEmpty(userService.checkToken(request))
             .zipWith(Mono.just(UUID.fromString(deviceId)))
-            .doOnNext(
-                tuple -> log.info("get geo-fencing for user {} - device {}", tuple.getT1().platformId(), deviceId))
-            .flatMap(tuple -> deviceService.getGeofencing(tuple.getT1(), tuple.getT2()))
+            .doOnNext(tuple -> log.info("get geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
+            .flatMap(tuple -> deviceService.insertGeofencing(tuple.getT1(), tuple.getT2(), fencing))
+            .filter(updated -> updated > 0)
             .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
-            .defaultIfEmpty(status(NO_CONTENT).body(ResponseJson.of(1, "Couldn't get any response")));
+            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't add geo-fencing")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't add geo-fencing")));
     }
 
-    @PostMapping("/geo")
+    @PostMapping("/geo/list")
     public Mono<ResponseEntity<ResponseJson>> createGeoFencing(
-        @RequestParam("device_id") String deviceId, ServerHttpRequest request
-    ) { return null; }
+        @RequestParam("device_id") String deviceId, @RequestBody Map<String, Fencing> fencing, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .zipWith(Mono.just(UUID.fromString(deviceId)))
+            .doOnNext(tuple -> log.info("get geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
+            .flatMap(tuple -> deviceService.insertGeofencing(tuple.getT1(), tuple.getT2(), fencing))
+            .doOnNext(updated -> log.info("{}: geo updated {}", deviceId, updated))
+            .filter(updated -> updated > 0)
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
+            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't add geo-fencing")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't add geo-fencing")));
+    }
 
     @PutMapping("/geo")
     public Mono<ResponseEntity<ResponseJson>> updateGeoFencing(
-        @RequestParam("device_id") String deviceId, ServerHttpRequest request
-    ) { return null; }
+        @RequestParam("device_id") String deviceId, @RequestBody Fencing fencing, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .zipWith(Mono.just(UUID.fromString(deviceId)))
+            .doOnNext(tuple -> log.info("update geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
+            .flatMap(tuple -> deviceService.updateGeofencing(tuple.getT1(), tuple.getT2(), fencing))
+            .filter(updated -> updated > 0)
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
+            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't update geo-fencing")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't update geo-fencing")));
+    }
+
+    @PutMapping("/geo/list")
+    public Mono<ResponseEntity<ResponseJson>> updateGeoFencingList(
+        @RequestParam("device_id") String deviceId, @RequestBody Map<String, Fencing> fencing, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .zipWith(Mono.just(UUID.fromString(deviceId)))
+            .doOnNext(tuple -> log.info("update geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
+            .flatMap(tuple -> deviceService.updateGeofencing(tuple.getT1(), tuple.getT2(), fencing))
+            .doOnNext(updated -> log.info("{}: geo updated {}", deviceId, updated))
+            .filter(updated -> updated > 0)
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
+            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't update geo-fencing")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't update geo-fencing")));
+    }
 
     @DeleteMapping("/geo")
     public Mono<ResponseEntity<ResponseJson>> deleteGeoFencing(
-        @RequestParam("device_id") String deviceId, ServerHttpRequest request
-    ) { return null; }
+        @RequestParam("device_id") String deviceId, @RequestParam("name") String fencing, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .zipWith(Mono.just(UUID.fromString(deviceId)))
+            .doOnNext(tuple -> log.info("delete geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
+            .flatMap(tuple -> deviceService.deleteGeofencing(tuple.getT1(), tuple.getT2(), fencing))
+            .filter(updated -> updated > 0)
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
+            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't delete geo-fencing")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't delete geo-fencing")));
+    }
 }

@@ -17,20 +17,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DeviceMessageServiceImpl implements DeviceMessageService {
 
-    private final DeviceMessageRepository deviceRepository;
+    private final DeviceMessageRepository deviceMessageRepository;
 
     @Override
     public Mono<Integer> saveLocation(UUID deviceId, ILocation location) {
-        return Mono.just(deviceRepository.saveLocation(deviceId, location));
+        return Mono.just(deviceMessageRepository.saveLocation(deviceId, location));
     }
 
     @Override
     public Mono<Integer> updateBattery(UUID deviceId, BatteryMessage data) {
-        return Mono.just(deviceRepository.updateBattery(deviceId, data));
+        return Mono.just(deviceMessageRepository.updateBattery(deviceId, data));
     }
 
     @Override
     public Mono<Integer> updateConfig(UUID deviceId, ConfigMessage data) {
-        return Mono.just(deviceRepository.updateConfig(deviceId, data));
+        return Mono.just(deviceMessageRepository.updateConfig(deviceId, data));
     }
 }

@@ -51,7 +51,7 @@ public class GeoConvertServiceImpl implements GeoConvertService {
             .uri(convertUri)
             .bodyValue(json.token(convertToken))
             .exchange()
-            .doOnNext(response -> log.info("{} -> {}", deviceId, response.statusCode()))
+            .doOnNext(response -> log.info("{}: convert {}", deviceId, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(Location.class))
             .doOnNext(location -> log.info("{}: {}, {}", deviceId, location.latitude(), location.longitude()))

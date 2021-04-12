@@ -124,17 +124,17 @@ POST http://{{host}}/vtag/test/sms
 
 ### fcm ----------------------------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/test/fcm
-Content-Type: application/json
+Content-Type: text/plain
 #Accept-Language: en-US
 
-{"name": "Chao Q"}
+some content
 
 
 ### fcm ----------------------------------------------------------------------------------------------------------------
-POST http://{{host}}/vtag/test/rest
-Content-Type: application/json
+POST http://{{host}}/vtag/test/query
+Content-Type: text/plain
 Accept-Language: en-US
 
-{"name": "Chao Q"}
+some content
 
 

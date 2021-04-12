@@ -1,24 +1,19 @@
 package com.viettel.vtag.service.interfaces;
 
-import com.viettel.vtag.model.ILocation;
-import com.viettel.vtag.model.entity.Device;
-import com.viettel.vtag.model.entity.LocationHistory;
-import com.viettel.vtag.model.entity.User;
+import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
-import com.viettel.vtag.model.transfer.BatteryMessage;
-import com.viettel.vtag.model.transfer.ConfigMessage;
-import com.viettel.vtag.model.transfer.LocationMessage;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface DeviceService {
 
-    Mono<Integer> pairDevice(User user, PairDeviceRequest request);
+    Mono<ClientResponse> pairDevice(User user, PairDeviceRequest request);
 
-    Mono<Boolean> activate(PairDeviceRequest request);
+    Mono<Integer> saveUserDevice(User user, PairDeviceRequest request);
 
     Mono<Integer> unpairDevice(User user, PairDeviceRequest request);
 
@@ -30,11 +25,21 @@ public interface DeviceService {
 
     Mono<Integer> removeViewer(User user, RemoveViewerRequest detail);
 
+    Mono<Integer> insertGeofencing(User user, UUID uuid, Fencing fencing);
+
+    Mono<Integer> insertGeofencing(User user, UUID uuid, Map<String, Fencing> fencing);
+
+    Mono<Integer> updateGeofencing(User user, UUID uuid, Fencing fencing);
+
+    Mono<Integer> updateGeofencing(User t1, UUID t2, Map<String, Fencing> fencing);
+
+    Mono<Integer> deleteGeofencing(User user, UUID uuid, String fencing);
+
     Mono<List<Device>> getList(User user);
 
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 
     Mono<ClientResponse> getMessages(User user, UUID deviceId, int offset, int limit);
 
-    Mono<Device> getGeofencing(User t1, UUID t2);
+    Mono<Device> getGeofencing(User user, UUID deviceId);
 }

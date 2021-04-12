@@ -72,7 +72,7 @@ public class MqttHandler implements MqttCallback {
                     updateConfig(deviceId, payload);
                     break;
                 default:
-                    log.warn("Do not recognize subtopic '{}'", subtopic);
+                    log.warn("{}: Do not recognize subtopic '{}'", deviceId, subtopic);
             }
         } catch (JsonProcessingException e) {
             log.error("Couldn't parse MQTT payload from sub topic '{}': {}", subtopic, e.getMessage());

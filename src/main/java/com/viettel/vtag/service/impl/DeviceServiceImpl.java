@@ -1,9 +1,7 @@
 package com.viettel.vtag.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.viettel.vtag.model.entity.Device;
-import com.viettel.vtag.model.entity.LocationHistory;
-import com.viettel.vtag.model.entity.User;
+import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.DeviceService;
@@ -34,35 +32,34 @@ public class DeviceServiceImpl implements DeviceService {
     private final MqttClient mqttClient;
 
     @Override
-    public Mono<Integer> pairDevice(User user, PairDeviceRequest request) {
-        var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
+    public Mono<ClientResponse> pairDevice(User user, PairDeviceRequest request) {
+        var uuid = request.platformId();
+        var endpoint = "/api/devices/" + uuid + "/group/" + user.platformId();
         return iotPlatformService.put(endpoint, request)
             .filter(response -> response.statusCode().is2xxSuccessful())
-            .doOnNext(response -> log.info("put {}: {}", endpoint, response.statusCode()))
-            .map(response -> deviceRepository.save(new Device().name("VTAG").platformId(request.platformId())))
-            .doOnNext(saved -> log.info("saved {}", saved))
-            .filter(paired -> paired > 0)
-            .map(paired -> deviceRepository.setUserDevice(user, request))
-            .doOnNext(saved -> log.info("save user device {}", saved));
+            .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
+            .flatMap(ok -> iotPlatformService.post("/api/devices/" + uuid + "/active", Map.of("Type", "MAD")))
+            .doOnNext(response -> log.info("{}: activate {}", uuid, response.statusCode()));
+        // .filter(response -> response.statusCode().is2xxSuccessful());
     }
 
     @Override
-    public Mono<Boolean> activate(PairDeviceRequest request) {
+    public Mono<Integer> saveUserDevice(User user, PairDeviceRequest request) {
         // @formatter:off
-        var uuid = request.platformId();
-        return Mono.justOrEmpty(uuid)
-            .map(id -> "/api/devices/" + id + "/active")
-            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "MAD")))
-            .doOnNext(response -> log.info("activate {}: {}", uuid, response.statusCode()))
-            .map(response -> response.statusCode().is2xxSuccessful())
-            .filter(paired -> paired)
-            .doOnNext(response -> {
+        var device = request.platformId();
+        return Mono.justOrEmpty(device)
+            .map(uuid -> deviceRepository.save(new Device().name("VTAG").platformId(uuid)))
+            .doOnNext(saved -> log.info("saved {}", saved))
+            .filter(paired -> paired > 0)
+            .map(paired -> deviceRepository.setUserDevice(user, request))
+            .filter(paired -> paired > 0)
+            .doOnNext(paired -> {
                 try {
                     mqttClient.subscribe(new String[] {
-                        "messages/" + uuid + "/data",
-                        "messages/" + uuid + "/userdefined/battery",
-                        "messages/" + uuid + "/userdefined/wificell",
-                        "messages/" + uuid + "/userdefined/devconf"});
+                        "messages/" + device + "/data",
+                        "messages/" + device + "/userdefined/battery",
+                        "messages/" + device + "/userdefined/wificell",
+                        "messages/" + device + "/userdefined/devconf"});
                 } catch (MqttException e) {
                     log.error("Couldn't sub", e);
                 }})
@@ -76,10 +73,10 @@ public class DeviceServiceImpl implements DeviceService {
         return iotPlatformService.delete(endpoint)
             .filter(response -> response.statusCode().is2xxSuccessful())
             .doOnNext(response -> log.info("unpair {}: {}", endpoint, response.statusCode()))
-            .map(response -> deviceRepository.delete(user, request.platformId()))
+            .map(paired -> deviceRepository.removeUserDevice(user, request))
             .doOnNext(saved -> log.info("deleted {} from {}: {}", request.platformId(), user.platformId(), saved))
             .filter(paired -> paired > 0)
-            .map(paired -> deviceRepository.removeUserDevice(user, request))
+            .map(response -> deviceRepository.delete(user, request.platformId()))
             .doOnNext(saved -> log.info("unpaired user device {}", saved));
     }
 
@@ -123,6 +120,56 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
+    public Mono<Integer> insertGeofencing(User user, UUID deviceId, Fencing fencing) {
+        try {
+            return Mono.just(deviceRepository.insertGeoFencing(user, deviceId, fencing));
+        } catch (Exception e) {
+            log.error("error inserting geo-fencing {}", e.getMessage());
+            return Mono.empty();
+        }
+    }
+
+    @Override
+    public Mono<Integer> insertGeofencing(User user, UUID deviceId, Map<String, Fencing> fencing) {
+        try {
+            return Mono.just(deviceRepository.insertGeoFencing(user, deviceId, fencing));
+        } catch (Exception e) {
+            log.error("error inserting geo-fencing {}", e.getMessage());
+            return Mono.empty();
+        }
+    }
+
+    @Override
+    public Mono<Integer> updateGeofencing(User user, UUID deviceId, Fencing fencing) {
+        try {
+            return Mono.just(deviceRepository.updateGeoFencing(user, deviceId, fencing));
+        } catch (Exception e) {
+            log.error("error updating geo-fencing {}", e.getMessage());
+            return Mono.empty();
+        }
+    }
+
+    @Override
+    public Mono<Integer> updateGeofencing(User user, UUID deviceId, Map<String, Fencing> fencing) {
+        try {
+            return Mono.just(deviceRepository.updateGeoFencing(user, deviceId, fencing));
+        } catch (Exception e) {
+            log.error("error inserting geo-fencing {}", e.getMessage());
+            return Mono.empty();
+        }
+    }
+
+    @Override
+    public Mono<Integer> deleteGeofencing(User user, UUID deviceId, String fencing) {
+        try {
+            return Mono.just(deviceRepository.deleteGeoFencing(user, deviceId, fencing));
+        } catch (Exception e) {
+            log.error("error deleting geo-fencing {}", e.getMessage());
+            return Mono.empty();
+        }
+    }
+
+    @Override
     public Mono<List<Device>> getList(User user) {
         return Mono.just(deviceRepository.getUserDevice(user));
     }
@@ -134,14 +181,14 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<ClientResponse> getMessages(User user, UUID deviceId, int offset, int limit) {
-        var endpoint = "/api/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
+        var endpoint = "/api/messages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
             + "&topic=data,battery,wificell&offset=" + offset + "&limit=" + limit;
         log.info("msg endpoint {}", endpoint);
         return iotPlatformService.getWithToken(endpoint);
     }
 
     @Override
-    public Mono<Device> getGeofencing(User t1, UUID t2) {
+    public Mono<Device> getGeofencing(User user, UUID deviceId) {
         return null;
     }
 }

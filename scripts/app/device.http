@@ -19,7 +19,8 @@ Content-Type: application/json
 
 ### --------------------------------------------------------------------------------------------------------------------
 GET http://{{host}}/vtag/device/list
-Authorization: Bearer {{vtag_token}}
+Authorization: Bearer 82826b06-778d-456a-8bbf-ff83c3d375bb
+#{{vtag_token}}
 
 
 
@@ -62,6 +63,70 @@ GET http://{{host}}/vtag/device/messages
     ?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
     &offset=0
     &limit=100
+Authorization: Bearer
+#{{vtag_token}}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/device/geo?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
+Authorization: Bearer 6d749353-fb58-48a8-b571-fa615d6a1240 #{{vtag_token}}
+Content-Type: application/json
+
+{
+    "name": "name 1",
+    "lat": 12.34,
+    "lon": 12.34,
+    "radius": 100
+}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+PUT http://{{host}}/vtag/device/geo?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
 
+{
+    "name": "name 1",
+    "lat": 12.3456,
+    "lon": 12.3456,
+    "radius": 100
+}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/device/geo/list?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
+Authorization: Bearer 6d749353-fb58-48a8-b571-fa615d6a1240 #{{vtag_token}}
+Content-Type: application/json
+
+{
+    "name 1": {
+        "lat": 12.3456,
+        "lon": 12.3456,
+        "radius": 100
+    }
+}
+
+
+
+### --------------------------------------------------------------------------------------------------------------------
+PUT http://{{host}}/vtag/device/geo/list?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
+Authorization: Bearer {{vtag_token}}
+Content-Type: application/json
+
+{
+    "name 1": {
+        "lat": 12.3456,
+        "lon": 12.3456,
+        "radius": 100
+    }
+}
+
+
+### --------------------------------------------------------------------------------------------------------------------
+DELETE http://{{host}}/vtag/device/geo
+    ?device_id=7b762bf8-f157-467c-8f3d-a9d1eb342e35
+    &name=name 1
+Authorization: Bearer {{vtag_token}}
