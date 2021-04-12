@@ -54,6 +54,11 @@ public class GeoConvertServiceImpl implements GeoConvertService {
             .doOnNext(response -> log.info("{} -> {}", deviceId, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(Location.class))
-            .doOnNext(location -> log.info("{} is at {}", deviceId, location));
+            .doOnNext(location -> log.info("{} is at {}", deviceId, location))
+            .filter(location -> {
+                var error = "error".equals(location.status());
+                log.error("{} -> couldn't convert {}", deviceId, json);
+                return error;
+            });
     }
 }

@@ -82,7 +82,7 @@ public class MqttHandler implements MqttCallback {
     private void handleGpsMessage(UUID deviceId, String payload) throws JsonProcessingException {
         var gps = mapper.readValue(payload, LocationMessage.class);
         if ("DPOS".equals(gps.type())) {
-            log.info("Received an GPS message: {}", payload);
+            log.info("{}: GPS {}", deviceId, payload);
             deviceService.saveLocation(deviceId, gps);
         }
     }
@@ -92,11 +92,10 @@ public class MqttHandler implements MqttCallback {
 
         switch (data.type()) {
             case "DSOS":
-                convertWifiCell(deviceId, data).subscribe(
-                    locationMessage -> firebaseService.sos(deviceId, locationMessage));
+                convertWifiCell(deviceId, data).subscribe(location -> firebaseService.sos(deviceId, location));
                 break;
             case "DWFC":
-                convertWifiCell(deviceId, data).subscribe(locationMessage -> log.info("converted {}", locationMessage));
+                convertWifiCell(deviceId, data).subscribe(location -> log.info("{}: {}", deviceId, location));
                 break;
             default:
                 log.info("Do not recognize message {}", payload);
@@ -107,7 +106,7 @@ public class MqttHandler implements MqttCallback {
         var data = mapper.readValue(payload, BatteryMessage.class);
         deviceService.updateBattery(deviceId, data)
             .filter(updated -> updated > 0)
-            .subscribe(updated -> log.info("Updated battery info ({}) for {}", data.level(), deviceId));
+            .subscribe(updated -> log.info("{}: BTR {}", deviceId, data.level()));
     }
 
     private void updateConfig(UUID deviceId, String payload) {
@@ -115,7 +114,7 @@ public class MqttHandler implements MqttCallback {
             var data = mapper.readValue(payload, ConfigMessage.class);
             deviceService.updateConfig(deviceId, data)
                 .filter(updated -> updated > 0)
-                .subscribe(updated -> log.info("Updated config info ({}) for {}", data.MMC().modeString(), deviceId));
+                .subscribe(updated -> log.info("{}: MMC {}", deviceId, data.MMC().modeString()));
         } catch (JsonProcessingException e) {
             log.error("Couldn't parse MQTT config payload: {}", e.getMessage());
         }
