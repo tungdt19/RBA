@@ -2,6 +2,8 @@ package com.viettel.vtag.service.impl;
 
 import com.google.firebase.messaging.*;
 import com.viettel.vtag.model.ILocation;
+import com.viettel.vtag.model.entity.Device;
+import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class FirebaseServiceImpl implements FirebaseService {
     private final FirebaseMessaging fcm;
     private final MessageSource messageSource;
     private final UserRepository userRepository;
+    private final DeviceRepository deviceRepository;
 
     @Override
     public void sos(UUID deviceId, ILocation location) {
@@ -30,9 +33,10 @@ public class FirebaseServiceImpl implements FirebaseService {
             .setBody(messageSource.getMessage("message.sos.content", new Object[] {}, Locale.ENGLISH))
             .build();
         var tokens = userRepository.fetchAllViewers(deviceId);
+        var device = deviceRepository.find(deviceId);
         var data = Map.of(
             "click_action", "FLUTTER_NOTIFICATION_CLICK",
-            "device_name", "Thiết bị 2",
+            "device_name", device.name(),
             "device_id", deviceId.toString(),
             "action", "ACTION_SOS",
             "latitude", String.valueOf(location.latitude()),
