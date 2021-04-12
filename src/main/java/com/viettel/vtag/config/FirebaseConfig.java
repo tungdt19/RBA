@@ -42,6 +42,8 @@ public class FirebaseConfig {
             System.setProperty("com.google.api.client.should_use_proxy", "true");
             System.setProperty("http.proxyHost", proxyHost);
             System.setProperty("http.proxyPort", String.valueOf(proxyPort));
+            System.setProperty("https.proxyHost", proxyHost);
+            System.setProperty("https.proxyPort", String.valueOf(proxyPort));
         }
     }
 }

@@ -113,6 +113,7 @@ public class MqttHandler implements MqttCallback {
         try {
             var data = mapper.readValue(payload, ConfigMessage.class);
             if ("DTIME".equals(data.type())) {
+                log.info("{}: {}", deviceId, payload);
                 var message = new MqttMessage(TimeMessage.toBytes());
                 publisher.publish("messages/" + deviceId + "/app/controls", message);
                 return;
