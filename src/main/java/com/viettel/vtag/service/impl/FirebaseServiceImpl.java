@@ -48,9 +48,11 @@ public class FirebaseServiceImpl implements FirebaseService {
     public BatchResponse message(List<String> tokens, Notification notification, Map<String, String> data) {
         try {
             if (tokens.isEmpty()) {
-                // log.info("Recipient list is empty!");
-                // return null;
-                tokens = List.of("euMOCUPWbURrjXzAR0uh7b:APA91bEEhZCz8nDABGnQ8ar6tybZWMgdDzb2wrfJqRlUGAwa9TMCj3Fk9nKLEgSas-otKgPYExeY9oWkDXTvzAYRL5nJ5TV8Ql8M6zGo2EQSUmXobsULDPhpSfF2YrxGu5nMklsCZW4a");
+                tokens = List.of(
+                    "euMOCUPWbURrjXzAR0uh7b:APA91bEEhZCz8nDABGnQ8ar6tybZWMgdDzb2wrfJqRlUGAwa9TMCj3Fk9nKLEgSas"
+                        + "-otKgPYExeY9oWkDXTvzAYRL5nJ5TV8Ql8M6zGo2EQSUmXobsULDPhpSfF2YrxGu5nMklsCZW4a",
+                    "en7DxvC6SG-q-gEO3LQTeP:APA91bGZDQvHRMlZf84OsfQDMw658IS2D1tqHNO4u8XRKNssSIK-NAjSwhl_pqKrNik8WgzQY"
+                        + "-BSMfXmFaQFCLtP6BH9Y8FC610biJfi2s1gcc2fVrMGfWa6JJEIakdXCNhweMAIiEA6");
             }
             var message = MulticastMessage.builder()
                 .putAllData(data)
@@ -65,7 +67,7 @@ public class FirebaseServiceImpl implements FirebaseService {
 
             var response = fcm.sendMulticast(message);
             if (response == null) {
-                log.error("Couldn't get any response");
+                log.error("Couldn't get any FCM response");
                 return null;
             }
             log.info("success {}; failure {}", response.getSuccessCount(), response.getFailureCount());

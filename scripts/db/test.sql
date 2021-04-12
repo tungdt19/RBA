@@ -24,7 +24,7 @@ SELECT latitude, longitude, trigger_instant
 FROM location_history lh
          JOIN user_role ur ON lh.device_id = ur.device_id
          JOIN device d ON d.id = ur.device_id
-WHERE platform_device_id = '7b762bf8-f157-467c-8f3d-a9d1eb342e25'
+WHERE platform_device_id = ?
 ORDER BY trigger_instant
 LIMIT 1 OFFSET 0;
 
@@ -37,7 +37,7 @@ WHERE platform_device_id = ?;
 
 
 SELECT d.id, name, platform_device_id, d.battery, lh.device_id, lh.latitude, lh.longitude, lh.trigger_instant
-FROM device d
+FROM device d;
 
 
 
@@ -93,3 +93,9 @@ WHERE a.trigger_instant < b.trigger_instant
   AND DATE_TRUNC('minute', a.trigger_instant) = DATE_TRUNC('minute', b.trigger_instant);
 
 
+SELECT *
+FROM end_user eu
+         INNER JOIN user_role ur ON eu.id = ur.user_id
+         JOIN token t2 ON eu.id = t2.user_id AND (t.expired_instant < t2.expired_instant
+    OR t.expired_instant = t2.expired_instant)
+-- WHERE t2.user_id IS NULL

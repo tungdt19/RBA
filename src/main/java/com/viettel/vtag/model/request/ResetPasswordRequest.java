@@ -14,6 +14,6 @@ public class ResetPasswordRequest {
     @JsonProperty
     private String phone;
 
-    @JsonProperty
+    @JsonProperty("new_password")
     private String password;
 }

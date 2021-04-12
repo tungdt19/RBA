@@ -3,13 +3,14 @@ POST http://{{host}}/vtag/device/pair
 Authorization: Bearer {{vtag_token}}
 Content-Type: application/json
 
-{"platform_id": "7b762bf8-f157-467c-8f3d-a9d1eb342e35"}
+{"platform_id": "f7db01c2-991c-4a68-a271-c6ef4406aaa9"}
 
 
 
 ### --------------------------------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/device/unpair
-Authorization: Bearer {{vtag_token}}
+Authorization: Bearer dfb4d7aa-08f0-4bbf-addb-525dd74b5f70
+#{{vtag_token}}
 Content-Type: application/json
 
 {"platform_id": "7b762bf8-f157-467c-8f3d-a9d1eb342e35"}

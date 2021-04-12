@@ -125,8 +125,16 @@ POST http://{{host}}/vtag/test/sms
 ### fcm ----------------------------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/test/fcm
 Content-Type: application/json
-Accept-Language: vi-VN
+#Accept-Language: en-US
 
-{"name": "$timestamp"}
+{"name": "Chao Q"}
+
+
+### fcm ----------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/test/rest
+Content-Type: application/json
+Accept-Language: en-US
+
+{"name": "Chao Q"}
 
 

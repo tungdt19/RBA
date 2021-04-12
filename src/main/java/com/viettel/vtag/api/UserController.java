@@ -109,6 +109,9 @@ public class UserController {
     @GetMapping("/info")
     public ResponseEntity<ResponseBody> getUserInfo(ServerHttpRequest request) {
         var user = userService.checkToken(request);
+        if (user == null) {
+            return status(UNAUTHORIZED).body(of(1, "Your user token is invalid!"));
+        }
         return status(OK).body(of(0, "Okie dokie!", user));
     }
 
@@ -139,7 +142,7 @@ public class UserController {
 
             return status(BAD_REQUEST).body(of(1, "Couldn't reset password!"));
         } catch (Exception e) {
-            log.error("Couldn't reset password", e);
+            log.error("Couldn't reset password {}: {}", e.getMessage(), detail);
             return status(INTERNAL_SERVER_ERROR).body(
                 of(1, "Couldn't reset password!", Map.of("detail", String.valueOf(e.getMessage()))));
         }
