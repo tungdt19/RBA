@@ -165,7 +165,7 @@ public class DeviceServiceImpl implements DeviceService {
             .doOnNext(saved -> log.info("{}: del usr {}: rs {}", request.platformId(), user.platformId(), saved))
             .filter(deleted -> deleted > 0)
             .map(deleted -> deviceRepository.delete(user, request.platformId()))
-            .doOnNext(saved -> log.info("{}: del dvc {}: rs {}", request.platformId(), user.platformId(), saved))
+            .doOnNext(saved -> log.info("{}: del dvc: rs {}", request.platformId(), saved))
             .map(deleted -> deleted > 0)
             .filter(deleted -> deleted);
     }

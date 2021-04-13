@@ -158,8 +158,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public int delete(User user, UUID platformID) {
-        var sql = "DELETE FROM device d USING user_role ur WHERE d.id = ur.device_id AND platform_device_id = ? "
-            + "AND ur.user_id = ?";
+        var sql = "DELETE FROM device d WHERE platform_device_id = ?";
         return jdbc.update(sql, platformID, user.id());
     }
 
