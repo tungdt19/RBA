@@ -43,7 +43,7 @@ public class FirebaseServiceImpl implements FirebaseService {
         var device = deviceRepository.find(deviceId);
         var bodyArgs = new String[] {device.name(), fence.name()};
         var title = messageSource.getMessage("message.fence.title", new Object[] { }, locale);
-        var body = messageSource.getMessage("message.fence.body", bodyArgs, locale);
+        var body = messageSource.getMessage("message.fence.arrived", bodyArgs, locale);
         var notification = Notification.builder().setTitle(title).setBody(body).build();
         var tokens = userRepository.fetchAllViewers(deviceId);
 

@@ -30,9 +30,15 @@ public interface DeviceService {
 
     Mono<Integer> deleteGeofencing(User user, UUID uuid);
 
-    Mono<String> getMessages(User user, UUID deviceId, int offset, int limit);
+    default Mono<String> getDeviceMessages(User user, UUID deviceId, int offset, int limit) {
+        return getDeviceMessages(user, deviceId, "data,battery,wificell,devconf", offset, limit);
+    }
 
-    Mono<Integer> updateConfig(User user, UUID deviceId, ConfigRequest config);
+    Mono<String> getDeviceMessages(User user, UUID deviceId, String topics, int offset, int limit);
+
+    Mono<DeviceConfig> getConfig(User user, UUID deviceId);
+
+    Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config);
 
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 

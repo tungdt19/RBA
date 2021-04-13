@@ -3,16 +3,16 @@ package com.viettel.vtag.utils;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.viettel.vtag.model.request.ConfigRequest;
+import com.viettel.vtag.model.request.DeviceConfig;
 
 import java.io.IOException;
 
-import static com.viettel.vtag.model.request.ConfigRequest.*;
+import static com.viettel.vtag.model.request.DeviceConfig.*;
 
-public class ConfigRequestSerializer extends JsonSerializer<ConfigRequest> {
+public class DeviceConfigSerializer extends JsonSerializer<DeviceConfig> {
 
     @Override
-    public void serialize(ConfigRequest config, JsonGenerator json, SerializerProvider provider) throws IOException {
+    public void serialize(DeviceConfig config, JsonGenerator json, SerializerProvider provider) throws IOException {
         json.writeStartObject();
 
         json.writeObjectField("Type", "MMC");
@@ -37,12 +37,12 @@ public class ConfigRequestSerializer extends JsonSerializer<ConfigRequest> {
         json.writeEndObject();
     }
 
-    private void writeDayNight(JsonGenerator json, Config day, Config night) throws IOException {
+    private static void writeDayNight(JsonGenerator json, Config day, Config night) throws IOException {
         writeConfig(json, day, "Day");
         writeConfig(json, night, "Night");
     }
 
-    private void writeConfig(JsonGenerator json, Config config, String dn) throws IOException {
+    private static void writeConfig(JsonGenerator json, Config config, String dn) throws IOException {
         json.writeFieldName(dn);
         json.writeStartObject();
         var start = config.start();

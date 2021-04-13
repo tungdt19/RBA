@@ -1,16 +1,21 @@
 package com.viettel.vtag.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
+import com.viettel.vtag.service.interfaces.MqttPublisher;
+import com.viettel.vtag.utils.DeviceConfigSerializer;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
@@ -29,7 +34,14 @@ public class DeviceServiceImpl implements DeviceService {
 
     private final DeviceRepository deviceRepository;
     private final IotPlatformService iotPlatformService;
+    private final MqttPublisher publisher;
     private final MqttClient mqttClient;
+
+    {
+        var module = new SimpleModule();
+        module.addSerializer(DeviceConfig.class, new DeviceConfigSerializer());
+        mapper.registerModule(module);
+    }
 
     @Override
     public Mono<ClientResponse> pairDevice(User user, PairDeviceRequest request) {
@@ -119,9 +131,10 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<String> getMessages(User user, UUID deviceId, int offset, int limit) {
-        var endpoint = "/api/messages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
-            + "&topic=data,battery,wificell,devconf&offset=" + offset + "&limit=" + limit;
+    public Mono<String> getDeviceMessages(User user, UUID deviceId, String topics, int offset, int limit) {
+        var endpoint =
+            "/api/messages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId + "&topic=" + topics
+                + "&offset=" + offset + "&limit=" + limit;
         return iotPlatformService.getWithToken(endpoint)
             .doOnNext(response -> log.info("{}: msg {}", deviceId, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
@@ -129,8 +142,20 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Integer> updateConfig(User user, UUID deviceId, ConfigRequest config) {
-        return null;
+    public Mono<DeviceConfig> getConfig(User user, UUID deviceId) {
+        return getDeviceMessages(user, deviceId, "devconf", 0, 1).map(s -> null);
+    }
+
+    @Override
+    public Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config) {
+        try {
+            var msg = new MqttMessage(mapper.writeValueAsBytes(config));
+            msg.setRetained(true);
+            publisher.publish("messages/" + deviceId + "/app/controls", msg);
+            return Mono.just(1);
+        } catch (JsonProcessingException e) {
+            return Mono.empty();
+        }
     }
 
     @Override

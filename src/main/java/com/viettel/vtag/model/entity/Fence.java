@@ -14,13 +14,13 @@ public class Fence implements ILocation {
     private String name;
 
     @JsonProperty("lat")
-    private Double latitude;
+    private double latitude;
 
     @JsonProperty("lon")
-    private Double longitude;
+    private double longitude;
 
     @JsonProperty
-    private Double radius;
+    private double radius;
 
     @JsonIgnore
     private int in;

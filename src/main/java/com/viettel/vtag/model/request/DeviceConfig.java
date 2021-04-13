@@ -1,8 +1,6 @@
 package com.viettel.vtag.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.viettel.vtag.utils.ConfigRequestSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -11,8 +9,7 @@ import java.util.List;
 
 @Data
 @Accessors(fluent = true)
-@JsonSerialize(using = ConfigRequestSerializer.class)
-public class ConfigRequest {
+public class DeviceConfig {
 
     @JsonProperty
     private int mode;

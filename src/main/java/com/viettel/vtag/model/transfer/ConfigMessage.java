@@ -46,15 +46,5 @@ public class ConfigMessage {
 
         @JsonProperty("Thre")
         private int threshold;
-
-        public String modeString() {
-            switch (mode) {
-                case 0: return "Real-time";
-                case 2: return "Hibernate";
-                case 1:
-                default:
-                    return "On-demand";
-            }
-        }
     }
 }

@@ -150,7 +150,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
             .name(rs.getString("name"))
             .imei(rs.getString("imei"))
             .battery(rs.getInt("battery"))
-            .status(rs.getString("status"))
+            .status(rs.getInt("status"))
             .platformId(rs.getObject("platform_device_id", UUID.class))
             .latitude(lat == null ? 0 : lat)
             .longitude(lon == null ? 0 : lon)

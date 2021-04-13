@@ -5,12 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.config.MqttSubscriberConfig;
 import com.viettel.vtag.model.transfer.*;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
-import com.viettel.vtag.service.interfaces.DeviceMessageService;
-import com.viettel.vtag.service.interfaces.FirebaseService;
-import com.viettel.vtag.service.interfaces.GeoService;
+import com.viettel.vtag.service.interfaces.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -20,30 +18,21 @@ import java.util.UUID;
 /** @see MqttSubscriberConfig#mqttSubscriberClient(MqttCallback) */
 @Slf4j
 @Service
-// @RequiredArgsConstructor
+@RequiredArgsConstructor
 public class MqttHandler implements MqttCallback {
+
+    private static final String MSG_TIME_REQUEST = "DTIME";
+    private static final String MSG_WIFI_CELL = "DWFC";
+    private static final String MSG_POSITION = "DPOS";
+    private static final String MSG_SOS = "DSOS";
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final MqttClient publisher;
+    private final MqttPublisher publisher;
     private final DeviceMessageService deviceService;
     private final DeviceRepository deviceRepository;
     private final FirebaseService firebaseService;
     private final GeoService geoService;
-
-    public MqttHandler(
-        @Qualifier("mqtt-publisher-client") MqttClient publisher,
-        DeviceMessageService deviceService,
-        DeviceRepository deviceRepository,
-        FirebaseService firebaseService,
-        GeoService geoService
-    ) {
-        this.publisher = publisher;
-        this.deviceService = deviceService;
-        this.deviceRepository = deviceRepository;
-        this.firebaseService = firebaseService;
-        this.geoService = geoService;
-    }
 
     /** @see MqttCallback#connectionLost(Throwable) */
     @Override
@@ -87,9 +76,9 @@ public class MqttHandler implements MqttCallback {
 
     private void handleGpsMessage(UUID deviceId, String payload) throws JsonProcessingException {
         var gps = mapper.readValue(payload, LocationMessage.class);
-        if ("DPOS".equals(gps.type())) {
+        if (MSG_POSITION.equals(gps.type())) {
             log.info("{}: GPS {}", deviceId, payload);
-            deviceService.saveLocation(deviceId, gps);
+            deviceService.saveLocation(deviceId, gps).subscribe();
         }
     }
 
@@ -98,10 +87,10 @@ public class MqttHandler implements MqttCallback {
 
         var device = deviceRepository.find(deviceId);
         switch (data.type()) {
-            case "DSOS":
+            case MSG_SOS:
                 convertWifiCell(deviceId, data).subscribe(location -> firebaseService.sos(device, location));
                 break;
-            case "DWFC":
+            case MSG_WIFI_CELL:
                 convertWifiCell(deviceId, data).flatMap(location -> geoService.checkFencing(device, location))
                     .subscribe(fence -> firebaseService.notifySafeZone(deviceId, fence));
                 break;
@@ -120,18 +109,16 @@ public class MqttHandler implements MqttCallback {
     private void updateConfig(UUID deviceId, String payload) {
         try {
             var data = mapper.readValue(payload, ConfigMessage.class);
-            if ("DTIME".equals(data.type())) {
+            if (MSG_TIME_REQUEST.equals(data.type())) {
                 log.info("{}: {}", deviceId, payload);
-                publisher.publish("messages/" + deviceId + "/app/controls", new MqttMessage(TimeMessage.toBytes()));
+                publisher.publish("messages/" + deviceId + "/app/controls", TimeMessage.toBytes());
                 return;
             }
             deviceService.updateConfig(deviceId, data)
                 .filter(updated -> updated > 0)
-                .subscribe(updated -> log.info("{}: MMC {}", deviceId, data.MMC().modeString()));
+                .subscribe(updated -> log.info("{}: MMC {}", deviceId, data.MMC()));
         } catch (JsonProcessingException e) {
             log.error("Couldn't parse MQTT config payload: {}", e.getMessage());
-        } catch (MqttException e) {
-            log.error("error handling config message {}", e.getMessage());
         }
     }
 
@@ -147,8 +134,8 @@ public class MqttHandler implements MqttCallback {
     private void publishLocation(UUID deviceId, LocationMessage location) {
         var topic = "messages/" + deviceId + "/data";
         try {
-            publisher.publish(topic, new MqttMessage(mapper.writeValueAsBytes(location)));
-        } catch (MqttException | JsonProcessingException e) {
+            publisher.publish(topic, mapper.writeValueAsBytes(location));
+        } catch (JsonProcessingException e) {
             log.error("Couldn't publish location {} to topic '{}'", location, topic, e);
         }
     }

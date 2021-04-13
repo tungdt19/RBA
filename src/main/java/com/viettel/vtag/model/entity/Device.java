@@ -46,7 +46,7 @@ public class Device {
     private LocalDateTime uptime;
 
     @JsonProperty
-    private String status;
+    private int status;
 
     @JsonIgnore
     private List<Fence> fences;
