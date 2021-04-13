@@ -27,10 +27,10 @@ public class Device {
     private int battery;
 
     @JsonProperty
-    private Double latitude;
+    private double latitude; // Double
 
     @JsonProperty
-    private Double longitude;
+    private double longitude; // Double
 
     @JsonProperty
     private double accuracy;

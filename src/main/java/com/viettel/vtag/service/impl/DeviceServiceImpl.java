@@ -39,7 +39,7 @@ public class DeviceServiceImpl implements DeviceService {
             .filter(response -> response.statusCode().is2xxSuccessful())
             .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
             .flatMap(ok -> iotPlatformService.post("/api/devices/" + uuid + "/active", Map.of("Type", "MAD")))
-            .doOnNext(response -> log.info("{}: Act {}", uuid, response.statusCode()));
+            .doOnNext(response -> log.info("{}: atv {}", uuid, response.statusCode()));
         // .filter(response -> response.statusCode().is2xxSuccessful());
     }
 
@@ -68,45 +68,13 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Integer> unpairDevice(User user, PairDeviceRequest request) {
-        var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
-        return iotPlatformService.delete(endpoint)
-            .filter(response -> response.statusCode().is2xxSuccessful())
-            .doOnNext(response -> log.info("unpair {}: {}", endpoint, response.statusCode()))
-            .map(paired -> deviceRepository.removeUserDevice(user, request))
-            .doOnNext(saved -> log.info("deleted {} from {}: {}", request.platformId(), user.platformId(), saved))
-            .filter(paired -> paired > 0)
-            .map(response -> deviceRepository.delete(user, request.platformId()))
-            .doOnNext(saved -> log.info("unpaired user device {}", saved));
+    public Mono<Device> getDevice(User user, UUID deviceId) {
+        return Mono.just(deviceRepository.getUserDevice(user, deviceId));
     }
 
     @Override
-    public Mono<Boolean> deactivate(PairDeviceRequest request) {
-        //@formatter:off
-        var uuid = request.platformId();
-        return Mono.justOrEmpty(uuid)
-            .map(id -> "/api/devices/" + id + "/deactive")
-            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
-            .doOnNext(response -> log.info("deactivate {}: {}", uuid, response.statusCode()))
-            .map(response -> response.statusCode().is2xxSuccessful())
-            .filter(paired -> paired)
-            .doOnNext(response -> {
-                try {
-                    mqttClient.unsubscribe(new String[] {
-                        "messages/" + uuid + "/data",
-                        "messages/" + uuid + "/userdefined/battery",
-                        "messages/" + uuid + "/userdefined/wificell",
-                        "messages/" + uuid + "/userdefined/devconf"});
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
-            });
-        //@formatter:on
-    }
-
-    @Override
-    public Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest detail) {
-        return Mono.just(deviceRepository.updateName(user, detail)).filter(updated -> updated > 0);
+    public Mono<List<Device>> getDeviceList(User user) {
+        return Mono.just(deviceRepository.getUserDevice(user));
     }
 
     @Override
@@ -117,6 +85,11 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public Mono<Integer> removeViewer(User user, RemoveViewerRequest request) {
         return Mono.just(deviceRepository.removeViewer(user, request)).filter(removed -> removed > 0);
+    }
+
+    @Override
+    public Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest detail) {
+        return Mono.just(deviceRepository.updateName(user, detail)).filter(updated -> updated > 0);
     }
 
     @Override
@@ -140,16 +113,6 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<List<Device>> getList(User user) {
-        return Mono.just(deviceRepository.getUserDevice(user));
-    }
-
-    @Override
-    public Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest detail) {
-        return Mono.justOrEmpty(deviceRepository.fetchHistory(user, detail));
-    }
-
-    @Override
     public Mono<String> getMessages(User user, UUID deviceId, int offset, int limit) {
         var endpoint = "/api/messages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
             + "&topic=data,battery,wificell&offset=" + offset + "&limit=" + limit;
@@ -160,7 +123,47 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Device> getGeofencing(User user, UUID deviceId) {
-        return null;
+    public Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest detail) {
+        return Mono.justOrEmpty(deviceRepository.fetchHistory(user, detail));
+    }
+
+    @Override
+    public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {
+        var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
+        return iotPlatformService.delete(endpoint)
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .doOnNext(response -> log.info("unpair {}: {}", endpoint, response.statusCode()))
+            .map(paired -> deviceRepository.removeUserDevice(user, request.platformId()))
+            .doOnNext(saved -> log.info("deleted {} from {}: {}", request.platformId(), user.platformId(), saved))
+            .filter(paired -> paired > 0)
+            .map(response -> deviceRepository.delete(user, request.platformId()))
+            .doOnNext(saved -> log.info("{}: UPR {}", request.platformId(), saved))
+            .map(paired -> paired > 0);
+    }
+
+    @Override
+    public Mono<Boolean> unpairDevice(User user, PairDeviceRequest request) {
+        //@formatter:off
+        var uuid = request.platformId();
+        return Mono.justOrEmpty(uuid)
+            .map(id -> "/api/devices/" + id + "/deactive")
+            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
+            .doOnNext(response -> log.info("{}: dtv {}", uuid, response.statusCode()))
+            .map(response -> response.statusCode().is2xxSuccessful())
+            .flatMap(endpoint -> iotPlatformService.delete("/api/devices/"+uuid+"/group/" + user.platformId()))
+            .map(response -> response.statusCode().is2xxSuccessful())
+            .filter(paired -> paired)
+            .doOnNext(response -> {
+                try {
+                    mqttClient.unsubscribe(new String[] {
+                        "messages/" + uuid + "/data",
+                        "messages/" + uuid + "/userdefined/battery",
+                        "messages/" + uuid + "/userdefined/wificell",
+                        "messages/" + uuid + "/userdefined/devconf"});
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            });
+        //@formatter:on
     }
 }

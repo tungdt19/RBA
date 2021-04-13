@@ -68,17 +68,15 @@ Authorization: Bearer #{{vtag_token}}
 
 
 ### --------------------------------------------------------------------------------------------------------------------
-GET http://{{host}}/vtag/device/geo/7b762bf8-f157-467c-8f3d-a9d1eb342e35
-Authorization: Bearer 6d749353-fb58-48a8-b571-fa615d6a1240 #{{vtag_token}}
+GET http://{{host}}/vtag/device/geo/7e1fcfca-9f7e-44b0-85d8-718036b58b9e
+Authorization: Bearer ad8ef77e-5058-48f9-a2c8-bce0146c2671 #{{vtag_token}}
 
 ### --------------------------------------------------------------------------------------------------------------------
-POST http://{{host}}/vtag/device/geo/7b762bf8-f157-467c-8f3d-a9d1eb342e35
-Authorization: Bearer 6d749353-fb58-48a8-b571-fa615d6a1240 #{{vtag_token}}
+POST http://{{host}}/vtag/device/geo/7e1fcfca-9f7e-44b0-85d8-718036b58b9e
+Authorization: Bearer e384cb8c-8101-43cb-a7ee-47e7c4f7f6fe #{{vtag_token}}
 Content-Type: application/json
 
-[
-    {"name": "name 1", "lat": 12.3456, "lon": 12.3456, "radius": 100}
-]
+[{"name": "Ho Tay", "lat": 21.068889, "lon": 105.812353, "radius": 100}]
 
 
 

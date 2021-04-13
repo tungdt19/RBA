@@ -58,6 +58,30 @@ vtag:
 
 ---
 spring:
+  profiles: test-db
+  datasource:
+    jdbcUrl: jdbc:postgresql://203.113.138.18:4446/postgres?useSSL=false
+    username: postgres
+    password: 1
+  sms-datasource:
+    jdbcUrl: jdbc:mysql://127.0.0.1:3306/smssupport?useSSL=false
+    username: root
+    password: 1
+vtag:
+  proxy:
+    enable: false
+  platform:
+    base-url: https://api.iotcloud.com.vn:4438
+  mqtt:
+    url: tcp://127.0.0.1:1883
+    topic: messages/+/wildcard
+    username: username
+    password: password
+    publisher-client-id: vtag_dev_publisher
+    subscriber-client-id: vtag_dev_subscriber
+
+---
+spring:
   profiles: test
   datasource:
     jdbcUrl: jdbc:postgresql://203.113.138.18:4446/postgres?useSSL=false

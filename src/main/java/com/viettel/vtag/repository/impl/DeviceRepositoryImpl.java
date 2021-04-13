@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -80,10 +79,10 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public int removeUserDevice(User user, PairDeviceRequest request) {
+    public int removeUserDevice(User user, UUID deviceId) {
         var sql = "DELETE FROM user_role ur USING device d WHERE d.id = ur.device_id AND ur.user_id = ? AND role_id = 1"
             + " AND platform_device_id = ?";
-        return jdbc.update(sql, user.id(), request.platformId());
+        return jdbc.update(sql, user.id(), deviceId);
     }
 
     @Override
@@ -94,9 +93,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public List<Device> getUserDevice(User user) {
-        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, last_lat, "
-            + "last_lon, update_instant FROM device INNER JOIN user_role ur ON device.id = ur.device_id WHERE user_id"
-            + " = ?";
+        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, update_instant,"
+            + " last_lat, last_lon FROM device INNER JOIN user_role ur ON device.id = ur.device_id WHERE user_id = ?";
         return jdbc.query(sql, new Object[] {user.id()}, (rs, i) -> new Device().id(rs.getInt("id"))
             .name(rs.getString("name"))
             .imei(rs.getString("imei"))
@@ -105,6 +103,29 @@ public class DeviceRepositoryImpl implements DeviceRepository {
             .latitude(rs.getObject("last_lat", Double.class))
             .longitude(rs.getObject("last_lon", Double.class))
             .uptime(rs.getTimestamp("update_instant").toLocalDateTime()));
+    }
+
+    @Override
+    public Device getUserDevice(User user, UUID deviceId) {
+        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, last_lat, "
+            + "last_lon, update_instant FROM device INNER JOIN user_role ur ON device.id = ur.device_id "
+            + "WHERE user_id = ? AND platform_device_id = ?";
+        return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, (rs, i) -> {
+            var id = rs.getObject("platform_device_id", UUID.class);
+            var lat = rs.getObject("last_lat", Double.class);
+            var lon = rs.getObject("last_lon", Double.class);
+            var up = rs.getTimestamp("update_instant").toLocalDateTime();
+
+            log.info("device({}, {}, {}, {})", id, lat, lon, up);
+            return new Device().id(rs.getInt("id"))
+                .name(rs.getString("name"))
+                .imei(rs.getString("imei"))
+                .battery(rs.getInt("battery"))
+                .platformId(id)
+                .latitude(lat)
+                .longitude(lon)
+                .uptime(up);
+        });
     }
 
     @Override
@@ -126,43 +147,6 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public int insertGeoFencing(User user, UUID deviceId, Fencing fencing) {
-        try {
-            var sql =
-                "UPDATE device SET geo_fencing = geo_fencing || ?::JSONB, geo_length = COALESCE(geo_length, 0) + 1 "
-                    + "WHERE platform_device_id = ? AND geo_length < 5";
-            return jdbc.update(sql, mapper.writeValueAsString(fencing), deviceId);
-        } catch (JsonProcessingException e) {
-            log.error("Error converting JSON format: {}", e.getMessage());
-            return 0;
-        }
-    }
-
-    @Override
-    public int insertGeoFencing(User user, UUID deviceId, List<Fencing> fencing) {
-        try {
-            var sql = "UPDATE device SET geo_fencing = ?::JSONB, geo_length = ? WHERE platform_device_id = ?";
-            return jdbc.update(sql, mapper.writeValueAsString(fencing), fencing.size(), deviceId);
-        } catch (JsonProcessingException e) {
-            log.error("Error converting JSON format: {}", e.getMessage());
-            return 0;
-        }
-    }
-
-    @Override
-    public int updateGeoFencing(User user, UUID deviceId, Fencing fencing) {
-        try {
-            var sql = "UPDATE device d SET geo_fencing = geo_fencing || ?::JSONB FROM user_role ur WHERE ur.device_id ="
-                + " d.id AND ur.user_id = ? AND platform_device_id = ? AND geo_fencing->'" + fencing.name()
-                + "' IS NOT NULL";
-            return jdbc.update(sql, mapper.writeValueAsString(fencing), user.id(), deviceId);
-        } catch (JsonProcessingException e) {
-            log.error("Error converting JSON format: {}", e.getMessage());
-            return 0;
-        }
-    }
-
-    @Override
     public int updateGeoFencing(User user, UUID deviceId, List<Fencing> fencing) {
         try {
             var sql = "UPDATE device d SET geo_fencing = ?::JSONB, geo_length = ? FROM user_role ur "
@@ -176,7 +160,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public int deleteGeoFencing(User user, UUID deviceId) {
-        var sql = "UPDATE device d SET geo_length = 0, geo_fencing = geo_fencing #- '{}' FROM user_role ur "
+        var sql = "UPDATE device d SET geo_length = 0, geo_fencing = '[]'::JSONB FROM user_role ur "
             + "WHERE d.id = ur.device_id AND ur.user_id = ? AND platform_device_id = ?";
 
         return jdbc.update(sql, user.id(), deviceId);

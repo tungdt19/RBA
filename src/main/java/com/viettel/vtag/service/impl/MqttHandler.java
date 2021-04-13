@@ -55,7 +55,9 @@ public class MqttHandler implements MqttCallback {
         var index = topic.indexOf('/', 9);
         var deviceId = UUID.fromString(topic.substring(9, index));
         var subtopic = topic.substring(index + 1);
-        var payload = new String(message.getPayload());
+        var p = message.getPayload();
+        var payload = new String(p);
+        log.info("{}: {} -> {} bytes", deviceId, subtopic, p.length);
 
         try {
             switch (subtopic) {
@@ -130,7 +132,7 @@ public class MqttHandler implements MqttCallback {
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage payload) {
         return geoConvertService.convert(deviceId, payload)
-            .doOnNext(location -> log.info("{}: {}", deviceId, location))
+            .doOnNext(location -> log.info("{}: LOC({}, {})", deviceId, location.latitude(), location.longitude()))
             .doOnNext(location -> deviceService.saveLocation(deviceId, location))
             .map(location -> LocationMessage.fromLocation(location, payload))
             .doOnNext(location -> publishLocation(deviceId, location))

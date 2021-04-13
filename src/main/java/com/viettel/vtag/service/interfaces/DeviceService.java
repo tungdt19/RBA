@@ -14,25 +14,25 @@ public interface DeviceService {
 
     Mono<Integer> saveUserDevice(User user, PairDeviceRequest request);
 
-    Mono<Integer> unpairDevice(User user, PairDeviceRequest request);
+    Mono<Device> getDevice(User user, UUID deviceId);
 
-    Mono<Boolean> deactivate(PairDeviceRequest request);
-
-    Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest request);
+    Mono<List<Device>> getDeviceList(User user);
 
     Mono<Integer> addViewer(User user, AddViewerRequest deviceId);
 
     Mono<Integer> removeViewer(User user, RemoveViewerRequest detail);
 
+    Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest request);
+
     Mono<Integer> updateGeofencing(User t1, UUID t2, List<Fencing> fencing);
 
     Mono<Integer> deleteGeofencing(User user, UUID uuid);
 
-    Mono<List<Device>> getList(User user);
+    Mono<String> getMessages(User user, UUID deviceId, int offset, int limit);
 
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 
-    Mono<String> getMessages(User user, UUID deviceId, int offset, int limit);
+    Mono<Boolean> unpairDevice(User user, PairDeviceRequest request);
 
-    Mono<Device> getGeofencing(User user, UUID deviceId);
+    Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request);
 }

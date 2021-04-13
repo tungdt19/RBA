@@ -4,7 +4,6 @@ import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public interface DeviceRepository {
@@ -23,21 +22,17 @@ public interface DeviceRepository {
 
     int removeViewer(User user, RemoveViewerRequest request);
 
-    int removeUserDevice(User user, PairDeviceRequest request);
+    int removeUserDevice(User user, UUID deviceId);
 
     List<UUID> fetchAllDevices();
 
     List<Device> getUserDevice(User user);
 
+    Device getUserDevice(User user, UUID deviceId);
+
     int setUserDevice(User user, PairDeviceRequest request);
 
     List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request);
-
-    int insertGeoFencing(User user, UUID deviceId, Fencing fencing);
-
-    int insertGeoFencing(User user, UUID deviceId, List<Fencing> fencing);
-
-    int updateGeoFencing(User user, UUID deviceId, Fencing fencing);
 
     int updateGeoFencing(User user, UUID deviceId, List<Fencing> fencing);
 

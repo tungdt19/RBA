@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.protocol.HTTP;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
@@ -51,7 +52,14 @@ public class GeoConvertServiceImpl implements GeoConvertService {
             .uri(convertUri)
             .bodyValue(json.token(convertToken).deviceId(deviceId))
             .exchange()
-            .filter(response -> response.statusCode().is2xxSuccessful())
+            .filter(response -> {
+                var status = response.statusCode();
+                var ok = status.is2xxSuccessful();
+                if (!ok) {
+                    log.info("{}: {} -> {}", deviceId, json, status);
+                }
+                return ok;
+            })
             .flatMap(response -> response.bodyToMono(Location.class))
             .filter(location -> {
                 var error = "error".equals(location.status());
@@ -59,7 +67,6 @@ public class GeoConvertServiceImpl implements GeoConvertService {
                     log.error("{}: '{}' -> {}", deviceId, json, location);
                 }
                 return error;
-            })
-            .doOnNext(location -> log.info("{}: LOC({}, {})", deviceId, location.latitude(), location.longitude()));
+            });
     }
 }

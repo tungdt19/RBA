@@ -15,7 +15,8 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 import static com.viettel.vtag.model.response.ResponseBody.of;
 import static org.springframework.http.HttpStatus.*;
@@ -32,8 +33,7 @@ public class DeviceController {
 
     @GetMapping("/list")
     public Mono<ResponseEntity<ResponseBody>> getDevices(ServerHttpRequest request) {
-        return Mono.justOrEmpty(userService.checkToken(request))
-            .flatMap(deviceService::getList)
+        return Mono.justOrEmpty(userService.checkToken(request)).flatMap(deviceService::getDeviceList)
             .map(devices -> ok(of(0, "Okie dokie!", devices)))
             .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't get user's devices")))
             .doOnError(throwable -> log.error("Couldn't add user", throwable))
@@ -121,10 +121,14 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseBody>> unpairDevice(
         @RequestBody PairDeviceRequest detail, ServerHttpRequest request
     ) {
-        return Mono.justOrEmpty(userService.checkToken(request))
-            .doOnNext(user -> log.info("unpair device {} from user {}", detail.platformId(), user.phone()))
+        var usr = userService.checkToken(request);
+        if (usr == null) {
+            return Mono.just(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")));
+        }
+        return Mono.just(usr)
+            .doOnNext(user -> log.info("{}: unpair from user {}", detail.platformId(), user.phone()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
-            .then(deviceService.deactivate(detail))
+            .then(deviceService.removeUserDevice(usr, detail))
             .map(bool -> true)
             .map(activated -> ok(of(0, "Unpaired device successfully!")))
             .doOnError(e -> log.error("Error on unpair {}", detail.platformId(), e))
@@ -134,15 +138,28 @@ public class DeviceController {
     @GetMapping("/messages")
     public Mono<ResponseEntity<ResponseJson>> getMessages(
         @RequestParam("device_id") String deviceId,
-        @RequestParam("offset") int offset,
-        @RequestParam("limit") int limit,
-        ServerHttpRequest request
+        @RequestParam("offset") int offset, @RequestParam("limit") int limit, ServerHttpRequest request
     ) {
         return Mono.justOrEmpty(userService.checkToken(request))
             .zipWith(Mono.just(UUID.fromString(deviceId)))
             .flatMap(tuple -> deviceService.getMessages(tuple.getT1(), tuple.getT2(), offset, limit))
             .map(content -> ok(ResponseJson.of(0, "Okie dokie!").json(content)))
             .defaultIfEmpty(status(NO_CONTENT).body(ResponseJson.of(1, "Couldn't get any response")));
+    }
+
+    @GetMapping("/geo/{device_id}")
+    public Mono<ResponseEntity<ResponseJson>> getGeoFencingList(
+        @PathVariable("device_id") String deviceId, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .zipWith(Mono.just(UUID.fromString(deviceId)))
+            .doOnNext(tuple -> log.info("update geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
+            .flatMap(tuple -> deviceService.getDevice(tuple.getT1(), tuple.getT2()))
+            .doOnNext(updated -> log.info("{}: geo updated {}", deviceId, updated))
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
+            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't get geo-fencing")))
+            .doOnError(e -> log.error("{}: geo {}", deviceId, e.getMessage(), e))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't get geo-fencing")));
     }
 
     @PutMapping("/geo/{device_id}")
