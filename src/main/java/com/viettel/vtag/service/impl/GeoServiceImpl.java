@@ -92,7 +92,7 @@ public class GeoServiceImpl implements GeoService {
                 if (error) {
                     log.error("{}: '{}' -> {}", deviceId, json, location);
                 }
-                return error;
+                return !error;
             });
     }
 
