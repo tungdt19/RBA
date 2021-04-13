@@ -5,6 +5,7 @@ import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.model.response.ResponseJson;
 import com.viettel.vtag.service.interfaces.DeviceService;
+import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class DeviceController {
 
     private final UserService userService;
     private final DeviceService deviceService;
+    private final IotPlatformService iotPlatformService;
 
     @GetMapping("/list")
     public Mono<ResponseEntity<ResponseBody>> getDevices(ServerHttpRequest request) {
@@ -206,5 +208,13 @@ public class DeviceController {
             .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
             .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't delete geo-fencing")))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't delete geo-fencing")));
+    }
+
+    @GetMapping("/all")
+    public Mono<ResponseEntity<ResponseJson>> getAllDeviceFromPlatform() {
+        return iotPlatformService.get("/api/devices")
+            .doOnNext(response -> log.info("all devices {}", response.statusCode()))
+            .flatMap(response -> response.bodyToMono(String.class))
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!", content)));
     }
 }

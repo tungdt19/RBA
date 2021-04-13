@@ -78,10 +78,10 @@ public class FirebaseServiceImpl implements FirebaseService {
             var message = MulticastMessage.builder()
                 .putAllData(data)
                 .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
-                .setApnsConfig(ApnsConfig.builder()
-                    .setAps(Aps.builder().setAlert("sound 2").build())
-                    .setFcmOptions(ApnsFcmOptions.builder().build())
-                    .build())
+                // .setApnsConfig(ApnsConfig.builder()
+                //     .setAps(Aps.builder().setAlert("sound 2").build())
+                //     .setFcmOptions(ApnsFcmOptions.builder().build())
+                //     .build())
                 .setNotification(notification)
                 .addAllTokens(tokens)
                 .build();
@@ -91,7 +91,7 @@ public class FirebaseServiceImpl implements FirebaseService {
                 log.error("Couldn't get any FCM response");
                 return null;
             }
-            log.info("success {}; failure {}", response.getSuccessCount(), response.getFailureCount());
+            log.info("success {}; failure {}; total {}", response.getSuccessCount(), response.getFailureCount(), tokens.size());
 
             if (response.getFailureCount() <= 0) return response;
             var responses = response.getResponses();
