@@ -1,5 +1,6 @@
 package com.viettel.vtag.model.transfer;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class ConfigMessage {
     @JsonProperty("Ver") // "7.2"
     private String version;
 
+    @JsonAlias({"Conn"})
     @JsonProperty("Con") // "nbiot"
     private String connection;
 
@@ -27,7 +29,17 @@ public class ConfigMessage {
     @JsonProperty("MMC") // {"Per":{"V":2,"U":"m"},"Mod":0}
     private PeriodConfig MMC;
 
+    @JsonProperty("Day")
+    private Mode day;
+
+    @JsonProperty("Night")
+    private Mode night;
+
     private Map<String, Object> properties = new HashMap<>();
+
+    public static int mode(ConfigMessage config) {
+        return config.MMC == null ? 1 : config.MMC.mode;
+    }
 
     @JsonAnySetter
     public void add(String key, Object value) {
@@ -46,5 +58,20 @@ public class ConfigMessage {
 
         @JsonProperty("Thre")
         private int threshold;
+    }
+
+    @Data
+    @Accessors(fluent = true)
+    public static class Mode {
+
+        @JsonProperty("per")
+        private int period;
+
+        @JsonProperty("hour")
+        private int hour;
+
+        @JsonAlias({"minute"})
+        @JsonProperty("min")
+        private int minute;
     }
 }

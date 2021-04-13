@@ -226,7 +226,7 @@ public class DeviceController {
             .zipWith(Mono.just(UUID.fromString(deviceId)))
             .doOnNext(tuple -> log.info("{}: cnf {}", deviceId, tuple.getT1().platformId()))
             .flatMap(tuple -> deviceService.getConfig(tuple.getT1(), tuple.getT2()))
-            .map(content -> ok(ResponseJson.of(0, "Okie dokie!", content)))
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!", content.data().get(0).payload())))
             .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't get device config")))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't get device config")));
     }
@@ -235,13 +235,14 @@ public class DeviceController {
     public Mono<ResponseEntity<ResponseJson>> configDevice(
         @PathVariable("device_id") String deviceId, @RequestBody DeviceConfig config, ServerHttpRequest request
     ) {
+        log.info("/config {}", config);
         return Mono.justOrEmpty(userService.checkToken(request))
             .zipWith(Mono.just(UUID.fromString(deviceId)))
             .doOnNext(tuple -> log.info("{}: cnf {}", deviceId, tuple.getT1().platformId()))
             .flatMap(tuple -> deviceService.updateConfig(tuple.getT1(), tuple.getT2(), config))
             .filter(updated -> updated > 0)
             .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
-            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't delete geo-fencing")))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't delete geo-fencing")));
+            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't apply config")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't apply config")));
     }
 }

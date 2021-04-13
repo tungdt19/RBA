@@ -2,7 +2,7 @@ package com.viettel.vtag.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
+import com.viettel.vtag.utils.TimeDeserializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -20,21 +20,5 @@ public class DeviceConfig {
     private int cycle;
 
     @JsonProperty("points")
-    private List<Config> schedule;
-
-    @Data
-    @Accessors(fluent = true)
-    public static class Config {
-
-        @JsonProperty("start_time")
-        @JsonDeserialize(using = LocalTimeDeserializer.class)
-        private LocalTime start;
-
-        @JsonProperty("end_time")
-        @JsonDeserialize(using = LocalTimeDeserializer.class)
-        private LocalTime end;
-
-        @JsonProperty
-        private int cycle;
-    }
+    private List<ModeConfig> schedule;
 }

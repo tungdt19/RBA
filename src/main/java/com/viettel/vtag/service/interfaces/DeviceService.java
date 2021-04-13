@@ -2,6 +2,7 @@ package com.viettel.vtag.service.interfaces;
 
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.model.transfer.PlatformData;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
@@ -36,7 +37,7 @@ public interface DeviceService {
 
     Mono<String> getDeviceMessages(User user, UUID deviceId, String topics, int offset, int limit);
 
-    Mono<String> getConfig(User user, UUID deviceId);
+    Mono<PlatformData> getConfig(User user, UUID deviceId);
 
     Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config);
 

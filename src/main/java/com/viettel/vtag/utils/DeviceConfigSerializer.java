@@ -4,10 +4,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.viettel.vtag.model.request.DeviceConfig;
+import com.viettel.vtag.model.request.ModeConfig;
 
 import java.io.IOException;
-
-import static com.viettel.vtag.model.request.DeviceConfig.*;
 
 public class DeviceConfigSerializer extends JsonSerializer<DeviceConfig> {
 
@@ -25,6 +24,12 @@ public class DeviceConfigSerializer extends JsonSerializer<DeviceConfig> {
         json.writeEndObject();
 
         var schedule = config.schedule();
+        if (schedule == null) {
+            writeDayNight(json, new ModeConfig(), new ModeConfig());
+            json.writeEndObject();
+            return;
+        }
+
         var config1 = schedule.get(0);
         var config2 = schedule.get(1);
 
@@ -37,12 +42,12 @@ public class DeviceConfigSerializer extends JsonSerializer<DeviceConfig> {
         json.writeEndObject();
     }
 
-    private static void writeDayNight(JsonGenerator json, Config day, Config night) throws IOException {
+    private static void writeDayNight(JsonGenerator json, ModeConfig day, ModeConfig night) throws IOException {
         writeConfig(json, day, "Day");
         writeConfig(json, night, "Night");
     }
 
-    private static void writeConfig(JsonGenerator json, Config config, String dn) throws IOException {
+    private static void writeConfig(JsonGenerator json, ModeConfig config, String dn) throws IOException {
         json.writeFieldName(dn);
         json.writeStartObject();
         var start = config.start();

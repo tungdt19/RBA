@@ -28,7 +28,7 @@ public class DeviceMessageRepositoryImpl implements DeviceMessageRepository {
     public int updateConfig(UUID platformDeviceId, ConfigMessage config) {
         try {
             var sql = "UPDATE device SET status = ? WHERE platform_device_id = ?";
-            return jdbc.update(sql, config.MMC(), platformDeviceId);
+            return jdbc.update(sql, ConfigMessage.mode(config), platformDeviceId);
         } catch (Exception e) {
             log.error("updateConfig", e);
             return 0;

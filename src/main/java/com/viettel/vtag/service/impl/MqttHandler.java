@@ -22,6 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MqttHandler implements MqttCallback {
 
+    private static final String MSG_CONFIG_UPDATE = "DFC";
     private static final String MSG_TIME_REQUEST = "DTIME";
     private static final String MSG_WIFI_CELL = "DWFC";
     private static final String MSG_POSITION = "DPOS";
@@ -111,14 +112,19 @@ public class MqttHandler implements MqttCallback {
     private void updateConfig(UUID deviceId, String payload) {
         try {
             var data = mapper.readValue(payload, ConfigMessage.class);
-            if (MSG_TIME_REQUEST.equals(data.type())) {
-                log.info("{}: {}", deviceId, payload);
-                publisher.publish("messages/" + deviceId + "/app/controls", TimeMessage.toBytes());
-                return;
+            switch (data.type()) {
+                case MSG_TIME_REQUEST:
+                    log.info("{}: {}", deviceId, payload);
+                    publisher.publish("messages/" + deviceId + "/app/controls", TimeMessage.toBytes());
+                    break;
+                case MSG_CONFIG_UPDATE:
+                    deviceService.updateConfig(deviceId, data)
+                        .filter(updated -> updated > 0)
+                        .subscribe(updated -> log.info("{}: MMC {}", deviceId, data.MMC()));
+                    break;
+                default:
+                    log.info("{}: type {}", deviceId, data.type());
             }
-            deviceService.updateConfig(deviceId, data)
-                .filter(updated -> updated > 0)
-                .subscribe(updated -> log.info("{}: MMC {}", deviceId, data.MMC()));
         } catch (JsonProcessingException e) {
             log.error("Couldn't parse MQTT config payload: {}", e.getMessage());
         }

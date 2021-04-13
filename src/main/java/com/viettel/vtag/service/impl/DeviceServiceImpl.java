@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.model.transfer.PlatformData;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
@@ -142,8 +143,12 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<String> getConfig(User user, UUID deviceId) {
-        return getDeviceMessages(user, deviceId, "devconf", 0, 1);
+    public Mono<PlatformData> getConfig(User user, UUID deviceId) {
+        var endpoint = "/messages/custom?deviceId=" + deviceId;
+        return iotPlatformService.get(endpoint)
+            .doOnNext(response -> log.info("{}: msg {}", deviceId, response.statusCode()))
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .flatMap(response -> response.bodyToMono(PlatformData.class));
     }
 
     @Override
