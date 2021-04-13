@@ -67,8 +67,8 @@ public class FirebaseServiceImpl implements FirebaseService {
                 log.error("Couldn't get any FCM response");
                 return null;
             }
-            log.info("success {}; failure {}; total {}", response.getSuccessCount(), response.getFailureCount(),
-                tokens.size());
+            log.info("{}: {} -> {}/{}/{}", data.get("device_id"), data.get("action"), response.getSuccessCount(),
+                response.getFailureCount(), tokens.size());
 
             return response.getFailureCount() > 0 ? handleFailResponse(tokens, response) : response;
         } catch (FirebaseMessagingException e) {

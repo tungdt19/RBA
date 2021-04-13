@@ -136,7 +136,6 @@ public class MqttHandler implements MqttCallback {
     }
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage payload) {
-        log.info("{}: con", deviceId);
         return geoService.convert(deviceId, payload)
             .doOnNext(location -> log.info("{}: LOC ({}, {})", deviceId, location.latitude(), location.longitude()))
             .doOnNext(location -> deviceService.saveLocation(deviceId, location))

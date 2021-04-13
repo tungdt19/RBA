@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS user_role (
 
     PRIMARY KEY (user_id, device_id),
     FOREIGN KEY (user_id) REFERENCES end_user (id),
-    FOREIGN KEY (device_id) REFERENCES device (id)
+    FOREIGN KEY (device_id) REFERENCES device (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS token (

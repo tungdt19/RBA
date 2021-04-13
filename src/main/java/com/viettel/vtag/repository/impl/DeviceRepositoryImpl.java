@@ -28,26 +28,10 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     private final JdbcTemplate jdbc;
 
     @Override
-    public Device get(int id) {
-        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length FROM device WHERE id = ?";
-        return jdbc.queryForObject(sql, new Object[] {id}, (rs, i) -> parseDevice(rs));
-    }
-
-    @Override
     public Device find(UUID platformId) {
         var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_fencing FROM device "
             + "WHERE platform_device_id = ?";
         return jdbc.queryForObject(sql, new Object[] {platformId}, this::parseDevice);
-    }
-
-    private Device parseDevice(ResultSet rs, int i) throws SQLException {
-        return new Device().id(rs.getInt("id"))
-            .name(rs.getString("name"))
-            .imei(rs.getString("imei"))
-            .battery(rs.getInt("battery"))
-            .status(rs.getString("status"))
-            .geoFencing(rs.getString("geo_fencing"))
-            .platformId(rs.getObject("platform_device_id", UUID.class));
     }
 
     @Override
@@ -100,7 +84,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     public List<Device> getUserDevice(User user) {
         var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, update_instant,"
             + " last_lat, last_lon FROM device INNER JOIN user_role ur ON device.id = ur.device_id WHERE user_id = ?";
-        return jdbc.query(sql, new Object[] {user.id()}, (rs, i) -> parseDevice(rs));
+        return jdbc.query(sql, new Object[] {user.id()}, this::parseDevice);
     }
 
     @Override
@@ -108,7 +92,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
         var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, last_lat, "
             + "last_lon, update_instant FROM device INNER JOIN user_role ur ON device.id = ur.device_id "
             + "WHERE user_id = ? AND platform_device_id = ?";
-        return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, (rs, i) -> parseDevice(rs));
+        return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, this::parseDevice);
     }
 
     @Override
@@ -162,17 +146,19 @@ public class DeviceRepositoryImpl implements DeviceRepository {
         return jdbc.update(sql, platformID, user.id());
     }
 
-    private Device parseDevice(ResultSet rs) throws SQLException {
+    private Device parseDevice(ResultSet rs, int i) throws SQLException {
         var lat = rs.getObject("last_lat", Double.class);
         var lon = rs.getObject("last_lon", Double.class);
         return new Device().id(rs.getInt("id"))
             .name(rs.getString("name"))
             .imei(rs.getString("imei"))
             .battery(rs.getInt("battery"))
+            .status(rs.getString("status"))
             .platformId(rs.getObject("platform_device_id", UUID.class))
             .latitude(lat == null ? 0 : lat)
             .longitude(lon == null ? 0 : lon)
-            .geoFencing(rs.getString("geo_fencing"))
-            .uptime(rs.getTimestamp("update_instant").toLocalDateTime());
+            .accuracy(rs.getInt("accuracy"))
+            .uptime(rs.getTimestamp("update_instant").toLocalDateTime())
+            .geoFencing(rs.getString("geo_fencing"));
     }
 }

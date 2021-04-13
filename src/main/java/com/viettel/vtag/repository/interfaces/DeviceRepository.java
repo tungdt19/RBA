@@ -8,8 +8,6 @@ import java.util.UUID;
 
 public interface DeviceRepository {
 
-    Device get(int id);
-
     Device find(UUID platformId);
 
     int save(Device device);

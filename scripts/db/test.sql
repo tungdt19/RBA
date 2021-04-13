@@ -110,4 +110,18 @@ UPDATE device d
 SET
     geo_fencing = geo_fencing || ?::JSONB
 FROM user_role ur
-WHERE ur.device_id = d.id AND ur.user_id = ? AND platform_device_id = ? AND geo_fencing -> 'name 1' IS NOT NULL
+WHERE ur.device_id = d.id AND ur.user_id = ? AND platform_device_id = ? AND geo_fencing -> 'name 1' IS NOT NULL;
+
+
+
+ALTER TABLE user_role
+    DROP CONSTRAINT user_role_user_id_fkey;
+
+ALTER TABLE user_role
+    ADD CONSTRAINT user_role_user_id_fkey FOREIGN KEY (user_id) REFERENCES end_user ON DELETE CASCADE;
+
+ALTER TABLE user_role
+    DROP CONSTRAINT user_role_device_id_fkey;
+
+ALTER TABLE user_role
+    ADD CONSTRAINT user_role_device_id_fkey FOREIGN KEY (device_id) REFERENCES device ON DELETE CASCADE;
