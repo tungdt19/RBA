@@ -99,7 +99,9 @@ public class GeoServiceImpl implements GeoService {
     @Override
     public Mono<Fence> checkFencing(Device device, ILocation location) {
         try {
-            var fences = mapper.readValue(device.geoFencing(), new TypeReference<List<Fence>>() { });
+            var fencing = device.geoFencing();
+            log.info("{}: check fence {} -> {}", device.platformId(), location, fencing);
+            var fences = mapper.readValue(fencing, new TypeReference<List<Fence>>() { });
 
             var lat = location.latitude();
             var lon = location.longitude();

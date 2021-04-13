@@ -32,7 +32,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public Device find(UUID platformId) {
-        var sql = "SELECT id, name, imei, platform_device_id, battery, status FROM device WHERE platform_device_id = ?";
+        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_fencing FROM device "
+            + "WHERE platform_device_id = ?";
         return jdbc.queryForObject(sql, new Object[] {platformId}, this::parseDevice);
     }
 
@@ -42,6 +43,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
             .imei(rs.getString("imei"))
             .battery(rs.getInt("battery"))
             .status(rs.getString("status"))
+            .geoFencing(rs.getString("geo_fencing"))
             .platformId(rs.getObject("platform_device_id", UUID.class));
     }
 
