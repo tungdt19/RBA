@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
@@ -96,7 +95,7 @@ public class TestController {
     @PostMapping("/fcm")
     public String fcm(@RequestBody String content, Locale locale) {
         var title = messageSource.getMessage("message.sos.title", new Object[] { }, Locale.ENGLISH);
-        var body = messageSource.getMessage("message.sos.content", new Object[] {"content"}, Locale.ENGLISH);
+        var body = messageSource.getMessage("message.sos.body", new Object[] {"content"}, Locale.ENGLISH);
         log.info("locale {} -> title: {}; body: {}", locale, title, body);
 
         var notification = Notification.builder().setTitle(title).setBody(body).build();

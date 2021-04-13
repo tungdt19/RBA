@@ -21,6 +21,8 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class FirebaseServiceImpl implements FirebaseService {
 
+    private static final Locale locale = Locale.ENGLISH;
+
     private final FirebaseMessaging fcm;
     private final MessageSource messageSource;
     private final UserRepository userRepository;
@@ -28,40 +30,25 @@ public class FirebaseServiceImpl implements FirebaseService {
 
     @Override
     public void sos(Device device, ILocation location) {
-        //@formatter:off
-        var title = messageSource.getMessage("message.sos.title", new Object[] {}, Locale.ENGLISH);
-        var body = messageSource.getMessage("message.sos.content", new Object[] {device.name()}, Locale.ENGLISH);
-        var notification= Notification.builder().setTitle(title).setBody(body).build();
+        var title = messageSource.getMessage("message.sos.title", new Object[] { }, locale);
+        var body = messageSource.getMessage("message.sos.body", new Object[] {device.name()}, locale);
+        var notification = Notification.builder().setTitle(title).setBody(body).build();
         var tokens = userRepository.fetchAllViewers(device.platformId());
-        var data = Map.of(
-            "click_action", "FLUTTER_NOTIFICATION_CLICK",
-            "device_name", device.name(),
-            "device_id", device.toString(),
-            "action", "ACTION_SOS",
-            "latitude", String.valueOf(location.latitude()),
-            "longitude", String.valueOf(location.longitude()));
+        var data = buildData(device, location, "ACTION_SOS");
         message(tokens, notification, data);
-        //@formatter:on
     }
 
     @Override
     public void notifySafeZone(UUID deviceId, Fence fence) {
-        //@formatter:off
-        var notification= Notification.builder()
-            .setTitle(messageSource.getMessage("message.fence.title", new Object[] {}, Locale.ENGLISH))
-            .setBody(messageSource.getMessage("message.fence.content", new Object[] {}, Locale.ENGLISH))
-            .build();
-        var tokens = userRepository.fetchAllViewers(deviceId);
         var device = deviceRepository.find(deviceId);
-        var data = Map.of(
-            "click_action", "FLUTTER_NOTIFICATION_CLICK",
-            "device_name", device.name(),
-            "device_id", deviceId.toString(),
-            "action", "ACTION_SOS",
-            "latitude", String.valueOf(fence.latitude()),
-            "longitude", String.valueOf(fence.longitude()));
-        message(tokens, notification, data);
-        //@formatter:on
+        var locale = Locale.ENGLISH;
+        var bodyArgs = new String[] {device.name(), fence.name()};
+        var title = messageSource.getMessage("message.fence.title", new Object[] { }, locale);
+        var body = messageSource.getMessage("message.fence.body", bodyArgs, locale);
+        var notification = Notification.builder().setTitle(title).setBody(body).build();
+        var tokens = userRepository.fetchAllViewers(deviceId);
+
+        message(tokens, notification, buildData(device, fence, "ACTION_SAFE_ZONE"));
     }
 
     @Override
@@ -74,37 +61,58 @@ public class FirebaseServiceImpl implements FirebaseService {
                     "en7DxvC6SG-q-gEO3LQTeP:APA91bGZDQvHRMlZf84OsfQDMw658IS2D1tqHNO4u8XRKNssSIK-NAjSwhl_pqKrNik8WgzQY"
                         + "-BSMfXmFaQFCLtP6BH9Y8FC610biJfi2s1gcc2fVrMGfWa6JJEIakdXCNhweMAIiEA6");
             }
-            var message = MulticastMessage.builder()
-                .putAllData(data)
-                .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
-                // .setApnsConfig(ApnsConfig.builder()
-                //     .setAps(Aps.builder().setAlert("sound 2").build())
-                //     .setFcmOptions(ApnsFcmOptions.builder().build())
-                //     .build())
-                .setNotification(notification)
-                .addAllTokens(tokens)
-                .build();
 
-            var response = fcm.sendMulticast(message);
+            var response = fcm.sendMulticast(buildMulticastMessage(tokens, notification, data));
             if (response == null) {
                 log.error("Couldn't get any FCM response");
                 return null;
             }
-            log.info("success {}; failure {}; total {}", response.getSuccessCount(), response.getFailureCount(), tokens.size());
+            log.info("success {}; failure {}; total {}", response.getSuccessCount(), response.getFailureCount(),
+                tokens.size());
 
-            if (response.getFailureCount() <= 0) return response;
-            var responses = response.getResponses();
-            log.info("response {}", responses);
-            var failedTokens = IntStream.range(0, responses.size())
-                .filter(i -> !responses.get(i).isSuccessful())
-                .mapToObj(tokens::get)
-                .collect(Collectors.toCollection(ArrayList::new));
-
-            log.error("List of tokens that caused failures: {}", failedTokens);
-            return response;
+            return response.getFailureCount() > 0 ? handleFailResponse(tokens, response) : response;
         } catch (FirebaseMessagingException e) {
             log.error("Couldn't send message to user: {}", e.getMessage());
             return null;
         }
+    }
+
+    private BatchResponse handleFailResponse(List<String> tokens, BatchResponse response) {
+        var responses = response.getResponses();
+        log.info("response {}", responses);
+        var failedTokens = IntStream.range(0, responses.size())
+            .filter(i -> !responses.get(i).isSuccessful())
+            .mapToObj(tokens::get)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        log.error("List of tokens that caused failures: {}", failedTokens);
+        return response;
+    }
+
+    private MulticastMessage buildMulticastMessage(
+        List<String> tokens, Notification notification, Map<String, String> data
+    ) {
+        return MulticastMessage.builder()
+            .putAllData(data)
+            .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
+            // .setApnsConfig(ApnsConfig.builder()
+            //     .setAps(Aps.builder().setAlert("sound 2").build())
+            //     .setFcmOptions(ApnsFcmOptions.builder().build())
+            //     .build())
+            .setNotification(notification)
+            .addAllTokens(tokens)
+            .build();
+    }
+
+    private Map<String, String> buildData(Device device, ILocation location, String action) {
+        //@formatter:off
+        return Map.of(
+            "click_action", "FLUTTER_NOTIFICATION_CLICK",
+            "device_name", device.name(),
+            "device_id", device.platformId().toString(),
+            "action", action,
+            "latitude", String.valueOf(location.latitude()),
+            "longitude", String.valueOf(location.longitude()));
+        //@formatter:on
     }
 }

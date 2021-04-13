@@ -2,12 +2,13 @@ package com.viettel.vtag.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.viettel.vtag.model.ILocation;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 @Data
 @Accessors(fluent = true)
-public class Fence {
+public class Fence implements ILocation {
 
     @JsonProperty
     private String name;
@@ -23,4 +24,9 @@ public class Fence {
 
     @JsonIgnore
     private int in;
+
+    @Override
+    public Integer accuracy() {
+        return null;
+    }
 }
