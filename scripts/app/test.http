@@ -81,7 +81,7 @@ Content-Type: application/json
 
 
 ### GPS ----------------------------------------------------------------------------------------------------------------
-POST http://{{host}}/vtag/device/test
+POST http://{{host}}/vtag/test/convert
 Content-Type: application/json
 
 {
@@ -96,7 +96,7 @@ Content-Type: application/json
 
 
 ### SOS ----------------------------------------------------------------------------------------------------------------
-POST http://{{host}}/vtag/device/test
+POST http://{{host}}/vtag/test/convert
 Content-Type: application/json
 
 {

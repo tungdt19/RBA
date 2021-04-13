@@ -61,8 +61,9 @@ public class DeviceServiceImpl implements DeviceService {
                         "messages/" + device + "/userdefined/wificell",
                         "messages/" + device + "/userdefined/devconf"});
                 } catch (MqttException e) {
-                    log.error("Couldn't sub", e);
-                }})
+                    log.error("{}: couldn't subscribe {}", device, e.getMessage());
+                }
+            })
             .doOnError(e -> log.error("Error on pairing device", e));
         // @formatter:on
     }
@@ -161,9 +162,10 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {
         return Mono.just(deviceRepository.removeUserDevice(user, request.platformId()))
-            .doOnNext(saved -> log.info("{}: DEL {}: {}", request.platformId(), user.platformId(), saved))
+            .doOnNext(saved -> log.info("{}: del usr {}: rs {}", request.platformId(), user.platformId(), saved))
             .filter(deleted -> deleted > 0)
             .map(deleted -> deviceRepository.delete(user, request.platformId()))
+            .doOnNext(saved -> log.info("{}: del dvc {}: rs {}", request.platformId(), user.platformId(), saved))
             .map(deleted -> deleted > 0)
             .filter(deleted -> deleted);
     }

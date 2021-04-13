@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -54,19 +55,26 @@ public class GeoServiceImpl implements GeoService {
     @Value("${vtag.proxy.enable}")
     private boolean proxyEnable;
 
-    public static double distance(double lat1, double lon1, double lat2, double lon2) {
-        var phi1 = lat1 * radian;
-        var phi2 = lat2 * radian;
-        var deltaPhi = (lat2 - lat1) * radian / 2;
-        var deltaLambda = (lon2 - lon1) * radian / 2;
-        var sinPhi = sin(deltaPhi);
-        var sinLambda = sin(deltaLambda);
-        var a = sinPhi * sinPhi + cos(phi1) * cos(phi2) * sinLambda * sinLambda;
-        return 2 * R * atan2(sqrt(a), sqrt(1 - a));
+    @Override
+    public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
+        return convert(json.deviceId(deviceId)).filter(response -> {
+            var status = response.statusCode();
+            var ok = status.is2xxSuccessful();
+            if (!ok) {
+                log.info("{}: {} -> {}", deviceId, json, status);
+            }
+            return ok;
+        }).flatMap(response -> response.bodyToMono(Location.class)).filter(location -> {
+            var error = "error".equals(location.status());
+            if (error) {
+                log.error("{}: '{}' -> {}", deviceId, json, location);
+            }
+            return !error;
+        });
     }
 
     @Override
-    public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
+    public Mono<ClientResponse> convert(WifiCellMessage json) {
         if (proxyEnable) {
             webClientBuilder.clientConnector(new ReactorClientHttpConnector(proxyHttpClient));
         }
@@ -76,24 +84,8 @@ public class GeoServiceImpl implements GeoService {
             .build()
             .post()
             .uri(convertUri)
-            .bodyValue(json.token(convertToken).deviceId(deviceId))
-            .exchange()
-            .filter(response -> {
-                var status = response.statusCode();
-                var ok = status.is2xxSuccessful();
-                if (!ok) {
-                    log.info("{}: {} -> {}", deviceId, json, status);
-                }
-                return ok;
-            })
-            .flatMap(response -> response.bodyToMono(Location.class))
-            .filter(location -> {
-                var error = "error".equals(location.status());
-                if (error) {
-                    log.error("{}: '{}' -> {}", deviceId, json, location);
-                }
-                return !error;
-            });
+            .bodyValue(json.token(convertToken))
+            .exchange();
     }
 
     @Override
@@ -115,5 +107,16 @@ public class GeoServiceImpl implements GeoService {
         } catch (JsonProcessingException e) {
             return Mono.empty();
         }
+    }
+
+    public static double distance(double lat1, double lon1, double lat2, double lon2) {
+        var phi1 = lat1 * radian;
+        var phi2 = lat2 * radian;
+        var deltaPhi = (lat2 - lat1) * radian / 2;
+        var deltaLambda = (lon2 - lon1) * radian / 2;
+        var sinPhi = sin(deltaPhi);
+        var sinLambda = sin(deltaLambda);
+        var a = sinPhi * sinPhi + cos(phi1) * cos(phi2) * sinLambda * sinLambda;
+        return 2 * R * atan2(sqrt(a), sqrt(1 - a));
     }
 }

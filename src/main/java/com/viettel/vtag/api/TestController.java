@@ -5,9 +5,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.Notification;
 import com.viettel.vtag.model.entity.Fence;
-import com.viettel.vtag.service.interfaces.CommunicationService;
-import com.viettel.vtag.service.interfaces.DeviceService;
-import com.viettel.vtag.service.interfaces.FirebaseService;
+import com.viettel.vtag.model.entity.Location;
+import com.viettel.vtag.model.transfer.WifiCellMessage;
+import com.viettel.vtag.service.interfaces.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +20,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import static org.springframework.http.ResponseEntity.*;
 
 @Data
 @Slf4j
@@ -35,6 +39,7 @@ public class TestController {
 
     private final JdbcTemplate jdbc;
     private final MqttClient subscriber;
+    private final GeoService geoService;
     private final DeviceService deviceService;
     private final FirebaseService firebaseService;
     private final CommunicationService communicationService;
@@ -55,7 +60,7 @@ public class TestController {
     ) throws MqttException {
         var topic = "messages/" + id + "/" + subtopic;
         var token = subscriber.subscribeWithResponse(topic);
-        return ResponseEntity.ok(Map.of("topics", token.getTopics()));
+        return ok(Map.of("topics", token.getTopics()));
     }
 
     @PostMapping("/mqtt/pub")
@@ -63,9 +68,9 @@ public class TestController {
         try {
             var msg = new MqttMessage(body.getBytes(StandardCharsets.UTF_8));
             subscriber.publish(topic, msg);
-            return ResponseEntity.ok().body(Map.of("msg", "Okie dokie!"));
+            return ok().body(Map.of("msg", "Okie dokie!"));
         } catch (MqttException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("msg", "Okie dokie!"));
+            return status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("msg", "Okie dokie!"));
         }
     }
 
@@ -82,10 +87,9 @@ public class TestController {
     public ResponseEntity<Map<String, Object>> sql(@RequestBody String sql) {
         try {
             var updated = jdbc.update(sql);
-            return ResponseEntity.ok(Map.of("updated", updated));
+            return ok(Map.of("updated", updated));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("msg", String.valueOf(e.getMessage())));
+            return status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("msg", String.valueOf(e.getMessage())));
         }
     }
 
@@ -118,5 +122,12 @@ public class TestController {
             return null;
         });
         return null;
+    }
+
+    @PostMapping("/convert")
+    public Mono<ResponseEntity<Location>> query(@RequestBody WifiCellMessage message) {
+        return geoService.convert(message)
+            .flatMap(response -> response.bodyToMono(Location.class))
+            .map(ResponseEntity::ok);
     }
 }

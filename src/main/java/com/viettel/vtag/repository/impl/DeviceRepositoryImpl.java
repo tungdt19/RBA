@@ -13,13 +13,16 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Repository
 @RequiredArgsConstructor
 public class DeviceRepositoryImpl implements DeviceRepository {
 
+    private final Map<UUID, Device> cache = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
 
     private final JdbcTemplate jdbc;

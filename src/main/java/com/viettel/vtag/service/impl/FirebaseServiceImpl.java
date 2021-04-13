@@ -29,10 +29,9 @@ public class FirebaseServiceImpl implements FirebaseService {
     @Override
     public void sos(Device device, ILocation location) {
         //@formatter:off
-        var notification= Notification.builder()
-            .setTitle(messageSource.getMessage("message.sos.title", new Object[] {}, Locale.ENGLISH))
-            .setBody(messageSource.getMessage("message.sos.content", new Object[] {}, Locale.ENGLISH))
-            .build();
+        var title = messageSource.getMessage("message.sos.title", new Object[] {}, Locale.ENGLISH);
+        var body = messageSource.getMessage("message.sos.content", new Object[] {device.name()}, Locale.ENGLISH);
+        var notification= Notification.builder().setTitle(title).setBody(body).build();
         var tokens = userRepository.fetchAllViewers(device.platformId());
         var data = Map.of(
             "click_action", "FLUTTER_NOTIFICATION_CLICK",
