@@ -30,15 +30,15 @@ public interface DeviceRepository {
 
     Device getUserDevice(User user, UUID deviceId);
 
-    String getDeviceGeo(User user, UUID deviceId);
-
-    int setUserDevice(User user, PairDeviceRequest request);
-
-    List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request);
+    String getGeoFencing(User user, UUID deviceId);
 
     int updateGeoFencing(User user, UUID deviceId, List<Fence> fence);
 
     int deleteGeoFencing(User user, UUID deviceId);
+
+    int setUserDevice(User user, PairDeviceRequest request);
+
+    List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request);
 
     int delete(User user, UUID platformId);
 }

@@ -42,8 +42,10 @@ public class DeviceMessageRepositoryImpl implements DeviceMessageRepository {
         var inserted = jdbc.update(insert, location.latitude(), location.longitude(), location.accuracy(),
             platformDeviceId);
 
-        var sql = "UPDATE device SET last_lat = ?, last_lon = ?, update_instant = NOW() WHERE platform_device_id = ?";
-        var updated = jdbc.update(sql, location.latitude(), location.longitude(), platformDeviceId);
+        var sql = "UPDATE device SET last_lat = ?, last_lon = ?, accuracy = ?, update_instant = NOW() "
+            + "WHERE platform_device_id = ?";
+        var updated = jdbc.update(sql, location.latitude(), location.longitude(), location.accuracy(),
+            platformDeviceId);
 
         return inserted + updated;
     }

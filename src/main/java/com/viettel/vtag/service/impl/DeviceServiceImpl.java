@@ -74,7 +74,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<String> getGeoFencing(User user, UUID deviceId) {
-        return Mono.justOrEmpty(deviceRepository.getDeviceGeo(user, deviceId));
+        return Mono.justOrEmpty(deviceRepository.getGeoFencing(user, deviceId));
     }
 
     @Override
