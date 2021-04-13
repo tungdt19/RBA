@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.model.ILocation;
+import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.model.entity.Fence;
 import com.viettel.vtag.model.entity.Location;
 import com.viettel.vtag.model.transfer.WifiCellMessage;
@@ -64,10 +65,6 @@ public class GeoServiceImpl implements GeoService {
         return 2 * R * atan2(sqrt(a), sqrt(1 - a));
     }
 
-    public static double toDouble(double degree, double minute, double second, boolean reverse) {
-        return (reverse ? -1 : 1) * (degree + minute / 60 + second / 360);
-    }
-
     @Override
     public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
         if (proxyEnable) {
@@ -100,15 +97,15 @@ public class GeoServiceImpl implements GeoService {
     }
 
     @Override
-    public Mono<Fence> checkFencing(UUID deviceId, ILocation location) {
+    public Mono<Fence> checkFencing(Device device, ILocation location) {
         try {
-            var device = deviceRepository.find(deviceId);
             var fences = mapper.readValue(device.geoFencing(), new TypeReference<List<Fence>>() { });
 
             var lat = location.latitude();
             var lon = location.longitude();
             for (var fence : fences) {
                 if (distance(lat, lon, fence.latitude(), fence.longitude()) <= fence.radius()) {
+                    log.info("{}: fen {}", device.platformId(), fence);
                     return Mono.just(fence);
                 }
             }

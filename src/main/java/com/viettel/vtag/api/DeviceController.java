@@ -181,12 +181,12 @@ public class DeviceController {
 
     @PutMapping("/geo/{device_id}")
     public Mono<ResponseEntity<ResponseJson>> updateGeoFencingList(
-        @PathVariable("device_id") String deviceId, @RequestBody List<Fence> fence, ServerHttpRequest request
+        @PathVariable("device_id") String deviceId, @RequestBody List<Fence> fences, ServerHttpRequest request
     ) {
         return Mono.justOrEmpty(userService.checkToken(request))
             .zipWith(Mono.just(UUID.fromString(deviceId)))
             .doOnNext(tuple -> log.info("update geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
-            .flatMap(tuple -> deviceService.updateGeofencing(tuple.getT1(), tuple.getT2(), fence))
+            .flatMap(tuple -> deviceService.updateGeofencing(tuple.getT1(), tuple.getT2(), fences))
             .doOnNext(updated -> log.info("{}: geo updated {}", deviceId, updated))
             .filter(updated -> updated > 0)
             .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))

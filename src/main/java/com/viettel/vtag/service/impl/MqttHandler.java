@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.config.MqttSubscriberConfig;
 import com.viettel.vtag.model.transfer.*;
+import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.DeviceMessageService;
 import com.viettel.vtag.service.interfaces.FirebaseService;
 import com.viettel.vtag.service.interfaces.GeoService;
@@ -26,16 +27,20 @@ public class MqttHandler implements MqttCallback {
 
     private final MqttClient publisher;
     private final DeviceMessageService deviceService;
+    private final DeviceRepository deviceRepository;
     private final FirebaseService firebaseService;
     private final GeoService geoService;
 
     public MqttHandler(
         @Qualifier("mqtt-publisher-client") MqttClient publisher,
         DeviceMessageService deviceService,
-        FirebaseService firebaseService, GeoService geoService
+        DeviceRepository deviceRepository,
+        FirebaseService firebaseService,
+        GeoService geoService
     ) {
         this.publisher = publisher;
         this.deviceService = deviceService;
+        this.deviceRepository = deviceRepository;
         this.firebaseService = firebaseService;
         this.geoService = geoService;
     }
@@ -91,14 +96,14 @@ public class MqttHandler implements MqttCallback {
     private void handleWifiCellMessage(UUID deviceId, String payload) throws JsonProcessingException {
         var data = mapper.readValue(payload, WifiCellMessage.class);
 
+        var device = deviceRepository.find(deviceId);
         switch (data.type()) {
             case "DSOS":
-                convertWifiCell(deviceId, data).subscribe(location -> firebaseService.sos(deviceId, location));
+                convertWifiCell(deviceId, data).subscribe(location -> firebaseService.sos(device, location));
                 break;
             case "DWFC":
-                convertWifiCell(deviceId, data).flatMap(location -> geoService.checkFencing(deviceId, location))
-                    .map(fence -> firebaseService.notifySafeZone(deviceId, fence))
-                    .subscribe();
+                convertWifiCell(deviceId, data).flatMap(location -> geoService.checkFencing(device, location))
+                    .subscribe(fence -> firebaseService.notifySafeZone(deviceId, fence));
                 break;
             default:
                 log.info("{}: Do not recognize {}", deviceId, payload);
@@ -117,8 +122,7 @@ public class MqttHandler implements MqttCallback {
             var data = mapper.readValue(payload, ConfigMessage.class);
             if ("DTIME".equals(data.type())) {
                 log.info("{}: {}", deviceId, payload);
-                var message = new MqttMessage(TimeMessage.toBytes());
-                publisher.publish("messages/" + deviceId + "/app/controls", message);
+                publisher.publish("messages/" + deviceId + "/app/controls", new MqttMessage(TimeMessage.toBytes()));
                 return;
             }
             deviceService.updateConfig(deviceId, data)
@@ -143,8 +147,7 @@ public class MqttHandler implements MqttCallback {
     private void publishLocation(UUID deviceId, LocationMessage location) {
         var topic = "messages/" + deviceId + "/data";
         try {
-            var bytes = new MqttMessage(mapper.writeValueAsBytes(location));
-            publisher.publish(topic, bytes);
+            publisher.publish(topic, new MqttMessage(mapper.writeValueAsBytes(location)));
         } catch (MqttException | JsonProcessingException e) {
             log.error("Couldn't publish location {} to topic '{}'", location, topic, e);
         }

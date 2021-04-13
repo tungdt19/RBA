@@ -5,11 +5,13 @@
 # echo -e "\nalias fm='$(pwd)/fm'\nalias fma='fm a'\nalias fmg='fm g'\nalias fmp='fm p'" >> ~/.bashrc
 # source ~/.bashrc
 
-echo "VTAG BACKEND DEPLOYMENT UTILITIES"
+echo "---------------------------------------------------------------------------------------------------------------"
+echo "                                       VTAG BACKEND DEPLOYMENT UTILITIES                                       "
+echo "---------------------------------------------------------------------------------------------------------------"
 
-FOLDER="/home/vht/be"
-PROFILE="production"
 PORT="8080"
+PROFILE="production"
+FOLDER="/home/vht/be"
 BASE_NAME="iot-vtag"
 CONTAINER="vtag.be"
 IMAGE="vtag/be"
@@ -35,36 +37,44 @@ dockerfile() {
     echo 'RUN echo "10.55.123.124 api.iotcloud.com.vn iotcloud.com.vn" > /etc/hosts'
     echo "CMD [\"java\", \"-jar\", \"/$BASE_NAME-$VERSION.jar\", \"-Dspring.profiles.active=$PROFILE\"]"
   } > "$FOLDER/$MODULE/Dockerfile"
+  echo "---------------------------------------------------------------------------------------------------------------"
 }
 
 build() {
   echo "--> Building container $IMAGE"
   docker build -t "$IMAGE:$VERSION" "$FOLDER"
+  echo "---------------------------------------------------------------------------------------------------------------"
 }
 
 run() {
+  echo "--> Running container $CONTAINER"
   docker run -dp "$PORT:$PORT" --name $CONTAINER -e "SPRING_PROFILES_ACTIVE=$PROFILE" \
      --add-host=api.iotcloud.com.vn:10.55.123.124 "$IMAGE:$VERSION"
+  echo "---------------------------------------------------------------------------------------------------------------"
 }
 
 remove() {
   echo "--> Removing container $CONTAINER"
   docker rm "$CONTAINER"
+  echo "---------------------------------------------------------------------------------------------------------------"
 }
 
 stop() {
   echo "--> Stopping container $CONTAINER"
   docker stop "$CONTAINER"
+  echo "---------------------------------------------------------------------------------------------------------------"
 }
 
 restart() {
   echo "--> Restarting container $CONTAINER"
   docker restart "$CONTAINER"
+  echo "---------------------------------------------------------------------------------------------------------------"
 }
 
 log_follow() {
   echo "--> Following container $CONTAINER"
   docker logs -f --since "10m" "$CONTAINER"
+  echo "---------------------------------------------------------------------------------------------------------------"
 }
 
 log_history() {

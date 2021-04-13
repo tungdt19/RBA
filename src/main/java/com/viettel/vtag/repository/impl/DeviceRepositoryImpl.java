@@ -27,7 +27,13 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     @Override
     public Device get(int id) {
         var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length FROM device WHERE id = ?";
-        return jdbc.queryForObject(sql, new Object[] {id}, this::parseDevice);
+        return jdbc.queryForObject(sql, new Object[] {id}, (rs, i) -> parseDevice(rs));
+    }
+
+    @Override
+    public Device find(UUID platformId) {
+        var sql = "SELECT id, name, imei, platform_device_id, battery, status FROM device WHERE platform_device_id = ?";
+        return jdbc.queryForObject(sql, new Object[] {platformId}, this::parseDevice);
     }
 
     private Device parseDevice(ResultSet rs, int i) throws SQLException {
@@ -35,13 +41,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
             .name(rs.getString("name"))
             .imei(rs.getString("imei"))
             .battery(rs.getInt("battery"))
-            .status(rs.getString("status"));
-    }
-
-    @Override
-    public Device find(UUID platformId) {
-        var sql = "SELECT id, name, imei FROM device WHERE platform_device_id = ?";
-        return jdbc.queryForObject(sql, new Object[] {platformId}, this::parseDevice);
+            .status(rs.getString("status"))
+            .platformId(rs.getObject("platform_device_id", UUID.class));
     }
 
     @Override
