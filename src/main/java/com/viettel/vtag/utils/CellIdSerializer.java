@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -17,16 +18,20 @@ public class CellIdSerializer extends JsonSerializer<WifiCellMessage> {
     public void serialize(
         WifiCellMessage value, JsonGenerator json, SerializerProvider serializers
     ) throws IOException {
+
         json.writeStartObject();
 
         json.writeObjectField("token", value.token());
-        json.writeObjectField("radio", "nbiot"); // value.connection()
+        json.writeObjectField("radio", value.connection());
         json.writeObjectField("address", 1);
-        json.writeObjectField("mcc", 452);
-        json.writeObjectField("mnc", 4);
+
+        var cells = value.cells();
+        var firstCell = cells.get(0);
+        json.writeObjectField("mcc", firstCell.mcc());
+        json.writeObjectField("mnc", firstCell.mnc());
 
         json.writeArrayFieldStart("cells");
-        for (var cell : value.cells()) {
+        for (var cell : cells) {
             json.writeStartObject();
             json.writeObjectField("cid", cell.cid());
             json.writeObjectField("lac", cell.lac());

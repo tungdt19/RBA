@@ -139,10 +139,9 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public int insertGeoFencing(User user, UUID deviceId, Map<String, Fencing> fencing) {
+    public int insertGeoFencing(User user, UUID deviceId, List<Fencing> fencing) {
         try {
-            var sql = "UPDATE device SET geo_fencing = ?::JSONB, geo_length = ? WHERE platform_device_id = ? "
-                + "AND geo_length < 5";
+            var sql = "UPDATE device SET geo_fencing = ?::JSONB, geo_length = ? WHERE platform_device_id = ?";
             return jdbc.update(sql, mapper.writeValueAsString(fencing), fencing.size(), deviceId);
         } catch (JsonProcessingException e) {
             log.error("Error converting JSON format: {}", e.getMessage());
@@ -164,7 +163,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public int updateGeoFencing(User user, UUID deviceId, Map<String, Fencing> fencing) {
+    public int updateGeoFencing(User user, UUID deviceId, List<Fencing> fencing) {
         try {
             var sql = "UPDATE device d SET geo_fencing = ?::JSONB, geo_length = ? FROM user_role ur "
                 + "WHERE ur.device_id = d.id AND ur.user_id = ? AND platform_device_id = ?";
@@ -176,10 +175,9 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public int deleteGeoFencing(User user, UUID deviceId, String name) {
-        var sql = "UPDATE device d SET geo_length = geo_length - 1, geo_fencing = geo_fencing #- '{\"" + name
-            + "\"}' FROM user_role ur WHERE d.id = ur.device_id AND ur.user_id = ? AND platform_device_id = ? "
-            + "AND geo_fencing->'" + name + "' IS NOT NULL;";
+    public int deleteGeoFencing(User user, UUID deviceId) {
+        var sql = "UPDATE device d SET geo_length = 0, geo_fencing = geo_fencing #- '{}' FROM user_role ur "
+            + "WHERE d.id = ur.device_id AND ur.user_id = ? AND platform_device_id = ?";
 
         return jdbc.update(sql, user.id(), deviceId);
     }

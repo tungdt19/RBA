@@ -49,18 +49,17 @@ public class GeoConvertServiceImpl implements GeoConvertService {
             .build()
             .post()
             .uri(convertUri)
-            .bodyValue(json.token(convertToken))
+            .bodyValue(json.token(convertToken).deviceId(deviceId))
             .exchange()
-            .doOnNext(response -> log.info("{}: convert {}", deviceId, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(Location.class))
-            .doOnNext(location -> log.info("{}: {}, {}", deviceId, location.latitude(), location.longitude()))
             .filter(location -> {
                 var error = "error".equals(location.status());
                 if (error) {
                     log.error("{}: '{}' -> {}", deviceId, json, location);
                 }
                 return error;
-            });
+            })
+            .doOnNext(location -> log.info("{}: LOC({}, {})", deviceId, location.latitude(), location.longitude()));
     }
 }

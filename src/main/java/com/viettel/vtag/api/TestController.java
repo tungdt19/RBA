@@ -109,7 +109,7 @@ public class TestController {
             try {
                 var id = rs.getInt("id");
                 var cont = rs.getString("content");
-                var map = new ObjectMapper().readValue(cont, new TypeReference<Map<String, Fencing>>() { });
+                var map = new ObjectMapper().readValue(cont, new TypeReference<List<Fencing>>() { });
                 var length = rs.getString("geo_length");
                 log.info("content {}", map);
             } catch (JsonProcessingException e) {

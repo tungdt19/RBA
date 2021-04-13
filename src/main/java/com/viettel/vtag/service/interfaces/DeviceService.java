@@ -6,7 +6,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public interface DeviceService {
@@ -25,21 +24,15 @@ public interface DeviceService {
 
     Mono<Integer> removeViewer(User user, RemoveViewerRequest detail);
 
-    Mono<Integer> insertGeofencing(User user, UUID uuid, Fencing fencing);
+    Mono<Integer> updateGeofencing(User t1, UUID t2, List<Fencing> fencing);
 
-    Mono<Integer> insertGeofencing(User user, UUID uuid, Map<String, Fencing> fencing);
-
-    Mono<Integer> updateGeofencing(User user, UUID uuid, Fencing fencing);
-
-    Mono<Integer> updateGeofencing(User t1, UUID t2, Map<String, Fencing> fencing);
-
-    Mono<Integer> deleteGeofencing(User user, UUID uuid, String fencing);
+    Mono<Integer> deleteGeofencing(User user, UUID uuid);
 
     Mono<List<Device>> getList(User user);
 
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 
-    Mono<ClientResponse> getMessages(User user, UUID deviceId, int offset, int limit);
+    Mono<String> getMessages(User user, UUID deviceId, int offset, int limit);
 
     Mono<Device> getGeofencing(User user, UUID deviceId);
 }

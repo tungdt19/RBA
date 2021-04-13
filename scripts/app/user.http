@@ -12,7 +12,6 @@ Content-Type: application/json
 
 {"phone": "0365819777", "password": "test"}
 
-
 ### check token --------------------------------------------------------------------------------------------------------
 GET http://{{host}}/vtag/user/info
 Authorization: Bearer {{vtag_token}}
@@ -92,9 +91,6 @@ Authorization: Bearer {{vtag_token}}
     "old_password": "abcdef",
     "new_password": "test"
 }
-
-
-
 
 ### --------------------------------------------------------------------------------------------------------------------
 POST http://{{host}}/vtag/user/password/reset

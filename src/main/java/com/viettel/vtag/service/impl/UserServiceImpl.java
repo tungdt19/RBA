@@ -70,7 +70,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public int resetPassword(ResetPasswordRequest request) {
-        return userRepository.updatePassword(request.phone(), request.password());
+        var phone = PhoneUtils.standardize(request.phone());
+        return userRepository.updatePassword(phone, request.password());
     }
 
     @Override

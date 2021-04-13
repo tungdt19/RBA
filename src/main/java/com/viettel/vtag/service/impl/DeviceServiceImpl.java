@@ -39,7 +39,7 @@ public class DeviceServiceImpl implements DeviceService {
             .filter(response -> response.statusCode().is2xxSuccessful())
             .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
             .flatMap(ok -> iotPlatformService.post("/api/devices/" + uuid + "/active", Map.of("Type", "MAD")))
-            .doOnNext(response -> log.info("{}: activate {}", uuid, response.statusCode()));
+            .doOnNext(response -> log.info("{}: Act {}", uuid, response.statusCode()));
         // .filter(response -> response.statusCode().is2xxSuccessful());
     }
 
@@ -120,37 +120,7 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Integer> insertGeofencing(User user, UUID deviceId, Fencing fencing) {
-        try {
-            return Mono.just(deviceRepository.insertGeoFencing(user, deviceId, fencing));
-        } catch (Exception e) {
-            log.error("error inserting geo-fencing {}", e.getMessage());
-            return Mono.empty();
-        }
-    }
-
-    @Override
-    public Mono<Integer> insertGeofencing(User user, UUID deviceId, Map<String, Fencing> fencing) {
-        try {
-            return Mono.just(deviceRepository.insertGeoFencing(user, deviceId, fencing));
-        } catch (Exception e) {
-            log.error("error inserting geo-fencing {}", e.getMessage());
-            return Mono.empty();
-        }
-    }
-
-    @Override
-    public Mono<Integer> updateGeofencing(User user, UUID deviceId, Fencing fencing) {
-        try {
-            return Mono.just(deviceRepository.updateGeoFencing(user, deviceId, fencing));
-        } catch (Exception e) {
-            log.error("error updating geo-fencing {}", e.getMessage());
-            return Mono.empty();
-        }
-    }
-
-    @Override
-    public Mono<Integer> updateGeofencing(User user, UUID deviceId, Map<String, Fencing> fencing) {
+    public Mono<Integer> updateGeofencing(User user, UUID deviceId, List<Fencing> fencing) {
         try {
             return Mono.just(deviceRepository.updateGeoFencing(user, deviceId, fencing));
         } catch (Exception e) {
@@ -160,9 +130,9 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Integer> deleteGeofencing(User user, UUID deviceId, String fencing) {
+    public Mono<Integer> deleteGeofencing(User user, UUID deviceId) {
         try {
-            return Mono.just(deviceRepository.deleteGeoFencing(user, deviceId, fencing));
+            return Mono.just(deviceRepository.deleteGeoFencing(user, deviceId));
         } catch (Exception e) {
             log.error("error deleting geo-fencing {}", e.getMessage());
             return Mono.empty();
@@ -180,11 +150,13 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<ClientResponse> getMessages(User user, UUID deviceId, int offset, int limit) {
+    public Mono<String> getMessages(User user, UUID deviceId, int offset, int limit) {
         var endpoint = "/api/messages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId
             + "&topic=data,battery,wificell&offset=" + offset + "&limit=" + limit;
-        log.info("msg endpoint {}", endpoint);
-        return iotPlatformService.getWithToken(endpoint);
+        return iotPlatformService.getWithToken(endpoint)
+            .doOnNext(response -> log.info("{}: msg {}", deviceId, response.statusCode()))
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .flatMap(response -> response.bodyToMono(String.class));
     }
 
     @Override

@@ -6,9 +6,7 @@ import com.viettel.vtag.utils.CellIdSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Data
 @Accessors(fluent = true)
@@ -16,11 +14,14 @@ import java.util.Map;
 @JsonSerialize(using = CellIdSerializer.class)
 public class WifiCellMessage {
 
-    @JsonProperty("Type")
-    private String type;
-
     @JsonIgnore
     private String token;
+
+    @JsonIgnore
+    private UUID deviceId;
+
+    @JsonProperty("Type")
+    private String type;
 
     @JsonProperty("Con")
     private String connection;

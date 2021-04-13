@@ -35,13 +35,13 @@ public interface DeviceRepository {
 
     int insertGeoFencing(User user, UUID deviceId, Fencing fencing);
 
-    int insertGeoFencing(User user, UUID deviceId, Map<String, Fencing> fencing);
+    int insertGeoFencing(User user, UUID deviceId, List<Fencing> fencing);
 
     int updateGeoFencing(User user, UUID deviceId, Fencing fencing);
 
-    int updateGeoFencing(User user, UUID deviceId, Map<String, Fencing> fencing);
+    int updateGeoFencing(User user, UUID deviceId, List<Fencing> fencing);
 
-    int deleteGeoFencing(User user, UUID deviceId, String name);
+    int deleteGeoFencing(User user, UUID deviceId);
 
     int delete(User user, UUID platformId);
 }
