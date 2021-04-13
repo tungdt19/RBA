@@ -131,11 +131,11 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
-    public int updateGeoFencing(User user, UUID deviceId, List<Fencing> fencing) {
+    public int updateGeoFencing(User user, UUID deviceId, List<Fence> fence) {
         try {
             var sql = "UPDATE device d SET geo_fencing = ?::JSONB, geo_length = ? FROM user_role ur "
                 + "WHERE ur.device_id = d.id AND ur.user_id = ? AND platform_device_id = ?";
-            return jdbc.update(sql, mapper.writeValueAsString(fencing), fencing.size(), user.id(), deviceId);
+            return jdbc.update(sql, mapper.writeValueAsString(fence), fence.size(), user.id(), deviceId);
         } catch (JsonProcessingException e) {
             log.error("Error converting JSON format: {}", e.getMessage());
             return 0;

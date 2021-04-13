@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.Notification;
-import com.viettel.vtag.model.entity.Fencing;
+import com.viettel.vtag.model.entity.Fence;
 import com.viettel.vtag.service.interfaces.CommunicationService;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.FirebaseService;
@@ -109,7 +109,7 @@ public class TestController {
             try {
                 var id = rs.getInt("id");
                 var cont = rs.getString("content");
-                var map = new ObjectMapper().readValue(cont, new TypeReference<List<Fencing>>() { });
+                var map = new ObjectMapper().readValue(cont, new TypeReference<List<Fence>>() { });
                 var length = rs.getString("geo_length");
                 log.info("content {}", map);
             } catch (JsonProcessingException e) {

@@ -98,9 +98,9 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Integer> updateGeofencing(User user, UUID deviceId, List<Fencing> fencing) {
+    public Mono<Integer> updateGeofencing(User user, UUID deviceId, List<Fence> fence) {
         try {
-            return Mono.just(deviceRepository.updateGeoFencing(user, deviceId, fencing));
+            return Mono.just(deviceRepository.updateGeoFencing(user, deviceId, fence));
         } catch (Exception e) {
             log.error("error inserting geo-fencing {}", e.getMessage());
             return Mono.empty();

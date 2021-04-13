@@ -1,14 +1,19 @@
 package com.viettel.vtag.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.viettel.vtag.model.ILocation;
+import com.viettel.vtag.model.entity.Fence;
 import com.viettel.vtag.model.entity.Location;
 import com.viettel.vtag.model.transfer.WifiCellMessage;
-import com.viettel.vtag.service.interfaces.GeoConvertService;
+import com.viettel.vtag.repository.interfaces.DeviceRepository;
+import com.viettel.vtag.service.interfaces.GeoService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.protocol.HTTP;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
@@ -16,14 +21,23 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
+import java.util.List;
 import java.util.UUID;
+
+import static java.lang.Math.*;
 
 @Data
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GeoConvertServiceImpl implements GeoConvertService {
+public class GeoServiceImpl implements GeoService {
 
+    private static final double R = 6_371_000;
+    private static final double radian = PI / 180;
+
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    private final DeviceRepository deviceRepository;
     private final WebClient.Builder webClientBuilder;
     private final HttpClient proxyHttpClient;
 
@@ -38,6 +52,21 @@ public class GeoConvertServiceImpl implements GeoConvertService {
 
     @Value("${vtag.proxy.enable}")
     private boolean proxyEnable;
+
+    public static double distance(double lat1, double lon1, double lat2, double lon2) {
+        var phi1 = lat1 * radian;
+        var phi2 = lat2 * radian;
+        var deltaPhi = (lat2 - lat1) * radian / 2;
+        var deltaLambda = (lon2 - lon1) * radian / 2;
+        var sinPhi = sin(deltaPhi);
+        var sinLambda = sin(deltaLambda);
+        var a = sinPhi * sinPhi + cos(phi1) * cos(phi2) * sinLambda * sinLambda;
+        return 2 * R * atan2(sqrt(a), sqrt(1 - a));
+    }
+
+    public static double toDouble(double degree, double minute, double second, boolean reverse) {
+        return (reverse ? -1 : 1) * (degree + minute / 60 + second / 360);
+    }
 
     @Override
     public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
@@ -68,5 +97,24 @@ public class GeoConvertServiceImpl implements GeoConvertService {
                 }
                 return error;
             });
+    }
+
+    @Override
+    public Mono<Fence> checkFencing(UUID deviceId, ILocation location) {
+        try {
+            var device = deviceRepository.find(deviceId);
+            var fences = mapper.readValue(device.geoFencing(), new TypeReference<List<Fence>>() { });
+
+            var lat = location.latitude();
+            var lon = location.longitude();
+            for (var fence : fences) {
+                if (distance(lat, lon, fence.latitude(), fence.longitude()) <= fence.radius()) {
+                    return Mono.just(fence);
+                }
+            }
+            return Mono.empty();
+        } catch (JsonProcessingException e) {
+            return Mono.empty();
+        }
     }
 }

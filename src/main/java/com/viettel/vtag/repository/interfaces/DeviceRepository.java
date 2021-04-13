@@ -36,7 +36,7 @@ public interface DeviceRepository {
 
     List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request);
 
-    int updateGeoFencing(User user, UUID deviceId, List<Fencing> fencing);
+    int updateGeoFencing(User user, UUID deviceId, List<Fence> fence);
 
     int deleteGeoFencing(User user, UUID deviceId);
 

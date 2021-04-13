@@ -1,15 +1,12 @@
 package com.viettel.vtag.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.viettel.vtag.utils.FencingSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 @Data
 @Accessors(fluent = true)
-@JsonSerialize(using = FencingSerializer.class)
-public class Fencing {
+public class Fence {
 
     @JsonProperty
     private String name;

@@ -26,7 +26,7 @@ public interface DeviceService {
 
     Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest request);
 
-    Mono<Integer> updateGeofencing(User t1, UUID t2, List<Fencing> fencing);
+    Mono<Integer> updateGeofencing(User t1, UUID t2, List<Fence> fence);
 
     Mono<Integer> deleteGeofencing(User user, UUID uuid);
 

@@ -2,6 +2,7 @@ package com.viettel.vtag.service.impl;
 
 import com.google.firebase.messaging.*;
 import com.viettel.vtag.model.ILocation;
+import com.viettel.vtag.model.entity.Fence;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
@@ -40,6 +41,26 @@ public class FirebaseServiceImpl implements FirebaseService {
             "action", "ACTION_SOS",
             "latitude", String.valueOf(location.latitude()),
             "longitude", String.valueOf(location.longitude()));
+        message(tokens, notification, data);
+        //@formatter:on
+    }
+
+    @Override
+    public void notifySafeZone(UUID deviceId, Fence fence) {
+        //@formatter:off
+        var notification= Notification.builder()
+            .setTitle(messageSource.getMessage("message.fence.title", new Object[] {}, Locale.ENGLISH))
+            .setBody(messageSource.getMessage("message.fence.content", new Object[] {}, Locale.ENGLISH))
+            .build();
+        var tokens = userRepository.fetchAllViewers(deviceId);
+        var device = deviceRepository.find(deviceId);
+        var data = Map.of(
+            "click_action", "FLUTTER_NOTIFICATION_CLICK",
+            "device_name", device.name(),
+            "device_id", deviceId.toString(),
+            "action", "ACTION_SOS",
+            "latitude", String.valueOf(fence.latitude()),
+            "longitude", String.valueOf(fence.longitude()));
         message(tokens, notification, data);
         //@formatter:on
     }

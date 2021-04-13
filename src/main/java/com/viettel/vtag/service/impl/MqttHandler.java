@@ -6,7 +6,7 @@ import com.viettel.vtag.config.MqttSubscriberConfig;
 import com.viettel.vtag.model.transfer.*;
 import com.viettel.vtag.service.interfaces.DeviceMessageService;
 import com.viettel.vtag.service.interfaces.FirebaseService;
-import com.viettel.vtag.service.interfaces.GeoConvertService;
+import com.viettel.vtag.service.interfaces.GeoService;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,18 +27,17 @@ public class MqttHandler implements MqttCallback {
     private final MqttClient publisher;
     private final DeviceMessageService deviceService;
     private final FirebaseService firebaseService;
-    private final GeoConvertService geoConvertService;
+    private final GeoService geoService;
 
     public MqttHandler(
         @Qualifier("mqtt-publisher-client") MqttClient publisher,
         DeviceMessageService deviceService,
-        FirebaseService firebaseService,
-        GeoConvertService geoConvertService
+        FirebaseService firebaseService, GeoService geoService
     ) {
         this.publisher = publisher;
         this.deviceService = deviceService;
         this.firebaseService = firebaseService;
-        this.geoConvertService = geoConvertService;
+        this.geoService = geoService;
     }
 
     /** @see MqttCallback#connectionLost(Throwable) */
@@ -97,7 +96,9 @@ public class MqttHandler implements MqttCallback {
                 convertWifiCell(deviceId, data).subscribe(location -> firebaseService.sos(deviceId, location));
                 break;
             case "DWFC":
-                convertWifiCell(deviceId, data).subscribe();
+                convertWifiCell(deviceId, data).flatMap(location -> geoService.checkFencing(deviceId, location))
+                    .map(fence -> firebaseService.notifySafeZone(deviceId, fence))
+                    .subscribe();
                 break;
             default:
                 log.info("{}: Do not recognize {}", deviceId, payload);
@@ -131,7 +132,7 @@ public class MqttHandler implements MqttCallback {
     }
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage payload) {
-        return geoConvertService.convert(deviceId, payload)
+        return geoService.convert(deviceId, payload)
             .doOnNext(location -> log.info("{}: LOC ({}, {})", deviceId, location.latitude(), location.longitude()))
             .doOnNext(location -> deviceService.saveLocation(deviceId, location))
             .map(location -> LocationMessage.fromLocation(location, payload))
