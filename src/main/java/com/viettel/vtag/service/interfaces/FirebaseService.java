@@ -5,6 +5,7 @@ import com.google.firebase.messaging.Notification;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.model.entity.Fence;
+import com.viettel.vtag.model.entity.FenceCheck;
 
 import java.util.List;
 import java.util.Map;
@@ -16,5 +17,5 @@ public interface FirebaseService {
 
     void sos(Device device, ILocation location);
 
-    void notifySafeZone(UUID deviceId, Fence fence);
+    void notifySafeZone(Device device, FenceCheck fence);
 }

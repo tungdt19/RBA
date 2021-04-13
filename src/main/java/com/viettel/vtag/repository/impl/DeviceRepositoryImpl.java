@@ -7,7 +7,9 @@ import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
@@ -20,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class DeviceRepositoryImpl implements DeviceRepository {
+public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device> {
 
     private final Map<UUID, Device> cache = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -28,9 +30,19 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     private final JdbcTemplate jdbc;
 
     @Override
-    public Device find(UUID platformId) {
-        var sql = "SELECT d.* FROM device d WHERE platform_device_id = ?";
-        return jdbc.queryForObject(sql, new Object[] {platformId}, this::parseDevice);
+    public Device find(UUID deviceId) {
+        var device = cache.get(deviceId);
+        if (device != null) return device;
+
+        try {
+            var sql = "SELECT d.* FROM device d WHERE platform_device_id = ?";
+            var dvc = jdbc.queryForObject(sql, this, deviceId);
+            if (dvc == null) return null;
+            cache.put(deviceId, dvc.parseGeoFencing(dvc.geoFencing()));
+            return dvc;
+        } catch (IncorrectResultSizeDataAccessException e) {
+            return null;
+        }
     }
 
     @Override
@@ -82,14 +94,14 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     @Override
     public List<Device> getUserDevice(User user) {
         var sql = "SELECT d.* FROM device d INNER JOIN user_role ur ON d.id = ur.device_id WHERE user_id = ?";
-        return jdbc.query(sql, new Object[] {user.id()}, this::parseDevice);
+        return jdbc.query(sql, this, user.id());
     }
 
     @Override
     public Device getUserDevice(User user, UUID deviceId) {
         var sql = "SELECT d.* FROM device d INNER JOIN user_role ur ON d.id = ur.device_id WHERE user_id = ? "
             + "AND platform_device_id = ?";
-        return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, this::parseDevice);
+        return jdbc.queryForObject(sql, this, user.id(), deviceId);
     }
 
     @Override
@@ -143,7 +155,8 @@ public class DeviceRepositoryImpl implements DeviceRepository {
         return jdbc.update(sql, platformID, user.id());
     }
 
-    private Device parseDevice(ResultSet rs, int i) throws SQLException {
+    @Override
+    public Device mapRow(ResultSet rs, int i) throws SQLException {
         var lat = rs.getObject("last_lat", Double.class);
         var lon = rs.getObject("last_lon", Double.class);
         return new Device().id(rs.getInt("id"))

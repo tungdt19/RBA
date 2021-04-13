@@ -23,7 +23,7 @@ public class Fence implements ILocation {
     private double radius;
 
     @JsonIgnore
-    private int in;
+    private boolean in;
 
     @Override
     public Integer accuracy() {

@@ -4,6 +4,7 @@ import com.google.firebase.messaging.*;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.model.entity.Fence;
+import com.viettel.vtag.model.entity.FenceCheck;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
@@ -21,12 +22,11 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class FirebaseServiceImpl implements FirebaseService {
 
-    private static final Locale locale = Locale.ENGLISH;
+    private static final Locale locale = Locale.forLanguageTag("vi_VN");
 
     private final FirebaseMessaging fcm;
     private final MessageSource messageSource;
     private final UserRepository userRepository;
-    private final DeviceRepository deviceRepository;
 
     @Override
     public void sos(Device device, ILocation location) {
@@ -39,15 +39,13 @@ public class FirebaseServiceImpl implements FirebaseService {
     }
 
     @Override
-    public void notifySafeZone(UUID deviceId, Fence fence) {
-        var device = deviceRepository.find(deviceId);
-        var bodyArgs = new String[] {device.name(), fence.name()};
+    public void notifySafeZone(Device device, FenceCheck fenceCheck) {
         var title = messageSource.getMessage("message.fence.title", new Object[] { }, locale);
-        var body = messageSource.getMessage("message.fence.arrived", bodyArgs, locale);
+        var body = messageSource.getMessage(fenceCheck.message(), fenceCheck.args(), locale);
         var notification = Notification.builder().setTitle(title).setBody(body).build();
-        var tokens = userRepository.fetchAllViewers(deviceId);
+        var tokens = userRepository.fetchAllViewers(device.platformId());
 
-        message(tokens, notification, buildData(device, fence, "ACTION_SAFE_ZONE"));
+        message(tokens, notification, buildData(device, fenceCheck.location(), "ACTION_SAFE_ZONE"));
     }
 
     @Override

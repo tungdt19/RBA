@@ -1,11 +1,9 @@
 package com.viettel.vtag.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
-import com.viettel.vtag.model.entity.Fence;
+import com.viettel.vtag.model.entity.FenceCheck;
 import com.viettel.vtag.model.entity.Location;
 import com.viettel.vtag.model.transfer.WifiCellMessage;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
@@ -23,7 +21,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
-import java.util.List;
 import java.util.UUID;
 
 import static java.lang.Math.*;
@@ -89,24 +86,26 @@ public class GeoServiceImpl implements GeoService {
     }
 
     @Override
-    public Mono<Fence> checkFencing(Device device, ILocation location) {
-        try {
-            var fencing = device.geoFencing();
-            log.info("{}: check fence {} -> {}", device.platformId(), location, fencing);
-            var fences = mapper.readValue(fencing, new TypeReference<List<Fence>>() { });
+    public FenceCheck checkFencing(Device device, ILocation location) {
+        var fencing = device.geoFencing();
+        log.info("{}: check fence {} -> {}", device.platformId(), location, fencing);
+        var fences = device.fences();
 
-            var lat = location.latitude();
-            var lon = location.longitude();
-            for (var fence : fences) {
-                if (distance(lat, lon, fence.latitude(), fence.longitude()) <= fence.radius()) {
-                    log.info("{}: fen {}", device.platformId(), fence);
-                    return Mono.just(fence);
+        var lat = location.latitude();
+        var lon = location.longitude();
+        var check = new FenceCheck();
+        for (var fence : fences) {
+            if (distance(lat, lon, fence.latitude(), fence.longitude()) <= fence.radius()) {
+                if (!fence.in()) {
+                    log.info("{}: in {}", device.platformId(), fence);
+                    check.to(fence);
                 }
+            } else if (fence.in()) {
+                log.info("{}: out {}", device.platformId(), fence);
+                check.from(fence);
             }
-            return Mono.empty();
-        } catch (JsonProcessingException e) {
-            return Mono.empty();
         }
+        return check.device(device).build();
     }
 
     public static double distance(double lat1, double lon1, double lat2, double lon2) {

@@ -3,6 +3,7 @@ package com.viettel.vtag.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.config.MqttSubscriberConfig;
+import com.viettel.vtag.model.entity.FenceCheck;
 import com.viettel.vtag.model.transfer.*;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.*;
@@ -91,8 +92,9 @@ public class MqttHandler implements MqttCallback {
                 convertWifiCell(deviceId, data).subscribe(location -> firebaseService.sos(device, location));
                 break;
             case MSG_WIFI_CELL:
-                convertWifiCell(deviceId, data).flatMap(location -> geoService.checkFencing(device, location))
-                    .subscribe(fence -> firebaseService.notifySafeZone(deviceId, fence));
+                convertWifiCell(deviceId, data).map(location -> geoService.checkFencing(device, location))
+                    .filter(FenceCheck::change)
+                    .subscribe(fence -> firebaseService.notifySafeZone(device, fence));
                 break;
             default:
                 log.info("{}: Do not recognize {}", deviceId, payload);
