@@ -130,7 +130,6 @@ public class DeviceController {
             .doOnNext(user -> log.info("{}: unpair from user {}", detail.platformId(), user.phone()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
             .then(deviceService.removeUserDevice(usr, detail))
-            .map(bool -> true)
             .map(activated -> ok(of(0, "Unpaired device successfully!")))
             .doOnError(e -> log.error("Error on unpair {}", detail.platformId(), e))
             .defaultIfEmpty(status(BAD_GATEWAY).body(of(1, "Couldn't unpair device!")));
