@@ -30,6 +30,8 @@ public interface DeviceRepository {
 
     Device getUserDevice(User user, UUID deviceId);
 
+    String getDeviceGeo(User user, UUID deviceId);
+
     int setUserDevice(User user, PairDeviceRequest request);
 
     List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request);

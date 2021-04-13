@@ -97,10 +97,10 @@ public class MqttHandler implements MqttCallback {
                 convertWifiCell(deviceId, data).subscribe(location -> firebaseService.sos(deviceId, location));
                 break;
             case "DWFC":
-                convertWifiCell(deviceId, data).subscribe(location -> log.info("{}: {}", deviceId, location));
+                convertWifiCell(deviceId, data).subscribe();
                 break;
             default:
-                log.info("Do not recognize message {}", payload);
+                log.info("{}: Do not recognize {}", deviceId, payload);
         }
     }
 
@@ -132,7 +132,7 @@ public class MqttHandler implements MqttCallback {
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage payload) {
         return geoConvertService.convert(deviceId, payload)
-            .doOnNext(location -> log.info("{}: LOC({}, {})", deviceId, location.latitude(), location.longitude()))
+            .doOnNext(location -> log.info("{}: LOC ({}, {})", deviceId, location.latitude(), location.longitude()))
             .doOnNext(location -> deviceService.saveLocation(deviceId, location))
             .map(location -> LocationMessage.fromLocation(location, payload))
             .doOnNext(location -> publishLocation(deviceId, location))

@@ -26,7 +26,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public Device get(int id) {
-        var sql = "SELECT id, name, imei,platform_device_id, battery, status, geo_length FROM device WHERE id = ?";
+        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length FROM device WHERE id = ?";
         return jdbc.queryForObject(sql, new Object[] {id}, this::parseDevice);
     }
 
@@ -35,8 +35,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
             .name(rs.getString("name"))
             .imei(rs.getString("imei"))
             .battery(rs.getInt("battery"))
-            .status(rs.getString("status"))
-            .geoFencing(rs.getInt("geofencing"));
+            .status(rs.getString("status"));
     }
 
     @Override
@@ -95,14 +94,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     public List<Device> getUserDevice(User user) {
         var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, update_instant,"
             + " last_lat, last_lon FROM device INNER JOIN user_role ur ON device.id = ur.device_id WHERE user_id = ?";
-        return jdbc.query(sql, new Object[] {user.id()}, (rs, i) -> new Device().id(rs.getInt("id"))
-            .name(rs.getString("name"))
-            .imei(rs.getString("imei"))
-            .battery(rs.getInt("battery"))
-            .platformId(rs.getObject("platform_device_id", UUID.class))
-            .latitude(rs.getObject("last_lat", Double.class))
-            .longitude(rs.getObject("last_lon", Double.class))
-            .uptime(rs.getTimestamp("update_instant").toLocalDateTime()));
+        return jdbc.query(sql, new Object[] {user.id()}, (rs, i) -> parseDevice(rs));
     }
 
     @Override
@@ -110,22 +102,14 @@ public class DeviceRepositoryImpl implements DeviceRepository {
         var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, last_lat, "
             + "last_lon, update_instant FROM device INNER JOIN user_role ur ON device.id = ur.device_id "
             + "WHERE user_id = ? AND platform_device_id = ?";
-        return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, (rs, i) -> {
-            var id = rs.getObject("platform_device_id", UUID.class);
-            var lat = rs.getObject("last_lat", Double.class);
-            var lon = rs.getObject("last_lon", Double.class);
-            var up = rs.getTimestamp("update_instant").toLocalDateTime();
+        return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, (rs, i) -> parseDevice(rs));
+    }
 
-            log.info("device({}, {}, {}, {})", id, lat, lon, up);
-            return new Device().id(rs.getInt("id"))
-                .name(rs.getString("name"))
-                .imei(rs.getString("imei"))
-                .battery(rs.getInt("battery"))
-                .platformId(id)
-                .latitude(lat)
-                .longitude(lon)
-                .uptime(up);
-        });
+    @Override
+    public String getDeviceGeo(User user, UUID deviceId) {
+        var sql = "SELECT geo_fencing FROM device INNER JOIN user_role ur ON id = ur.device_id WHERE user_id = ? "
+            + "AND platform_device_id = ?";
+        return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, (rs, i) -> rs.getString("geo_fencing"));
     }
 
     @Override
@@ -171,5 +155,19 @@ public class DeviceRepositoryImpl implements DeviceRepository {
         var sql = "DELETE FROM device d USING user_role ur WHERE d.id = ur.device_id AND platform_device_id = ? "
             + "AND ur.user_id = ?";
         return jdbc.update(sql, platformID, user.id());
+    }
+
+    private Device parseDevice(ResultSet rs) throws SQLException {
+        var lat = rs.getObject("last_lat", Double.class);
+        var lon = rs.getObject("last_lon", Double.class);
+        return new Device().id(rs.getInt("id"))
+            .name(rs.getString("name"))
+            .imei(rs.getString("imei"))
+            .battery(rs.getInt("battery"))
+            .platformId(rs.getObject("platform_device_id", UUID.class))
+            .latitude(lat == null ? 0 : lat)
+            .longitude(lon == null ? 0 : lon)
+            .geoFencing(rs.getString("geo_fencing"))
+            .uptime(rs.getTimestamp("update_instant").toLocalDateTime());
     }
 }

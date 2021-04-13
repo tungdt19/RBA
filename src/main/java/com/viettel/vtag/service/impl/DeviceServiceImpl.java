@@ -69,7 +69,12 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Device> getDevice(User user, UUID deviceId) {
-        return Mono.just(deviceRepository.getUserDevice(user, deviceId));
+        return Mono.justOrEmpty(deviceRepository.getUserDevice(user, deviceId));
+    }
+
+    @Override
+    public Mono<String> getGeoFencing(User user, UUID deviceId) {
+        return Mono.justOrEmpty(deviceRepository.getDeviceGeo(user, deviceId));
     }
 
     @Override
@@ -128,20 +133,6 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {
-        var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
-        return iotPlatformService.delete(endpoint)
-            .filter(response -> response.statusCode().is2xxSuccessful())
-            .doOnNext(response -> log.info("unpair {}: {}", endpoint, response.statusCode()))
-            .map(paired -> deviceRepository.removeUserDevice(user, request.platformId()))
-            .doOnNext(saved -> log.info("deleted {} from {}: {}", request.platformId(), user.platformId(), saved))
-            .filter(paired -> paired > 0)
-            .map(response -> deviceRepository.delete(user, request.platformId()))
-            .doOnNext(saved -> log.info("{}: UPR {}", request.platformId(), saved))
-            .map(paired -> paired > 0);
-    }
-
-    @Override
     public Mono<Boolean> unpairDevice(User user, PairDeviceRequest request) {
         //@formatter:off
         var uuid = request.platformId();
@@ -165,5 +156,19 @@ public class DeviceServiceImpl implements DeviceService {
                 }
             });
         //@formatter:on
+    }
+
+    @Override
+    public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {
+        var endpoint = "/api/devices/" + request.platformId() + "/group/" + user.platformId();
+        return iotPlatformService.delete(endpoint)
+            .filter(response -> response.statusCode().is2xxSuccessful())
+            .doOnNext(response -> log.info("unpair {}: {}", endpoint, response.statusCode()))
+            .map(paired -> deviceRepository.removeUserDevice(user, request.platformId()))
+            .doOnNext(saved -> log.info("deleted {} from {}: {}", request.platformId(), user.platformId(), saved))
+            .filter(paired -> paired > 0)
+            .map(response -> deviceRepository.delete(user, request.platformId()))
+            .doOnNext(saved -> log.info("{}: UPR {}", request.platformId(), saved))
+            .map(paired -> paired > 0);
     }
 }

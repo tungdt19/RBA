@@ -1,6 +1,7 @@
 package com.viettel.vtag.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -35,8 +36,9 @@ public class Device {
     @JsonProperty
     private double accuracy;
 
+    @JsonRawValue
     @JsonProperty("geo-fencing")
-    private int geoFencing;
+    private String geoFencing;
 
     @JsonProperty("uptime")
     private LocalDateTime uptime;
