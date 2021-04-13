@@ -32,6 +32,8 @@ public interface DeviceService {
 
     Mono<String> getMessages(User user, UUID deviceId, int offset, int limit);
 
+    Mono<Integer> updateConfig(User user, UUID deviceId, ConfigRequest config);
+
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 
     Mono<Boolean> unpairDevice(User user, PairDeviceRequest request);

@@ -29,8 +29,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public Device find(UUID platformId) {
-        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_fencing FROM device "
-            + "WHERE platform_device_id = ?";
+        var sql = "SELECT d.* FROM device d WHERE platform_device_id = ?";
         return jdbc.queryForObject(sql, new Object[] {platformId}, this::parseDevice);
     }
 
@@ -82,16 +81,14 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public List<Device> getUserDevice(User user) {
-        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, update_instant,"
-            + " last_lat, last_lon FROM device INNER JOIN user_role ur ON device.id = ur.device_id WHERE user_id = ?";
+        var sql = "SELECT d.* FROM device d INNER JOIN user_role ur ON d.id = ur.device_id WHERE user_id = ?";
         return jdbc.query(sql, new Object[] {user.id()}, this::parseDevice);
     }
 
     @Override
     public Device getUserDevice(User user, UUID deviceId) {
-        var sql = "SELECT id, name, imei, platform_device_id, battery, status, geo_length, geo_fencing, last_lat, "
-            + "last_lon, update_instant FROM device INNER JOIN user_role ur ON device.id = ur.device_id "
-            + "WHERE user_id = ? AND platform_device_id = ?";
+        var sql = "SELECT d.* FROM device d INNER JOIN user_role ur ON d.id = ur.device_id WHERE user_id = ? "
+            + "AND platform_device_id = ?";
         return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, this::parseDevice);
     }
 

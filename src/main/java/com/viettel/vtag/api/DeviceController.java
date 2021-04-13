@@ -217,4 +217,18 @@ public class DeviceController {
             .flatMap(response -> response.bodyToMono(String.class))
             .map(content -> ok(ResponseJson.of(0, "Okie dokie!", content)));
     }
+
+    @PostMapping("/config/{device_id}")
+    public Mono<ResponseEntity<ResponseJson>> configDevice(
+        @PathVariable("device_id") String deviceId, @RequestBody ConfigRequest config, ServerHttpRequest request
+    ) {
+        return Mono.justOrEmpty(userService.checkToken(request))
+            .zipWith(Mono.just(UUID.fromString(deviceId)))
+            .doOnNext(tuple -> log.info("{}: cnf {}", deviceId, tuple.getT1().platformId()))
+            .flatMap(tuple -> deviceService.updateConfig(tuple.getT1(), tuple.getT2(), config))
+            .filter(updated -> updated > 0)
+            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
+            .defaultIfEmpty(status(BAD_REQUEST).body(ResponseJson.of(1, "Couldn't delete geo-fencing")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't delete geo-fencing")));
+    }
 }

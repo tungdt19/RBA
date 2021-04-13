@@ -41,7 +41,6 @@ public class FirebaseServiceImpl implements FirebaseService {
     @Override
     public void notifySafeZone(UUID deviceId, Fence fence) {
         var device = deviceRepository.find(deviceId);
-        var locale = Locale.ENGLISH;
         var bodyArgs = new String[] {device.name(), fence.name()};
         var title = messageSource.getMessage("message.fence.title", new Object[] { }, locale);
         var body = messageSource.getMessage("message.fence.body", bodyArgs, locale);

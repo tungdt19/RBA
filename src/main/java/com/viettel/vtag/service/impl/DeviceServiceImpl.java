@@ -129,6 +129,11 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
+    public Mono<Integer> updateConfig(User user, UUID deviceId, ConfigRequest config) {
+        return null;
+    }
+
+    @Override
     public Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest detail) {
         return Mono.justOrEmpty(deviceRepository.fetchHistory(user, detail));
     }
@@ -161,10 +166,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {
-        return Mono.just(deviceRepository.removeUserDevice(user, request.platformId()))
-            .doOnNext(saved -> log.info("{}: del usr {}: rs {}", request.platformId(), user.platformId(), saved))
-            .filter(deleted -> deleted > 0)
-            .map(deleted -> deviceRepository.delete(user, request.platformId()))
+        return Mono.just(deviceRepository.delete(user, request.platformId()))
             .doOnNext(saved -> log.info("{}: del dvc: rs {}", request.platformId(), saved))
             .map(deleted -> deleted > 0)
             .filter(deleted -> deleted);
