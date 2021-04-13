@@ -36,7 +36,7 @@ public interface DeviceService {
 
     Mono<String> getDeviceMessages(User user, UUID deviceId, String topics, int offset, int limit);
 
-    Mono<DeviceConfig> getConfig(User user, UUID deviceId);
+    Mono<String> getConfig(User user, UUID deviceId);
 
     Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config);
 

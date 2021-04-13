@@ -142,8 +142,8 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<DeviceConfig> getConfig(User user, UUID deviceId) {
-        return getDeviceMessages(user, deviceId, "devconf", 0, 1).map(s -> null);
+    public Mono<String> getConfig(User user, UUID deviceId) {
+        return getDeviceMessages(user, deviceId, "devconf", 0, 1);
     }
 
     @Override

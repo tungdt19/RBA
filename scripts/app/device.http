@@ -86,3 +86,29 @@ Content-Type: application/json
 ### --------------------------------------------------------------------------------------------------------------------
 DELETE http://{{host}}/vtag/device/geo/7b762bf8-f157-467c-8f3d-a9d1eb342e35
 Authorization: Bearer {{vtag_token}}
+
+
+### --------------------------------------------------------------------------------------------------------------------
+GET http://{{host}}/vtag/device/config/9ee7c288-f54e-4855-a8b5-138ca1c53f0a
+Authorization: Bearer 918254e4-76b9-4cdd-893e-836a77792164 #{{vtag_token}}
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/device/config/9ee7c288-f54e-4855-a8b5-138ca1c53f0a
+Authorization: Bearer 918254e4-76b9-4cdd-893e-836a77792164 #{{vtag_token}}
+Content-Type: application/json
+
+{
+    "mode": 2,
+    "points": [
+        {
+            "start_time": "6:00",
+            "end_time": "21:00",
+            "cycle": "5"
+        },
+        {
+            "start_time": "6:00",
+            "end_time": "21:00",
+            "cycle": 5
+        }
+    ]
+}
