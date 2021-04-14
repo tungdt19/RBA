@@ -128,7 +128,7 @@ public class GeoServiceImpl implements GeoService {
             .build()
             .post()
             .uri(convertUri)
-            .bodyValue(json.token(convertToken))
+            .bodyValue(json.token(token))
             .exchange();
     }
 }
