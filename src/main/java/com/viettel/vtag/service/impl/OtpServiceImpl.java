@@ -97,7 +97,7 @@ public class OtpServiceImpl implements OtpService {
     public void sendOtp(OtpRequest request, OTP otp, Locale locale) {
         log.info("{} -> {}", request, otp);
         var params = new Object[] {otp.content(), otp.expiredInstant()};
-        communicationService.send(request, messageSource.getMessage("message.otp", params, locale));
+        communicationService.send(request, messageSource.getMessage("message.otp.register", params, locale));
     }
 
     @PostConstruct

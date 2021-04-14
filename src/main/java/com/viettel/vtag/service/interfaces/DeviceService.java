@@ -2,8 +2,6 @@ package com.viettel.vtag.service.interfaces;
 
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
-import com.viettel.vtag.model.transfer.PlatformData;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -11,13 +9,15 @@ import java.util.UUID;
 
 public interface DeviceService {
 
-    Mono<ClientResponse> pairDevice(User user, PairDeviceRequest request);
+    Mono<Boolean> pairDevice(User user, PairDeviceRequest request);
 
     Mono<Integer> saveUserDevice(User user, PairDeviceRequest request);
 
     Mono<Device> getDevice(User user, UUID deviceId);
 
     Mono<String> getGeoFencing(User user, UUID deviceId);
+
+    Mono<List<Device>> getAllDevices();
 
     Mono<List<Device>> getDeviceList(User user);
 
@@ -37,7 +37,7 @@ public interface DeviceService {
 
     Mono<String> getDeviceMessages(User user, UUID deviceId, String topics, int offset, int limit);
 
-    Mono<PlatformData> getConfig(User user, UUID deviceId);
+    Mono<DeviceConfig> getConfig(User user, UUID deviceId);
 
     Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config);
 

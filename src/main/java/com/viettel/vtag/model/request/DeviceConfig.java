@@ -1,12 +1,9 @@
 package com.viettel.vtag.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.viettel.vtag.utils.TimeDeserializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -14,11 +11,14 @@ import java.util.List;
 public class DeviceConfig {
 
     @JsonProperty
-    private int mode;
+    private String id;
 
     @JsonProperty
-    private int cycle;
+    private int mode = 2;
+
+    @JsonProperty
+    private int cycle = 10;
 
     @JsonProperty("points")
-    private List<ModeConfig> schedule;
+    private List<ModeConfig> schedule = List.of(ModeConfig.of(6, 22, 10), ModeConfig.of(22, 6, 60));
 }

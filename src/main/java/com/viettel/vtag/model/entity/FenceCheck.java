@@ -8,6 +8,8 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class FenceCheck {
 
+    public static final FenceCheck NOT_CHANGE = new FenceCheck().change(false);
+
     private Device device;
     private Fence from;
     private Fence to;
@@ -21,16 +23,15 @@ public class FenceCheck {
         if (from != null && to != null) {
             message = "message.fence.change";
             args = new Object[] {device.name(), from.name(), to.name()};
-        }
-        if (to != null) {
+        } else if (to != null) {
             message = "message.fence.arrived";
             args = new Object[] {device.name(), to.name()};
-        }
-        if (from != null) {
+        } else if (from != null) {
             message = "message.fence.gone";
             args = new Object[] {device.name(), from.name()};
+        } else {
+            change = false;
         }
-        change = false;
         return this;
     }
 }

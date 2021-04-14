@@ -3,6 +3,7 @@ package com.viettel.vtag.service.impl;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.transfer.BatteryMessage;
 import com.viettel.vtag.model.transfer.ConfigMessage;
+import com.viettel.vtag.repository.DeviceCache;
 import com.viettel.vtag.repository.interfaces.DeviceMessageRepository;
 import com.viettel.vtag.service.interfaces.DeviceMessageService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class DeviceMessageServiceImpl implements DeviceMessageService {
     private final DeviceMessageRepository deviceMessageRepository;
 
     @Override
-    public Mono<Integer> saveLocation(UUID deviceId, ILocation location) {
+    public Mono<Integer> updateLocation(UUID deviceId, ILocation location) {
         return Mono.just(deviceMessageRepository.saveLocation(deviceId, location));
     }
 

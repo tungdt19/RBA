@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.repository.DeviceCache;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,22 +25,19 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device> {
 
-    private final Map<UUID, Device> cache = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
 
+    private final DeviceCache cache;
     private final JdbcTemplate jdbc;
 
     @Override
-    public Device find(UUID deviceId) {
+    public Device get(UUID deviceId) {
         var device = cache.get(deviceId);
         if (device != null) return device;
 
         try {
             var sql = "SELECT d.* FROM device d WHERE platform_device_id = ?";
-            var dvc = jdbc.queryForObject(sql, this, deviceId);
-            if (dvc == null) return null;
-            cache.put(deviceId, dvc.parseGeoFencing(dvc.geoFencing()));
-            return dvc;
+            return jdbc.queryForObject(sql, this, deviceId);
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
         }
@@ -86,6 +84,12 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
     }
 
     @Override
+    public List<Device> getAllDevices() {
+        var sql = "SELECT d.* FROM device d";
+        return jdbc.query(sql, this);
+    }
+
+    @Override
     public List<UUID> fetchAllDevices() {
         var sql = "SELECT platform_device_id FROM device WHERE platform_device_id IS NOT NULL";
         return jdbc.query(sql, (rs, rowNum) -> rs.getObject("platform_device_id", UUID.class));
@@ -106,9 +110,13 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
 
     @Override
     public String getGeoFencing(User user, UUID deviceId) {
-        var sql = "SELECT geo_fencing FROM device INNER JOIN user_role ur ON id = ur.device_id WHERE user_id = ? "
-            + "AND platform_device_id = ?";
-        return jdbc.queryForObject(sql, new Object[] {user.id(), deviceId}, (rs, i) -> rs.getString("geo_fencing"));
+        try {
+            var sql = "SELECT d.* FROM device d INNER JOIN user_role ur ON id = ur.device_id WHERE user_id = ? "
+                + "AND platform_device_id = ?";
+            return jdbc.queryForObject(sql, this, user.id(), deviceId).geoFencing();
+        } catch (Exception e) {
+            return "[]";
+        }
     }
 
     @Override
@@ -116,6 +124,7 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
         try {
             var sql = "UPDATE device d SET geo_fencing = ?::JSONB, geo_length = ? FROM user_role ur "
                 + "WHERE ur.device_id = d.id AND ur.user_id = ? AND platform_device_id = ?";
+            cache.get(deviceId).fences(fences);
             return jdbc.update(sql, mapper.writeValueAsString(fences), fences.size(), user.id(), deviceId);
         } catch (JsonProcessingException e) {
             log.error("Error converting JSON format: {}", e.getMessage());
@@ -127,7 +136,7 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
     public int deleteGeoFencing(User user, UUID deviceId) {
         var sql = "UPDATE device d SET geo_length = 0, geo_fencing = '[]'::JSONB FROM user_role ur "
             + "WHERE d.id = ur.device_id AND ur.user_id = ? AND platform_device_id = ?";
-
+        cache.get(deviceId).fences(List.of());
         return jdbc.update(sql, user.id(), deviceId);
     }
 
@@ -140,35 +149,41 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
 
     @Override
     public List<LocationHistory> fetchHistory(User user, LocationHistoryRequest request) {
-        var sql = "SELECT latitude, longitude, trigger_instant FROM location_history lh JOIN user_role ur "
+        var sql = "SELECT latitude, longitude, trigger_instant, lh.accuracy FROM location_history lh JOIN user_role ur "
             + "ON lh.device_id = ur.device_id JOIN device d ON d.id = ur.device_id WHERE ur.user_id = ? "
             + "AND trigger_instant > ? AND trigger_instant < ? AND platform_device_id = ? ORDER BY trigger_instant";
         return jdbc.query(sql, new Object[] {user.id(), request.from(), request.to(), request.deviceId()},
             (rs, num) -> new LocationHistory().latitude(rs.getDouble("latitude"))
                 .longitude(rs.getDouble("longitude"))
+                .accuracy(rs.getInt("accuracy"))
                 .time(rs.getTimestamp("trigger_instant").toLocalDateTime()));
     }
 
     @Override
-    public int delete(User user, UUID platformID) {
+    public int delete(User user, UUID platformId) {
         var sql = "DELETE FROM device d WHERE platform_device_id = ?";
-        return jdbc.update(sql, platformID, user.id());
+        cache.remove(platformId);
+        return jdbc.update(sql, platformId);
     }
 
     @Override
     public Device mapRow(ResultSet rs, int i) throws SQLException {
         var lat = rs.getObject("last_lat", Double.class);
         var lon = rs.getObject("last_lon", Double.class);
-        return new Device().id(rs.getInt("id"))
+        var uuid = rs.getObject("platform_device_id", UUID.class);
+        var geoFencing = rs.getString("geo_fencing");
+        var device = new Device().id(rs.getInt("id"))
             .name(rs.getString("name"))
             .imei(rs.getString("imei"))
             .battery(rs.getInt("battery"))
             .status(rs.getInt("status"))
-            .platformId(rs.getObject("platform_device_id", UUID.class))
+            .platformId(uuid)
             .latitude(lat == null ? 0 : lat)
             .longitude(lon == null ? 0 : lon)
             .accuracy(rs.getInt("accuracy"))
             .uptime(rs.getTimestamp("update_instant").toLocalDateTime())
-            .geoFencing(rs.getString("geo_fencing"));
+            .geoFencing(geoFencing);
+        cache.put(uuid, device.parseGeoFencing(geoFencing));
+        return device;
     }
 }

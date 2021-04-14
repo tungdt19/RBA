@@ -3,9 +3,7 @@ package com.viettel.vtag.service.impl;
 import com.google.firebase.messaging.*;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
-import com.viettel.vtag.model.entity.Fence;
 import com.viettel.vtag.model.entity.FenceCheck;
-import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class FirebaseServiceImpl implements FirebaseService {
 
-    private static final Locale locale = Locale.forLanguageTag("vi_VN");
+    private static final Locale locale = Locale.forLanguageTag("vi-VN");
 
     private final FirebaseMessaging fcm;
     private final MessageSource messageSource;
@@ -30,11 +28,12 @@ public class FirebaseServiceImpl implements FirebaseService {
 
     @Override
     public void sos(Device device, ILocation location) {
+        device.latitude(location.latitude()).longitude(location.longitude());
         var title = messageSource.getMessage("message.sos.title", new Object[] { }, locale);
         var body = messageSource.getMessage("message.sos.body", new Object[] {device.name()}, locale);
         var notification = Notification.builder().setTitle(title).setBody(body).build();
         var tokens = userRepository.fetchAllViewers(device.platformId());
-        var data = buildData(device, location, "ACTION_SOS");
+        var data = buildData(device, location, body, "ACTION_SOS");
         message(tokens, notification, data);
     }
 
@@ -45,7 +44,7 @@ public class FirebaseServiceImpl implements FirebaseService {
         var notification = Notification.builder().setTitle(title).setBody(body).build();
         var tokens = userRepository.fetchAllViewers(device.platformId());
 
-        message(tokens, notification, buildData(device, fenceCheck.location(), "ACTION_SAFE_ZONE"));
+        message(tokens, notification, buildData(device, fenceCheck.location(), body, "ACTION_SAFE_ZONE"));
     }
 
     @Override
@@ -104,13 +103,14 @@ public class FirebaseServiceImpl implements FirebaseService {
             .build();
     }
 
-    private Map<String, String> buildData(Device device, ILocation location, String action) {
+    private Map<String, String> buildData(Device device, ILocation location, String message, String action) {
         //@formatter:off
         return Map.of(
             "click_action", "FLUTTER_NOTIFICATION_CLICK",
             "device_name", device.name(),
             "device_id", device.platformId().toString(),
             "action", action,
+            "message", message,
             "latitude", String.valueOf(location.latitude()),
             "longitude", String.valueOf(location.longitude()));
         //@formatter:on

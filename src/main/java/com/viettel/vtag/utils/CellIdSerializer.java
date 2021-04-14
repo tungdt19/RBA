@@ -22,8 +22,9 @@ public class CellIdSerializer extends JsonSerializer<WifiCellMessage> {
         json.writeStartObject();
 
         json.writeObjectField("token", value.token());
-        json.writeObjectField("radio", value.connection());
-        json.writeObjectField("address", 1);
+        json.writeObjectField("radio", value.deviceId()); // value.connection()
+        json.writeObjectField("id", "nb-iot");
+        // json.writeObjectField("address", 1);
 
         var cells = value.cells();
         var firstCell = cells.get(0);
@@ -35,7 +36,7 @@ public class CellIdSerializer extends JsonSerializer<WifiCellMessage> {
             json.writeStartObject();
             json.writeObjectField("cid", cell.cid());
             json.writeObjectField("lac", cell.lac());
-            json.writeObjectField("psc", 0);
+            // json.writeObjectField("psc", 0);
             json.writeEndObject();
         }
         json.writeEndArray();

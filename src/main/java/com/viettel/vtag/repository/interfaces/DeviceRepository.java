@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface DeviceRepository {
 
-    Device find(UUID platformId);
+    Device get(UUID platformId);
 
     int save(Device device);
 
@@ -21,6 +21,8 @@ public interface DeviceRepository {
     int removeViewer(User user, RemoveViewerRequest request);
 
     int removeUserDevice(User user, UUID deviceId);
+
+    List<Device> getAllDevices();
 
     List<UUID> fetchAllDevices();
 

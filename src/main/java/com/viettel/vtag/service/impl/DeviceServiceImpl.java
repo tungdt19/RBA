@@ -18,7 +18,6 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -45,15 +44,17 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<ClientResponse> pairDevice(User user, PairDeviceRequest request) {
+    public Mono<Boolean> pairDevice(User user, PairDeviceRequest request) {
         var uuid = request.platformId();
+        var device = deviceRepository.get(uuid);
+        if (device != null) return Mono.empty();
         var endpoint = "/api/devices/" + uuid + "/group/" + user.platformId();
         return iotPlatformService.put(endpoint, request)
             .filter(response -> response.statusCode().is2xxSuccessful())
             .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
             .flatMap(ok -> iotPlatformService.post("/api/devices/" + uuid + "/active", Map.of("Type", "MAD")))
-            .doOnNext(response -> log.info("{}: atv {}", uuid, response.statusCode()));
-        // .filter(response -> response.statusCode().is2xxSuccessful());
+            .doOnNext(response -> log.info("{}: atv {}", uuid, response.statusCode()))
+            .map(response -> response.statusCode().is2xxSuccessful());
     }
 
     @Override
@@ -89,6 +90,11 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public Mono<String> getGeoFencing(User user, UUID deviceId) {
         return Mono.justOrEmpty(deviceRepository.getGeoFencing(user, deviceId));
+    }
+
+    @Override
+    public Mono<List<Device>> getAllDevices() {
+        return Mono.justOrEmpty(deviceRepository.getAllDevices());
     }
 
     @Override
@@ -143,12 +149,20 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<PlatformData> getConfig(User user, UUID deviceId) {
+    public Mono<DeviceConfig> getConfig(User user, UUID deviceId) {
         var endpoint = "/messages/custom?deviceId=" + deviceId;
         return iotPlatformService.get(endpoint)
-            .doOnNext(response -> log.info("{}: msg {}", deviceId, response.statusCode()))
+            .doOnNext(response -> log.info("{}: cfg {}", deviceId, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
-            .flatMap(response -> response.bodyToMono(PlatformData.class));
+            .flatMap(response -> response.bodyToMono(PlatformData.class))
+            .map(platformData -> platformData.data().get(0).payload())
+            .map(string -> {
+                try {
+                    return mapper.readValue(string, DeviceConfig.class);
+                } catch (JsonProcessingException e) {
+                    return new DeviceConfig();
+                }
+            });
     }
 
     @Override
@@ -190,7 +204,7 @@ public class DeviceServiceImpl implements DeviceService {
                     e.printStackTrace();
                 }
             })
-            .filter(paired -> paired);
+            .filter(unpaired -> unpaired);
         //@formatter:on
     }
 

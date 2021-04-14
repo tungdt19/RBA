@@ -127,4 +127,4 @@ vtag:
     subscriber-client-id: vtag_production_subscriber
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc
   unwired:
-    token: pk.d8db6727cfb09c8bf807c36ed971577c
+    token: 284a3628cddb31

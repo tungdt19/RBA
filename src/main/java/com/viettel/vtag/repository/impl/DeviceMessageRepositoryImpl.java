@@ -3,6 +3,7 @@ package com.viettel.vtag.repository.impl;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.transfer.BatteryMessage;
 import com.viettel.vtag.model.transfer.ConfigMessage;
+import com.viettel.vtag.repository.DeviceCache;
 import com.viettel.vtag.repository.interfaces.DeviceMessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class DeviceMessageRepositoryImpl implements DeviceMessageRepository {
 
     private final JdbcTemplate jdbc;
+    private final DeviceCache deviceCache;
 
     @Override
     public int updateBattery(UUID platformDeviceId, BatteryMessage battery) {
@@ -47,6 +49,7 @@ public class DeviceMessageRepositoryImpl implements DeviceMessageRepository {
         var updated = jdbc.update(sql, location.latitude(), location.longitude(), location.accuracy(),
             platformDeviceId);
 
+        deviceCache.get(platformDeviceId).latitude(location.latitude()).longitude(location.longitude());
         return inserted + updated;
     }
 }

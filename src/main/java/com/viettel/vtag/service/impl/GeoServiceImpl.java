@@ -52,9 +52,57 @@ public class GeoServiceImpl implements GeoService {
     @Value("${vtag.proxy.enable}")
     private boolean proxyEnable;
 
+    private String backupToken = "pk.d8db6727cfb09c8bf807c36ed971577c";
+
     @Override
     public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
-        return convert(json.deviceId(deviceId)).filter(response -> {
+        return convert(deviceId, json, convertToken);
+    }
+
+    @Override
+    public Mono<Location> retryConvert(UUID deviceId, WifiCellMessage json) {
+        return convert(deviceId, json, backupToken);
+    }
+
+    @Override
+    public FenceCheck checkFencing(Device device, ILocation location) {
+        var fences = device.fences();
+        if (fences == null) return FenceCheck.NOT_CHANGE;
+
+        var lat = location.latitude();
+        var lon = location.longitude();
+        device.latitude(lat).longitude(lon);
+        var check = new FenceCheck();
+        for (var fence : fences) {
+            var distance = distance(lat, lon, fence.latitude(), fence.longitude());
+            boolean inFence = distance <= fence.radius();
+            if (inFence) {
+                if (!fence.in()) {
+                    log.info("{}: in {}", device.platformId(), fence);
+                    check.to(fence);
+                }
+            } else if (fence.in()) {
+                check.from(fence);
+                log.info("{}: out {}", device.platformId(), fence);
+            }
+            fence.in(inFence);
+        }
+        return check.device(device).location(location).build();
+    }
+
+    public static double distance(double lat1, double lon1, double lat2, double lon2) {
+        var phi1 = lat1 * radian;
+        var phi2 = lat2 * radian;
+        var deltaPhi = (lat2 - lat1) * radian / 2;
+        var deltaLambda = (lon2 - lon1) * radian / 2;
+        var sinPhi = sin(deltaPhi);
+        var sinLambda = sin(deltaLambda);
+        var a = sinPhi * sinPhi + cos(phi1) * cos(phi2) * sinLambda * sinLambda;
+        return 2 * R * atan2(sqrt(a), sqrt(1 - a));
+    }
+
+    public Mono<Location> convert(UUID deviceId, WifiCellMessage json, String token) {
+        return convert(json.deviceId(deviceId), token).filter(response -> {
             var status = response.statusCode();
             var ok = status.is2xxSuccessful();
             if (!ok) {
@@ -70,8 +118,7 @@ public class GeoServiceImpl implements GeoService {
         });
     }
 
-    @Override
-    public Mono<ClientResponse> convert(WifiCellMessage json) {
+    public Mono<ClientResponse> convert(WifiCellMessage json, String token) {
         if (proxyEnable) {
             webClientBuilder.clientConnector(new ReactorClientHttpConnector(proxyHttpClient));
         }
@@ -83,39 +130,5 @@ public class GeoServiceImpl implements GeoService {
             .uri(convertUri)
             .bodyValue(json.token(convertToken))
             .exchange();
-    }
-
-    @Override
-    public FenceCheck checkFencing(Device device, ILocation location) {
-        var fencing = device.geoFencing();
-        log.info("{}: check fence {} -> {}", device.platformId(), location, fencing);
-        var fences = device.fences();
-
-        var lat = location.latitude();
-        var lon = location.longitude();
-        var check = new FenceCheck();
-        for (var fence : fences) {
-            if (distance(lat, lon, fence.latitude(), fence.longitude()) <= fence.radius()) {
-                if (!fence.in()) {
-                    log.info("{}: in {}", device.platformId(), fence);
-                    check.to(fence);
-                }
-            } else if (fence.in()) {
-                log.info("{}: out {}", device.platformId(), fence);
-                check.from(fence);
-            }
-        }
-        return check.device(device).build();
-    }
-
-    public static double distance(double lat1, double lon1, double lat2, double lon2) {
-        var phi1 = lat1 * radian;
-        var phi2 = lat2 * radian;
-        var deltaPhi = (lat2 - lat1) * radian / 2;
-        var deltaLambda = (lon2 - lon1) * radian / 2;
-        var sinPhi = sin(deltaPhi);
-        var sinLambda = sin(deltaLambda);
-        var a = sinPhi * sinPhi + cos(phi1) * cos(phi2) * sinLambda * sinLambda;
-        return 2 * R * atan2(sqrt(a), sqrt(1 - a));
     }
 }

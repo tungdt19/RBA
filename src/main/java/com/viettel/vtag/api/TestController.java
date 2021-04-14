@@ -94,13 +94,13 @@ public class TestController {
 
     @PostMapping("/fcm")
     public String fcm(@RequestBody String content, Locale locale) {
-        var title = messageSource.getMessage("message.sos.title", new Object[] { }, Locale.ENGLISH);
-        var body = messageSource.getMessage("message.sos.body", new Object[] {"content"}, Locale.ENGLISH);
+        var title = messageSource.getMessage("message.sos.title", new Object[] { }, locale);
+        var body = messageSource.getMessage("message.sos.body", new Object[] {content}, locale);
         log.info("locale {} -> title: {}; body: {}", locale, title, body);
 
         var notification = Notification.builder().setTitle(title).setBody(body).build();
         var response = firebaseService.message(List.of(), notification, Map.of("content", content));
-        return MessageFormatter.arrayFormat("{}/{}/{}",
+        return MessageFormatter.arrayFormat("test fcm {}/{}/{}",
             new Object[] {response.getSuccessCount(), response.getFailureCount(), response.getResponses().size()})
             .getMessage();
     }
@@ -121,12 +121,5 @@ public class TestController {
             return null;
         });
         return null;
-    }
-
-    @PostMapping("/convert")
-    public Mono<ResponseEntity<Location>> query(@RequestBody WifiCellMessage message) {
-        return geoService.convert(message)
-            .flatMap(response -> response.bodyToMono(Location.class))
-            .map(ResponseEntity::ok);
     }
 }

@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface DeviceMessageService {
 
-    Mono<Integer> saveLocation(UUID deviceId, ILocation gps);
+    Mono<Integer> updateLocation(UUID deviceId, ILocation gps);
 
     Mono<Integer> updateBattery(UUID deviceId, BatteryMessage data);
 

@@ -25,5 +25,8 @@ public class LocationHistory {
     private double longitude;
 
     @JsonProperty
+    private int accuracy;
+
+    @JsonProperty
     private LocalDateTime time;
 }

@@ -7,6 +7,7 @@ import com.viettel.vtag.model.request.DeviceConfig;
 import com.viettel.vtag.model.request.ModeConfig;
 
 import java.io.IOException;
+import java.time.LocalTime;
 
 public class DeviceConfigSerializer extends JsonSerializer<DeviceConfig> {
 
@@ -25,7 +26,7 @@ public class DeviceConfigSerializer extends JsonSerializer<DeviceConfig> {
 
         var schedule = config.schedule();
         if (schedule == null) {
-            writeDayNight(json, new ModeConfig(), new ModeConfig());
+            writeDayNight(json, new ModeConfig(), new ModeConfig().start(LocalTime.of(20, 0)));
             json.writeEndObject();
             return;
         }
