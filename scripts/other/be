@@ -28,7 +28,7 @@ read -r _ VERSION <<< "${BASH_REMATCH[@]}"
 
 
 dockerfile() {
-  echo "Create Dockerfile at '$FOLDER/$MODULE'"
+  echo "--> Create Dockerfile at '$FOLDER/$MODULE'"
   {
     echo "FROM openjdk"
     echo 'LABEL maintainer="duclm22@viettel.com.vn"'

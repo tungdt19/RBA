@@ -28,12 +28,13 @@ public class FirebaseServiceImpl implements FirebaseService {
 
     @Override
     public void sos(Device device, ILocation location) {
-        device.latitude(location.latitude()).longitude(location.longitude());
         var title = messageSource.getMessage("message.sos.title", new Object[] { }, locale);
         var body = messageSource.getMessage("message.sos.body", new Object[] {device.name()}, locale);
+
         var notification = Notification.builder().setTitle(title).setBody(body).build();
         var tokens = userRepository.fetchAllViewers(device.platformId());
         var data = buildData(device, location, body, "ACTION_SOS");
+
         message(tokens, notification, data);
     }
 
@@ -41,6 +42,7 @@ public class FirebaseServiceImpl implements FirebaseService {
     public void notifySafeZone(Device device, FenceCheck fenceCheck) {
         var title = messageSource.getMessage("message.fence.title", new Object[] { }, locale);
         var body = messageSource.getMessage(fenceCheck.message(), fenceCheck.args(), locale);
+
         var notification = Notification.builder().setTitle(title).setBody(body).build();
         var tokens = userRepository.fetchAllViewers(device.platformId());
 

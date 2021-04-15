@@ -35,7 +35,7 @@ public class LocationMessage implements ILocation {
     private String timestamp;
 
     @JsonProperty
-    public Integer accuracy;
+    private Integer accuracy;
 
     private Map<String, Object> properties = new HashMap<>();
 
@@ -45,7 +45,7 @@ public class LocationMessage implements ILocation {
     }
 
     public static LocationMessage fromLocation(Location location, WifiCellMessage payload) {
-        return new LocationMessage().type("CPOS")
+        return new LocationMessage().type("CPOS") // "C" + payload.type().substring(1)
             .connection(payload.connection())
             .version(payload.version())
             .latitude(location.latitude())

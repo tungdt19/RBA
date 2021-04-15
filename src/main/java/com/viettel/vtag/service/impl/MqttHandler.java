@@ -10,9 +10,11 @@ import com.viettel.vtag.service.interfaces.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -35,6 +37,7 @@ public class MqttHandler implements MqttCallback {
     private final DeviceRepository deviceRepository;
     private final FirebaseService firebaseService;
     private final GeoService geoService;
+    private final MessageSource messageSource;
 
     /** @see MqttCallback#connectionLost(Throwable) */
     @Override
@@ -50,9 +53,7 @@ public class MqttHandler implements MqttCallback {
         var index = topic.indexOf('/', 9);
         var deviceId = UUID.fromString(topic.substring(9, index));
         var subtopic = topic.substring(index + 1);
-        var p = message.getPayload();
-        var payload = new String(p);
-        log.info("{}> {} -> {} bytes", deviceId, subtopic, p.length);
+        var payload = message.getPayload();
 
         try {
             switch (subtopic) {
@@ -71,72 +72,74 @@ public class MqttHandler implements MqttCallback {
                 default:
                     log.warn("{}> Do not recognize subtopic '{}'", deviceId, subtopic);
             }
-        } catch (JsonProcessingException e) {
+        } catch (IOException e) {
             log.error("{}> Couldn't parse MQTT payload from sub topic '{}': {}", deviceId, subtopic, e.getMessage());
         }
     }
 
-    private void handleGpsMessage(UUID deviceId, String payload) throws JsonProcessingException {
+    private void handleGpsMessage(UUID deviceId, byte[] payload) throws IOException {
         var gps = mapper.readValue(payload, LocationMessage.class);
         if (MSG_POSITION.equals(gps.type())) {
-            log.info("{}> GPS {}", deviceId, payload);
-            deviceService.updateLocation(deviceId, gps).subscribe();
+            deviceService.updateLocation(deviceId, gps)
+                .subscribe(updated -> log.info("{}> {} bytes -> GPS ({}, {}) at {}: {}", deviceId, payload.length,
+                    gps.latitude(), gps.longitude(), gps.timestamp(), updated));
         }
     }
 
-    private void handleWifiCellMessage(UUID deviceId, String payload) throws JsonProcessingException {
+    private void handleWifiCellMessage(UUID deviceId, byte[] payload) throws IOException {
         var data = mapper.readValue(payload, WifiCellMessage.class);
         var type = data.type();
-        log.info("{}> {}", deviceId, type);
         var device = deviceRepository.get(deviceId);
         switch (type) {
             case MSG_SOS:
-                convertWifiCell(deviceId, data).subscribe(location -> firebaseService.sos(device, location));
+                convertWifiCell(deviceId, data, payload).doOnNext(device::location)
+                    .subscribe(location -> firebaseService.sos(device, location));
                 break;
             case MSG_WIFI_CELL:
-                convertWifiCell(deviceId, data).map(location -> geoService.checkFencing(device, location))
+                convertWifiCell(deviceId, data, payload).doOnNext(device::location)
+                    .map(location -> geoService.checkFencing(device, location))
                     .filter(FenceCheck::change)
                     .subscribe(fence -> firebaseService.notifySafeZone(device, fence));
+                // fenceCheck.subscribe(fence -> {
+                //     var message = messageSource.getMessage(fence.message(), fence.args(), Locale.ENGLISH);
+                //     publisher.publish("messages/" + deviceId + "/data", message.getBytes(StandardCharsets.UTF_8));
+                // });
                 break;
             case MSG_TIME_REQUEST:
-                log.info("{}> {}", deviceId, payload);
+                log.info("{}> {} bytes -> DTIME", deviceId, payload.length);
                 publisher.publish("messages/" + deviceId + "/app/controls", TimeMessage.toBytes());
                 break;
             default:
-                log.info("{}> Do not recognize {}", deviceId, type);
+                log.info("{}> {} bytes -> Don't handle '{}'", deviceId, payload.length, type);
         }
     }
 
-    private void updateBattery(UUID deviceId, String payload) throws JsonProcessingException {
+    private void updateBattery(UUID deviceId, byte[] payload) throws IOException {
         var data = mapper.readValue(payload, BatteryMessage.class);
         deviceService.updateBattery(deviceId, data)
             .filter(updated -> updated > 0)
-            .subscribe(updated -> log.info("{}> BTR {}", deviceId, data.level()));
+            .subscribe(updated -> log.info("{}> BTR {}%", deviceId, data.level()));
     }
 
-    private void updateConfig(UUID deviceId, String payload) {
-        try {
-            var data = mapper.readValue(payload, ConfigMessage.class);
-            if (MSG_CONFIG_UPDATE.equals(data.type())) {
-                deviceService.updateConfig(deviceId, data)
-                    .filter(updated -> updated > 0)
-                    .subscribe(updated -> log.info("{}> CFG {}", deviceId, ConfigMessage.mode(data)));
-            } else {
-                log.info("{}> ignore {}", deviceId, data.type());
-            }
-        } catch (JsonProcessingException e) {
-            log.error("{}> Couldn't parse MQTT config payload: {}", deviceId, e.getMessage());
+    private void updateConfig(UUID deviceId, byte[] payload) throws IOException {
+        var data = mapper.readValue(payload, ConfigMessage.class);
+        if (MSG_CONFIG_UPDATE.equals(data.type())) {
+            deviceService.updateConfig(deviceId, data)
+                .filter(updated -> updated > 0)
+                .subscribe(updated -> log.info("{}> CFG mode {}", deviceId, ConfigMessage.mode(data)));
+        } else {
+            log.info("{}> ignore {}", deviceId, data.type());
         }
     }
 
-    private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage payload) {
-        return geoService.convert(deviceId, payload)
-            .switchIfEmpty(geoService.retryConvert(deviceId, payload))
-            .doOnNext(location -> log.info("{}> {} LOC ({}, {}, {})", deviceId, payload.type(), location.latitude(),
-                location.longitude(), location.accuracy()))
+    private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage message, byte[] payload) {
+        return geoService.convert(deviceId, message)
             .doOnNext(location -> deviceService.updateLocation(deviceId, location))
-            .map(location -> LocationMessage.fromLocation(location, payload))
+            .map(location -> LocationMessage.fromLocation(location, message))
             .doOnNext(location -> publishLocation(deviceId, location))
+            .doOnNext(
+                location -> log.info("{}> {} bytes -> LOC {} ({}, {}, {})", deviceId, payload.length, message.type(),
+                    location.latitude(), location.longitude(), location.accuracy()))
             .doOnError(e -> log.error("{}> Error converting: {}", deviceId, e.getMessage()));
     }
 

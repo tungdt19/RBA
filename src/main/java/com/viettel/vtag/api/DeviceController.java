@@ -33,7 +33,7 @@ public class DeviceController {
     private final DeviceService deviceService;
     private final IotPlatformService iotPlatformService;
 
-    @GetMapping("/list")
+    @GetMapping(value = "/list", produces = "application/json;charset=UTF-8")
     public Mono<ResponseEntity<ResponseBody>> getDevices(ServerHttpRequest request) {
         return Mono.justOrEmpty(userService.checkToken(request))
             .flatMap(deviceService::getDeviceList)

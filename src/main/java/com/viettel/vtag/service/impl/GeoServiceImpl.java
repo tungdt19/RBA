@@ -1,5 +1,6 @@
 package com.viettel.vtag.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
@@ -55,13 +56,14 @@ public class GeoServiceImpl implements GeoService {
     private String backupToken = "pk.d8db6727cfb09c8bf807c36ed971577c";
 
     @Override
-    public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
-        return convert(deviceId, json, convertToken);
+    public Mono<Location> convert(WifiCellMessage json) {
+        return null;
     }
 
     @Override
-    public Mono<Location> retryConvert(UUID deviceId, WifiCellMessage json) {
-        return convert(deviceId, json, backupToken);
+    public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
+        return convert(deviceId, json, convertToken)
+            .switchIfEmpty(Mono.defer(() -> convert(deviceId, json.deviceId(deviceId), backupToken)));
     }
 
     @Override
@@ -76,6 +78,10 @@ public class GeoServiceImpl implements GeoService {
         for (var fence : fences) {
             var distance = distance(lat, lon, fence.latitude(), fence.longitude());
             boolean inFence = distance <= fence.radius();
+            if (fence.in() == null) {
+                fence.in(inFence);
+                continue;
+            }
             if (inFence) {
                 if (!fence.in()) {
                     log.info("{}: in {}", device.platformId(), fence);
@@ -129,6 +135,30 @@ public class GeoServiceImpl implements GeoService {
             .post()
             .uri(convertUri)
             .bodyValue(json.token(token))
-            .exchange();
+            .exchange()
+            .filter(response -> {
+                var status = response.statusCode();
+                var ok = status.is2xxSuccessful();
+                if (!ok) {
+                    try {
+                        log.info("{}: ({}) {} -> {}", deviceId, token, mapper.writeValueAsString(json), status);
+                    } catch (JsonProcessingException e) {
+                        log.info("{}: ({}) {} -> {}", deviceId, token, json, status);
+                    }
+                }
+                return ok;
+            })
+            .flatMap(response -> response.bodyToMono(Location.class))
+            .filter(location -> {
+                var ok = "ok".equals(location.status());
+                // if (error) {
+                try {
+                    log.info("{}: ({}) '{}' -> {}", deviceId, token, mapper.writeValueAsString(json), location);
+                } catch (JsonProcessingException e) {
+                    log.info("{}: ({}) '{}' -> {}", deviceId, token, json, location);
+                }
+                // }
+                return ok;
+            });
     }
 }

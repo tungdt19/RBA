@@ -17,8 +17,6 @@ public interface DeviceService {
 
     Mono<String> getGeoFencing(User user, UUID deviceId);
 
-    Mono<List<Device>> getAllDevices();
-
     Mono<List<Device>> getDeviceList(User user);
 
     Mono<Integer> addViewer(User user, AddViewerRequest deviceId);

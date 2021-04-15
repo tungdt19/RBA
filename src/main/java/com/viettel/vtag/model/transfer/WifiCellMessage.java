@@ -5,10 +5,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.viettel.vtag.utils.CellIdSerializer;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
 @Data
+@Slf4j
 @Accessors(fluent = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSerialize(using = CellIdSerializer.class)
@@ -42,6 +44,18 @@ public class WifiCellMessage {
         properties.put(key, value);
     }
 
+    public WifiCellMessage token(String token) {
+        this.token = token;
+        log.info("set token {}", token);
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "{" + token + ", id=" + deviceId + ", type=" + type + ", con='" + connection + ", cells=" + cells
+            + ", aps=" + aps + '}';
+    }
+
     @Data
     @Accessors(fluent = true)
     public static class Cell {
@@ -60,6 +74,11 @@ public class WifiCellMessage {
 
         @JsonProperty("SS")
         private int ss;
+
+        @Override
+        public String toString() {
+            return "{" + "cid=" + cid + ", lac=" + lac + ", mcc=" + mcc + ", mnc=" + mnc + '}';
+        }
     }
 
     @Data
@@ -71,5 +90,10 @@ public class WifiCellMessage {
 
         @JsonProperty("SS")
         private int ss;
+
+        @Override
+        public String toString() {
+            return "{" + ss + ", " + mac + '}';
+        }
     }
 }

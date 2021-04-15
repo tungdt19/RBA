@@ -1,6 +1,7 @@
 package com.viettel.vtag.api;
 
 import com.viettel.vtag.model.response.ResponseBody;
+import com.viettel.vtag.service.interfaces.AdminDeviceService;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

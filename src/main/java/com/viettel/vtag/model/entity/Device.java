@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.viettel.vtag.model.ILocation;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +65,12 @@ public class Device {
         } catch (JsonProcessingException e) {
             log.info("{}: couldn't parse json: {}", platformId, e.getMessage());
         }
+        return this;
+    }
+
+    public Device location(ILocation location) {
+        latitude = location.latitude();
+        longitude = location.longitude();
         return this;
     }
 }

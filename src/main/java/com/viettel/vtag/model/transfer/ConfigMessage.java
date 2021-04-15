@@ -38,7 +38,7 @@ public class ConfigMessage {
     private Map<String, Object> properties = new HashMap<>();
 
     public static int mode(ConfigMessage config) {
-        return config.MMC == null ? 1 : config.MMC.mode;
+        return config.MMC == null ? 0 : config.MMC.mode;
     }
 
     @JsonAnySetter
