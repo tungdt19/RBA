@@ -2,7 +2,6 @@ package com.viettel.vtag.api;
 
 import com.viettel.vtag.model.response.ResponseBody;
 import com.viettel.vtag.service.interfaces.AdminDeviceService;
-import com.viettel.vtag.service.interfaces.DeviceService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,7 @@ import static org.springframework.http.ResponseEntity.*;
 @RequestMapping("/admin")
 public class AdminController {
 
-    private final DeviceService deviceService;
+    private final AdminDeviceService deviceService;
 
     @GetMapping("/devices")
     public Mono<ResponseEntity<ResponseBody>> getAllDevices() {

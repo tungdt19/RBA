@@ -44,16 +44,9 @@ public class WifiCellMessage {
         properties.put(key, value);
     }
 
-    public WifiCellMessage token(String token) {
-        this.token = token;
-        log.info("set token {}", token);
-        return this;
-    }
-
     @Override
     public String toString() {
-        return "{" + token + ", id=" + deviceId + ", type=" + type + ", con='" + connection + ", cells=" + cells
-            + ", aps=" + aps + '}';
+        return "{" + deviceId + ", " + type + ", " + connection + ", " + cells + ", " + aps + '}';
     }
 
     @Data

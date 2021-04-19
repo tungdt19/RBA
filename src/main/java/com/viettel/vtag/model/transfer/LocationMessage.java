@@ -45,7 +45,7 @@ public class LocationMessage implements ILocation {
     }
 
     public static LocationMessage fromLocation(Location location, WifiCellMessage payload) {
-        return new LocationMessage().type("CPOS") // "C" + payload.type().substring(1)
+        return new LocationMessage().type("C" + payload.type().substring(1))
             .connection(payload.connection())
             .version(payload.version())
             .latitude(location.latitude())

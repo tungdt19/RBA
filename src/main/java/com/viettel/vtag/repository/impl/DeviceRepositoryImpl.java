@@ -109,6 +109,8 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
     @Override
     public String getGeoFencing(User user, UUID deviceId) {
         try {
+            var device = cache.get(deviceId);
+            if (device != null) return device.geoFencing();
             var sql = "SELECT d.* FROM device d INNER JOIN user_role ur ON id = ur.device_id WHERE user_id = ? "
                 + "AND platform_device_id = ?";
             return jdbc.queryForObject(sql, this, user.id(), deviceId).geoFencing();

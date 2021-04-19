@@ -148,7 +148,7 @@ public class MqttHandler implements MqttCallback {
         try {
             publisher.publish(topic, mapper.writeValueAsBytes(location));
         } catch (JsonProcessingException e) {
-            log.error("{}> Couldn't publish location {} to topic '{}'", deviceId, location, topic, e);
+            log.error("{}< Couldn't publish location {} to topic '{}'", deviceId, location, topic, e);
         }
     }
 

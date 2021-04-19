@@ -1,4 +1,4 @@
-package com.viettel.vtag.repository;
+package com.viettel.vtag.repository.cache;
 
 import com.viettel.vtag.model.entity.Device;
 import org.springframework.stereotype.Component;

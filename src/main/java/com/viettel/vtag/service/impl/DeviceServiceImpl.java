@@ -93,11 +93,6 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<List<Device>> getAllDevices() {
-        return Mono.justOrEmpty(deviceRepository.getAllDevices());
-    }
-
-    @Override
     public Mono<List<Device>> getDeviceList(User user) {
         return Mono.just(deviceRepository.getUserDevice(user));
     }

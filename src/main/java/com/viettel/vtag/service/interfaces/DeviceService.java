@@ -25,9 +25,9 @@ public interface DeviceService {
 
     Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest request);
 
-    Mono<Integer> updateGeofencing(User t1, UUID t2, List<Fence> fence);
+    Mono<Integer> updateGeofencing(User user, UUID deviceId, List<Fence> fence);
 
-    Mono<Integer> deleteGeofencing(User user, UUID uuid);
+    Mono<Integer> deleteGeofencing(User user, UUID deviceId);
 
     default Mono<String> getDeviceMessages(User user, UUID deviceId, int offset, int limit) {
         return getDeviceMessages(user, deviceId, "data,battery,wificell,devconf", offset, limit);
