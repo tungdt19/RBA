@@ -4,7 +4,7 @@ import com.google.firebase.messaging.*;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Device;
 import com.viettel.vtag.model.entity.FenceCheck;
-import com.viettel.vtag.repository.interfaces.UserRepository;
+import com.viettel.vtag.repository.interfaces.AdminDeviceRepository;
 import com.viettel.vtag.service.interfaces.FirebaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ public class FirebaseServiceImpl implements FirebaseService {
 
     private final FirebaseMessaging fcm;
     private final MessageSource messageSource;
-    private final UserRepository userRepository;
+    private final AdminDeviceRepository deviceRepository;
 
     @Override
     public void sos(Device device, ILocation location) {
@@ -32,7 +32,7 @@ public class FirebaseServiceImpl implements FirebaseService {
         var body = messageSource.getMessage("message.sos.body", new Object[] {device.name()}, locale);
 
         var notification = Notification.builder().setTitle(title).setBody(body).build();
-        var tokens = userRepository.fetchAllViewers(device.platformId());
+        var tokens = deviceRepository.getAllViewerTokens(device.platformId());
         var data = buildData(device, location, body, "ACTION_SOS");
 
         message(tokens, notification, data);
@@ -44,7 +44,7 @@ public class FirebaseServiceImpl implements FirebaseService {
         var body = messageSource.getMessage(fenceCheck.message(), fenceCheck.args(), locale);
 
         var notification = Notification.builder().setTitle(title).setBody(body).build();
-        var tokens = userRepository.fetchAllViewers(device.platformId());
+        var tokens = deviceRepository.getAllViewerTokens(device.platformId());
 
         message(tokens, notification, buildData(device, fenceCheck.location(), body, "ACTION_SAFE_ZONE"));
     }

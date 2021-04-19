@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 import static com.viettel.vtag.model.response.ResponseBody.of;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.ResponseEntity.*;
@@ -33,6 +35,11 @@ public class AdminController {
 
     @GetMapping("/history/{device-id}")
     public Mono<ResponseEntity<ResponseBody>> getDeviceHistory(@PathVariable("device-id") String deviceId) {
-        return null;
+        return Mono.justOrEmpty(UUID.fromString(deviceId))
+            .flatMap(deviceService::getDeviceHistory)
+            .doOnNext(list -> log.info("{}: his {} points", deviceId, list.size()))
+            .map(list -> ok(of(0, "Okie", list)))
+            .defaultIfEmpty(notFound().build())
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't get all devices")));
     }
 }

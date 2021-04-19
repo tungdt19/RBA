@@ -113,13 +113,6 @@ public class UserRepositoryImpl implements UserRepository {
         }
     }
 
-    @Override
-    public List<String> fetchAllViewers(UUID deviceId) {
-        var sql = "SELECT user_id, phone_no, fcm_token FROM user_role ur INNER JOIN end_user u ON u.id = ur.user_id "
-            + "INNER JOIN device d ON d.id = ur.device_id WHERE platform_device_id = ? AND fcm_token IS NOT NULL";
-        return jdbc.query(sql, new Object[] {deviceId}, (rs, rowNum) -> rs.getString("fcm_token"));
-    }
-
     private User mapUser(ResultSet rs, int i) throws SQLException {
         return new User().id(rs.getInt("id"))
             .username(rs.getString("username"))

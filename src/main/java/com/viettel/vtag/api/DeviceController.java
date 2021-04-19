@@ -104,11 +104,10 @@ public class DeviceController {
         ServerHttpRequest request
     ) {
         try {
-            var requestMono = Mono.just(new LocationHistoryRequest().deviceId(UUID.fromString(deviceId))
-                .from(LocalDateTime.parse(from))
-                .to(LocalDateTime.parse(to)));
             return Mono.justOrEmpty(userService.checkToken(request))
-                .zipWith(requestMono)
+                .zipWith(Mono.just(new LocationHistoryRequest().deviceId(UUID.fromString(deviceId))
+                    .from(LocalDateTime.parse(from))
+                    .to(LocalDateTime.parse(to))))
                 .flatMap(req -> deviceService.fetchHistory(req.getT1(), req.getT2()))
                 .map(history -> ok(of(0, "Okie dokie!", history)))
                 .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't find any history!")))
