@@ -21,8 +21,10 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.ProxyProvider;
+import reactor.netty.tcp.TcpClient;
 
 import javax.net.ssl.SSLException;
+import java.util.function.Consumer;
 
 @Data
 @Configuration
@@ -73,9 +75,8 @@ public class WebSecurityConfig {
     @Bean
     @Primary
     public HttpClient proxyHttpClient() {
-        return HttpClient.create()
-            .tcpConfiguration(
-                tcpClient -> tcpClient.proxy(proxy -> proxy.type(ProxyProvider.Proxy.HTTP).host(host).port(port)));
+        Consumer<ProxyProvider.TypeSpec> config = proxy -> proxy.type(ProxyProvider.Proxy.HTTP).host(host).port(port);
+        return HttpClient.create().tcpConfiguration(tcpClient -> tcpClient.proxy(config));
     }
 
     @Bean("insecure-httpclient")

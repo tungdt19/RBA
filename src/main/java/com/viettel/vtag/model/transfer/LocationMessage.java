@@ -37,6 +37,12 @@ public class LocationMessage implements ILocation {
     @JsonProperty
     private Integer accuracy;
 
+    @JsonProperty
+    private String message;
+
+    @JsonProperty
+    private String address;
+
     private Map<String, Object> properties = new HashMap<>();
 
     @JsonAnySetter
@@ -50,6 +56,8 @@ public class LocationMessage implements ILocation {
             .version(payload.version())
             .latitude(location.latitude())
             .longitude(location.longitude())
-            .accuracy(location.accuracy());
+            .accuracy(location.accuracy())
+            .message(location.message())
+            .address(location.address());
     }
 }

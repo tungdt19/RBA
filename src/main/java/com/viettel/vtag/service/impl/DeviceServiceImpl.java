@@ -83,18 +83,13 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Device> getDevice(User user, UUID deviceId) {
-        return Mono.justOrEmpty(deviceRepository.getUserDevice(user, deviceId));
-    }
-
-    @Override
-    public Mono<String> getGeoFencing(User user, UUID deviceId) {
-        return Mono.justOrEmpty(deviceRepository.getGeoFencing(user, deviceId));
-    }
-
-    @Override
     public Mono<List<Device>> getDeviceList(User user) {
         return Mono.just(deviceRepository.getUserDevice(user));
+    }
+
+    @Override
+    public Mono<Device> getDevice(User user, UUID deviceId) {
+        return Mono.justOrEmpty(deviceRepository.getUserDevice(user, deviceId));
     }
 
     @Override
@@ -110,6 +105,11 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest detail) {
         return Mono.just(deviceRepository.updateName(user, detail)).filter(updated -> updated > 0);
+    }
+
+    @Override
+    public Mono<String> getGeoFencing(User user, UUID deviceId) {
+        return Mono.justOrEmpty(deviceRepository.getGeoFencing(user, deviceId));
     }
 
     @Override
@@ -162,14 +162,21 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config) {
-        try {
-            var msg = new MqttMessage(mapper.writeValueAsBytes(config));
-            msg.setRetained(true);
-            publisher.publish("messages/" + deviceId + "/app/controls", msg);
-            return Mono.just(1);
-        } catch (JsonProcessingException e) {
-            return Mono.empty();
-        }
+        return Mono.fromCallable(() -> {
+            try {
+                return mapper.writeValueAsBytes(config);
+            } catch (JsonProcessingException e) {
+                return null;
+            }
+        })
+            .map(bytes -> {
+                var msg = new MqttMessage(bytes);
+                msg.setRetained(true);
+                return msg;
+            })
+            .doOnNext(msg -> publisher.publish("messages/" + deviceId + "/app/controls", msg))
+            .map(msg -> 1)
+            .onErrorReturn(1);
     }
 
     @Override
@@ -207,7 +214,6 @@ public class DeviceServiceImpl implements DeviceService {
     public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {
         return Mono.just(deviceRepository.delete(user, request.platformId()))
             .doOnNext(saved -> log.info("{}: del dvc: rs {}", request.platformId(), saved))
-            .map(deleted -> deleted > 0)
-            .filter(deleted -> deleted);
+            .map(deleted -> deleted > 0);
     }
 }

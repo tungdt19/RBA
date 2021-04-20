@@ -1,12 +1,6 @@
 package com.viettel.vtag.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.Notification;
-import com.viettel.vtag.model.entity.Fence;
-import com.viettel.vtag.model.entity.Location;
-import com.viettel.vtag.model.transfer.WifiCellMessage;
 import com.viettel.vtag.service.interfaces.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +14,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.springframework.http.ResponseEntity.*;
+import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.status;
 
 @Data
 @Slf4j
@@ -73,15 +68,6 @@ public class TestController {
         }
     }
 
-    // @GetMapping("/json")
-    // public ResponseEntity<Map<String, String>> json() {
-    // var sql = "select * from test_json where id = 1";
-    // var a = jdbc.query(sql, (rs, name) -> {
-    //     rs.get
-    //     return
-    // });
-    // }
-
     @PostMapping("/sql")
     public ResponseEntity<Map<String, Object>> sql(@RequestBody String sql) {
         try {
@@ -105,21 +91,13 @@ public class TestController {
             .getMessage();
     }
 
-    @PostMapping("/query")
-    public String query(@RequestBody String content, Locale locale) {
-        var sql = "SELECT id, content, geo_length, PG_TYPEOF(content) FROM test_json";
-        jdbc.query(sql, (rs, rowNum) -> {
-            try {
-                var id = rs.getInt("id");
-                var cont = rs.getString("content");
-                var map = new ObjectMapper().readValue(cont, new TypeReference<List<Fence>>() { });
-                var length = rs.getString("geo_length");
-                log.info("content {}", map);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-            return null;
-        });
-        return null;
+    @GetMapping("/sql")
+    public List<ResultSet> query(@RequestBody String sql) {
+        return jdbc.query(sql, (rs, rowNum) -> rs);
+    }
+
+    @PostMapping("/sql")
+    public int update(@RequestBody String sql) {
+        return jdbc.update(sql);
     }
 }

@@ -3,7 +3,7 @@ package com.viettel.vtag.repository.impl;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.transfer.BatteryMessage;
 import com.viettel.vtag.model.transfer.ConfigMessage;
-import com.viettel.vtag.repository.DeviceCache;
+import com.viettel.vtag.repository.cache.DeviceCache;
 import com.viettel.vtag.repository.interfaces.DeviceMessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

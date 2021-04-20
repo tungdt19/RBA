@@ -15,6 +15,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.util.Map;
 import java.util.UUID;
@@ -32,7 +33,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public Mono<Integer> register(RegisterRequest request) {
         var phone = PhoneUtils.standardize(request.phone());
-        return iotPlatformService.post("/api/groups", Map.of("name", phone))
+        return Mono.justOrEmpty(request.password())
+            .flatMap(s -> iotPlatformService.post("/api/groups", Map.of("name", phone)))
             .doOnNext(response -> log.info("register user {}: {}", phone, response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(entity -> entity.bodyToMono(Identity.class))
@@ -45,20 +47,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Token createToken(TokenRequest request) {
-        try {
-            var phone = PhoneUtils.standardize(request.username());
-            var user = userRepository.findByPhone(phone);
-            if (user == null || !bCrypt.matches(request.password(), user.encryptedPassword())) return null;
-
-            var token = Token.generate();
-            var updated = userRepository.saveToken(token, user.id());
-            log.info("User({}, {}, {}) -> {}", user.id(), user.phone(), user.platformId(), token);
-            return updated > 0 ? token : null;
-        } catch (Exception e) {
-            log.error("cannot create token {}", e.getMessage());
-            return null;
-        }
+    public Mono<Token> createToken(TokenRequest request) {
+        return Mono.justOrEmpty(PhoneUtils.standardize(request.username()))
+            .map(userRepository::findByPhone)
+            .filter(user -> bCrypt.matches(request.password(), user.encryptedPassword()))
+            .zipWith(Mono.justOrEmpty(Token.generate()))
+            .filter(tuple -> userRepository.saveToken(tuple.getT2(), tuple.getT1().id()) > 0)
+            .doOnNext(tuple -> {
+                var user = tuple.getT1();
+                log.info("User({}, {}, {}) -> {}", user.id(), user.phone(), user.platformId(), tuple.getT2());
+            })
+            .map(Tuple2::getT2)
+            .doOnError(e -> log.error("cannot create token {}", e.getMessage()));
     }
 
     @Override
@@ -69,9 +69,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int resetPassword(ResetPasswordRequest request) {
+    public Mono<Integer> resetPassword(ResetPasswordRequest request) {
         var phone = PhoneUtils.standardize(request.phone());
-        return userRepository.updatePassword(phone, request.password());
+        return Mono.just(userRepository.updatePassword(phone, request.password()));
     }
 
     @Override
@@ -85,8 +85,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int updateNotificationToken(User user, FcmTokenUpdateRequest request) {
-        //TODO implement this
-        return userRepository.updateNotificationToken(user, request);
+    public Mono<Integer> updateNotificationToken(User user, FcmTokenUpdateRequest request) {
+        return Mono.just(userRepository.updateNotificationToken(user, request));
     }
 }

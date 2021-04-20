@@ -7,6 +7,12 @@ spring:
     driverClassName: org.postgresql.Driver
   sms-datasource:
     driverClassName: com.mysql.jdbc.Driver
+  r2dbc:
+    pool:
+      initial-size: 100
+      max-size: 500
+      max-idle-time: 30m
+      validation-query: SELECT 1
 
 server:
   port: 8080
@@ -57,6 +63,7 @@ vtag:
     subscriber-client-id: vtag_dev_subscriber
 
 ---
+
 spring:
   profiles: test-db
   datasource:
@@ -67,6 +74,10 @@ spring:
     jdbcUrl: jdbc:mysql://127.0.0.1:3306/smssupport?useSSL=false
     username: root
     password: 1
+  r2dbc:
+    url: r2dbc:pool:mysql://127.0.0.1:3306/demo
+    username: user
+    password: password
 vtag:
   proxy:
     enable: false
@@ -127,4 +138,4 @@ vtag:
     subscriber-client-id: vtag_production_subscriber
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc
   unwired:
-    token: 284a3628cddb31
+    token: "pk.d8db6727cfb09c8bf807c36ed971577c"

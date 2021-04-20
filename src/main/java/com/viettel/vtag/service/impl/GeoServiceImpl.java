@@ -52,8 +52,6 @@ public class GeoServiceImpl implements GeoService {
     @Value("${vtag.unwired.token}")
     private String convertToken;
 
-    private String backupToken = "pk.d8db6727cfb09c8bf807c36ed971577c";
-
     @Override
     public Mono<Location> convert(WifiCellMessage json) {
         return null;
@@ -61,8 +59,8 @@ public class GeoServiceImpl implements GeoService {
 
     @Override
     public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
-        return convert(deviceId, json, convertToken)
-            .switchIfEmpty(Mono.defer(() -> convert(deviceId, json.deviceId(deviceId), backupToken)));
+        return convert(deviceId, json, convertToken);
+        // .switchIfEmpty(Mono.defer(() -> convert(deviceId, json.deviceId(deviceId), backupToken)));
     }
 
     @Override

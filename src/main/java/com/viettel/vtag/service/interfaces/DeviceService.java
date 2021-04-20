@@ -13,17 +13,17 @@ public interface DeviceService {
 
     Mono<Integer> saveUserDevice(User user, PairDeviceRequest request);
 
-    Mono<Device> getDevice(User user, UUID deviceId);
-
-    Mono<String> getGeoFencing(User user, UUID deviceId);
-
     Mono<List<Device>> getDeviceList(User user);
+
+    Mono<Device> getDevice(User user, UUID deviceId);
 
     Mono<Integer> addViewer(User user, AddViewerRequest deviceId);
 
     Mono<Integer> removeViewer(User user, RemoveViewerRequest detail);
 
     Mono<Integer> updateDeviceName(User user, ChangeDeviceNameRequest request);
+
+    Mono<String> getGeoFencing(User user, UUID deviceId);
 
     Mono<Integer> updateGeofencing(User user, UUID deviceId, List<Fence> fence);
 

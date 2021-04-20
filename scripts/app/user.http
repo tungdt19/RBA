@@ -10,7 +10,7 @@ Content-Type: application/json
 POST http://{{host}}/vtag/user/register
 Content-Type: application/json
 
-{"phone": "0365819777", "password": "test"}
+{"phone": "0365819778"}
 
 ### check token --------------------------------------------------------------------------------------------------------
 GET http://{{host}}/vtag/user/info

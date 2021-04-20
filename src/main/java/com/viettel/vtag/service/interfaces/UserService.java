@@ -11,19 +11,19 @@ public interface UserService {
 
     Mono<Integer> register(RegisterRequest request);
 
-    Token createToken(TokenRequest request);
+    Mono<Token> createToken(TokenRequest request);
 
     Mono<Integer> changePassword(User user, ChangePasswordRequest password);
 
-    int resetPassword(ResetPasswordRequest request);
+    Mono<Integer> resetPassword(ResetPasswordRequest request);
 
     Mono<Integer> delete(User user);
 
-    default User checkToken(ServerHttpRequest request) {
-        return checkUserToken(TokenUtils.getToken(request));
+    default Mono<User> checkToken(ServerHttpRequest request) {
+        return Mono.justOrEmpty(checkUserToken(TokenUtils.getToken(request)));
     }
 
     User checkUserToken(String token);
 
-    int updateNotificationToken(User user, FcmTokenUpdateRequest request);
+    Mono<Integer> updateNotificationToken(User user, FcmTokenUpdateRequest request);
 }

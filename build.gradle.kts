@@ -48,6 +48,7 @@ dependencies {
 
     implementation(spring("boot", "-starter"))
     implementation(spring("boot", "-starter-jdbc"))
+    implementation(spring("boot", "-starter-data-r2dbc"))
     implementation(spring("boot", "-starter-webflux"))
     implementation(spring("boot", "-starter-security"))
 

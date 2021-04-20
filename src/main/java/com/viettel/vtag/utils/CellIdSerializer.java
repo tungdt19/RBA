@@ -21,10 +21,10 @@ public class CellIdSerializer extends JsonSerializer<WifiCellMessage> {
         json.writeObjectField("token", value.token());
         json.writeObjectField("radio", "nb-iot"); // value.connection()
         var deviceId = value.deviceId();
+        json.writeObjectField("address", 1);
         if (deviceId != null) {
             json.writeObjectField("id", deviceId);
         }
-        // json.writeObjectField("address", 1);
 
         var cells = value.cells();
         var firstCell = cells.get(0);
