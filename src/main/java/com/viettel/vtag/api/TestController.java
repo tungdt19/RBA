@@ -68,16 +68,6 @@ public class TestController {
         }
     }
 
-    @PostMapping("/sql")
-    public ResponseEntity<Map<String, Object>> sql(@RequestBody String sql) {
-        try {
-            var updated = jdbc.update(sql);
-            return ok(Map.of("updated", updated));
-        } catch (Exception e) {
-            return status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("msg", String.valueOf(e.getMessage())));
-        }
-    }
-
     @PostMapping("/fcm")
     public String fcm(@RequestBody String content, Locale locale) {
         var title = messageSource.getMessage("message.sos.title", new Object[] { }, locale);

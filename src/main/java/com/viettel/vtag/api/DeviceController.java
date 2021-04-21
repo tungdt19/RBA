@@ -130,10 +130,8 @@ public class DeviceController {
         return userMono.doOnNext(user -> log.info("{}: unpair from user {}", detail.platformId(), user.phone()))
             .flatMap(user -> deviceService.unpairDevice(user, detail))
             .zipWith(userMono)
-            .flatMap(tuple -> Mono.just(tuple.getT1())
-                .filter(paired -> paired)
-                .flatMap(paired -> deviceService.removeUserDevice(tuple.getT2(), detail)))
-            .map(activated -> activated
+            .flatMap(tuple -> tuple.getT1() ? deviceService.removeUserDevice(tuple.getT2(), detail) : Mono.just(false))
+            .map(unpaired -> unpaired
                 ? ok(of(0, "Unpaired device successfully!"))
                 : status(BAD_GATEWAY).body(of(1, "Couldn't unpair device!")))
             .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")))
@@ -242,9 +240,10 @@ public class DeviceController {
             .zipWith(Mono.fromCallable(() -> UUID.fromString(deviceId)))
             .doOnNext(tuple -> log.info("{}: cnf {}", deviceId, tuple.getT1().platformId()))
             .flatMap(tuple -> deviceService.updateConfig(tuple.getT1(), tuple.getT2(), config))
-            .filter(updated -> updated > 0)
-            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
-            .defaultIfEmpty(badRequest().body(ResponseJson.of(1, "Couldn't apply config")))
+            .map(updated -> updated > 0
+                ? ok(ResponseJson.of(0, "Okie dokie!"))
+                : badRequest().body(ResponseJson.of(1, "Couldn't apply config")))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(ResponseJson.of(1, "Get lost, trespasser!")))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't apply config")));
     }
 }

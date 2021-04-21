@@ -1,6 +1,5 @@
 package com.viettel.vtag.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.viettel.vtag.model.entity.*;
@@ -35,7 +34,7 @@ public class DeviceServiceImpl implements DeviceService {
     private final DeviceRepository deviceRepository;
     private final IotPlatformService iotPlatformService;
     private final MqttPublisher publisher;
-    private final MqttClient mqttClient;
+    private final MqttClient subscriber;
 
     {
         var module = new SimpleModule();
@@ -48,6 +47,7 @@ public class DeviceServiceImpl implements DeviceService {
         var uuid = request.platformId();
         var device = deviceRepository.get(uuid);
         if (device != null) return Mono.empty();
+
         var endpoint = "/api/devices/" + uuid + "/group/" + user.platformId();
         return iotPlatformService.put(endpoint, request)
             .filter(response -> response.statusCode().is2xxSuccessful())
@@ -69,7 +69,7 @@ public class DeviceServiceImpl implements DeviceService {
             .filter(paired -> paired > 0)
             .doOnNext(paired -> {
                 try {
-                    mqttClient.subscribe(new String[] {
+                    subscriber.subscribe(new String[] {
                         "messages/" + device + "/data",
                         "messages/" + device + "/userdefined/battery",
                         "messages/" + device + "/userdefined/wificell",
@@ -151,24 +151,12 @@ public class DeviceServiceImpl implements DeviceService {
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(PlatformData.class))
             .map(platformData -> platformData.data().get(0).payload())
-            .map(string -> {
-                try {
-                    return mapper.readValue(string, DeviceConfig.class);
-                } catch (JsonProcessingException e) {
-                    return new DeviceConfig();
-                }
-            });
+            .flatMap(string -> Mono.fromCallable(() -> mapper.readValue(string, DeviceConfig.class)));
     }
 
     @Override
     public Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config) {
-        return Mono.fromCallable(() -> {
-            try {
-                return mapper.writeValueAsBytes(config);
-            } catch (JsonProcessingException e) {
-                return null;
-            }
-        })
+        return Mono.fromCallable(() -> mapper.writeValueAsBytes(config))
             .map(bytes -> {
                 var msg = new MqttMessage(bytes);
                 msg.setRetained(true);
@@ -176,7 +164,7 @@ public class DeviceServiceImpl implements DeviceService {
             })
             .doOnNext(msg -> publisher.publish("messages/" + deviceId + "/app/controls", msg))
             .map(msg -> 1)
-            .onErrorReturn(1);
+            .onErrorReturn(-1);
     }
 
     @Override
@@ -197,7 +185,7 @@ public class DeviceServiceImpl implements DeviceService {
             .map(response -> response.statusCode().is2xxSuccessful())
             .doOnNext(response -> {
                 try {
-                    mqttClient.unsubscribe(new String[] {
+                    subscriber.unsubscribe(new String[] {
                         "messages/" + uuid + "/data",
                         "messages/" + uuid + "/userdefined/battery",
                         "messages/" + uuid + "/userdefined/wificell",

@@ -48,18 +48,18 @@ dependencies {
 
     implementation(spring("boot", "-starter"))
     implementation(spring("boot", "-starter-jdbc"))
-    implementation(spring("boot", "-starter-data-r2dbc"))
+    // implementation(spring("boot", "-starter-data-r2dbc"))
     implementation(spring("boot", "-starter-webflux"))
     implementation(spring("boot", "-starter-security"))
 
     implementation("org.postgresql:postgresql:42.2.19")
     implementation("mysql:mysql-connector-java:5.1.49")
 
-    implementation("com.google.auth:google-auth-library-oauth2-http:0.25.2")
+    // implementation("com.google.auth:google-auth-library-oauth2-http:0.25.2")
     implementation("com.google.firebase:firebase-admin:7.1.1")
 
-    implementation("io.r2dbc:r2dbc-pool:0.8.6.RELEASE")
-    implementation("io.r2dbc:r2dbc-postgresql:0.8.7.RELEASE")
+    // implementation("io.r2dbc:r2dbc-pool:0.8.6.RELEASE")
+    // implementation("io.r2dbc:r2dbc-postgresql:0.8.7.RELEASE")
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
 
     testCompileOnly("org.projectlombok:lombok:1.18.18")

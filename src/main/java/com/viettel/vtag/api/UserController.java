@@ -83,8 +83,8 @@ public class UserController {
     @PostMapping("/token")
     public Mono<ResponseEntity<ResponseBody>> getToken(@RequestBody TokenRequest request) {
         return userService.createToken(request)
-            .map(token -> ok(of(0, "Get token successfully!", Map.of("token", token.uuid(), "expire", token.expire()))))
-            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Invalid username or password!")));
+            .map(token -> ok(of(0, "Get token successfully!", token)))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Invalid phone number or password!")));
     }
 
     /** {@link UserServiceImpl#updateNotificationToken(User, FcmTokenUpdateRequest)} */
@@ -92,38 +92,35 @@ public class UserController {
     public Mono<ResponseEntity<ResponseBody>> updateFcmToken(
         @RequestBody FcmTokenUpdateRequest detail, ServerHttpRequest request
     ) {
-        var user = userService.checkToken(request);
-        if (user == null) {
-            return Mono.just(status(UNAUTHORIZED).body(of(1, "Invalid username or password!")));
-        }
-        return userService.updateNotificationToken(user, detail)
-            .map(updated -> updated > 0 ? ok(of(0, "Okie dokie!")) : ok(of(0, "Couldn't update FCM token!")));
+        //@formatter:off
+        return userService.checkToken(request)
+            .flatMap(user -> userService.updateNotificationToken(user, detail))
+            .map(updated -> updated > 0
+                ? ok(of(0, "Okie dokie!"))
+                : ok(of(0, "Couldn't update FCM token!")))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Invalid username or password!")));
+        //@formatter:on
     }
 
     @GetMapping("/info")
-    public ResponseEntity<ResponseBody> getUserInfo(ServerHttpRequest request) {
-        var user = userService.checkToken(request);
-        if (user == null) {
-            return status(UNAUTHORIZED).body(of(1, "Your user token is invalid!"));
-        }
-        return status(OK).body(of(0, "Okie dokie!", user));
+    public Mono<ResponseEntity<ResponseBody>> getUserInfo(ServerHttpRequest request) {
+        return userService.checkToken(request)
+            .map(user -> status(OK).body(of(0, "Okie dokie!", user)))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Your user token is invalid!")));
     }
 
     @PostMapping("/password")
     public Mono<ResponseEntity<ResponseBody>> changePassword(
-        @RequestBody ChangePasswordRequest passwordRequest, ServerHttpRequest request
+        @RequestBody ChangePasswordRequest detail, ServerHttpRequest request
     ) {
-        var user = userService.checkToken(request);
-        if (user == null) {
-            return Mono.just(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")));
-        }
-
-        return userService.changePassword(user, passwordRequest)
+        return userService.checkToken(request)
+            .flatMap(user -> userService.changePassword(user, detail))
             .map(changed -> changed > 0
                 ? ok(of(0, "Changed password successfully!"))
                 : badRequest().body(of(1, "Couldn't changed password!")))
-            .defaultIfEmpty(badRequest().body(of(1, "Couldn't change password!")))
-            .onErrorContinue((e, o) -> status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't change password!")));
+            .doOnError(e -> log.error("Couldn't change password {}: {}", detail, e.getMessage()))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't change password!")));
     }
 
     /** {@see UserServiceImpl#resetPassword} */
@@ -133,7 +130,7 @@ public class UserController {
             .map(reset -> reset > 0
                 ? ok(of(0, "Changed password successfully!"))
                 : badRequest().body(of(1, "Couldn't reset password!")))
-            .doOnError(e -> log.error("Couldn't reset password {}: {}", e.getMessage(), detail))
+            .doOnError(e -> log.error("Couldn't reset password {}: {}", detail, e.getMessage()))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't reset password!")));
     }
 
@@ -144,11 +141,15 @@ public class UserController {
 
     @DeleteMapping
     public Mono<ResponseEntity<ResponseBody>> deleteUser(ServerHttpRequest request) {
-        var user = userService.checkToken(request);
-        return userService.delete(user)
-            .map(deleted -> ok(of(0, "Delete user successfully!")))
-            .defaultIfEmpty(ok(of(1, "Couldn't delete user!")))
-            .onErrorContinue(Exception.class, (e, o) -> status(INTERNAL_SERVER_ERROR).body(
-                of(1, "Couldn't delete user!", Map.of("detail", String.valueOf(e.getMessage())))));
+        //@formatter:off
+        return userService.checkToken(request)
+            .flatMap(userService::delete)
+            .map(deleted -> deleted > 0
+                ? ok(of(0, "Delete user successfully!"))
+                : ok(of(1, "Couldn't delete user!")))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")))
+            .doOnError(e -> log.error("Couldn't delete user!", e))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't delete user!")));
+        //@formatter:on
     }
 }

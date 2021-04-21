@@ -1,5 +1,6 @@
 package com.viettel.vtag.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -10,7 +11,10 @@ import java.util.UUID;
 @Accessors(fluent = true)
 public class Token {
 
+    @JsonProperty("token")
     private UUID uuid;
+
+    @JsonProperty
     private LocalDateTime expire;
 
     public static Token generate() {
