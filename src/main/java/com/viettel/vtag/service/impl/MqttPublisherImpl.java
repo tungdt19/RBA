@@ -35,4 +35,13 @@ public class MqttPublisherImpl implements MqttPublisher {
             log.error("Couldn't pub {} bytes to {}", message.getPayload().length, topic);
         }
     }
+
+    @Override
+    public void publish(String topic, byte[] payload, int qos, boolean retain) {
+        try {
+            client.publish(topic, payload, qos, retain);
+        } catch (MqttException e) {
+            log.error("Couldn't pub {} bytes to {}", payload.length, topic);
+        }
+    }
 }

@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -155,16 +154,11 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config) {
+    public Mono<Boolean> updateConfig(User user, UUID deviceId, DeviceConfig config) {
         return Mono.fromCallable(() -> mapper.writeValueAsBytes(config))
-            .map(bytes -> {
-                var msg = new MqttMessage(bytes);
-                msg.setRetained(true);
-                return msg;
-            })
-            .doOnNext(msg -> publisher.publish("messages/" + deviceId + "/app/controls", msg))
-            .map(msg -> 1)
-            .onErrorReturn(-1);
+            .doOnNext(payload -> publisher.publish("messages/" + deviceId + "/app/controls", payload, 1, true))
+            .thenReturn(true)
+            .onErrorReturn(false);
     }
 
     @Override
@@ -197,6 +191,7 @@ public class DeviceServiceImpl implements DeviceService {
             .filter(unpaired -> unpaired);
         //@formatter:on
     }
+
 
     @Override
     public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {

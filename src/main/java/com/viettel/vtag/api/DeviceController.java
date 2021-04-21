@@ -240,7 +240,7 @@ public class DeviceController {
             .zipWith(Mono.fromCallable(() -> UUID.fromString(deviceId)))
             .doOnNext(tuple -> log.info("{}: cnf {}", deviceId, tuple.getT1().platformId()))
             .flatMap(tuple -> deviceService.updateConfig(tuple.getT1(), tuple.getT2(), config))
-            .map(updated -> updated > 0
+            .map(updated -> updated
                 ? ok(ResponseJson.of(0, "Okie dokie!"))
                 : badRequest().body(ResponseJson.of(1, "Couldn't apply config")))
             .defaultIfEmpty(status(UNAUTHORIZED).body(ResponseJson.of(1, "Get lost, trespasser!")))

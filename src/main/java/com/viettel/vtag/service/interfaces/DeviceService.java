@@ -37,7 +37,7 @@ public interface DeviceService {
 
     Mono<DeviceConfig> getConfig(User user, UUID deviceId);
 
-    Mono<Integer> updateConfig(User user, UUID deviceId, DeviceConfig config);
+    Mono<Boolean> updateConfig(User user, UUID deviceId, DeviceConfig config);
 
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 
