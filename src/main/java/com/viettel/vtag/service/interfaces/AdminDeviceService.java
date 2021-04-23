@@ -13,5 +13,7 @@ public interface AdminDeviceService {
 
     Mono<List<LocationHistory>> getDeviceHistory(UUID device);
 
-    Mono<List<String>> getAllViewerTokens(UUID deviceId);
+    Mono<List<String>> getDeviceNotificationTokens(UUID deviceId);
+
+    Mono<String> getAllPlatformDevices();
 }

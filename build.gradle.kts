@@ -3,7 +3,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
     java
-    distribution
+    idea
     id("org.springframework.boot") version "2.3.4.RELEASE"
     id("io.spring.dependency-management") version "1.0.10.RELEASE"
 }
@@ -40,13 +40,16 @@ fun spring(project: String, module: String = ""): String {
 }
 
 dependencies {
-    compileOnly("org.projectlombok:lombok:1.18.18")
-    annotationProcessor("org.projectlombok:lombok:1.18.18")
+    "org.projectlombok:lombok:1.18.20".let {
+        compileOnly(it)
+        annotationProcessor(it)
+        testCompileOnly(it)
+        testAnnotationProcessor(it)
+    }
 
     compileOnly(spring("boot", "-configuration-processor"))
     annotationProcessor(spring("boot", "-configuration-processor"))
 
-    implementation(spring("boot", "-starter"))
     implementation(spring("boot", "-starter-jdbc"))
     // implementation(spring("boot", "-starter-data-r2dbc"))
     implementation(spring("boot", "-starter-webflux"))
@@ -55,15 +58,11 @@ dependencies {
     implementation("org.postgresql:postgresql:42.2.19")
     implementation("mysql:mysql-connector-java:5.1.49")
 
-    // implementation("com.google.auth:google-auth-library-oauth2-http:0.25.2")
     implementation("com.google.firebase:firebase-admin:7.1.1")
 
     // implementation("io.r2dbc:r2dbc-pool:0.8.6.RELEASE")
     // implementation("io.r2dbc:r2dbc-postgresql:0.8.7.RELEASE")
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
-
-    testCompileOnly("org.projectlombok:lombok:1.18.18")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.18")
 
     testImplementation(spring("boot", "-starter-test"))
     testImplementation("com.github.javafaker:javafaker:1.0.2")
@@ -71,13 +70,4 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-}
-
-distributions {
-    main {
-        distributionBaseName.set(rootProject.name)
-        contents {
-            from("src/", "scripts/")
-        }
-    }
 }

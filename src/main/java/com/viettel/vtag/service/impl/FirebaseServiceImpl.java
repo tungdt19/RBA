@@ -20,8 +20,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class FirebaseServiceImpl implements FirebaseService {
 
-    private static final Locale locale = Locale.forLanguageTag("vi-VN");
-
+    private final Locale locale;
     private final FirebaseMessaging fcm;
     private final MessageSource messageSource;
     private final AdminDeviceRepository deviceRepository;
@@ -31,8 +30,8 @@ public class FirebaseServiceImpl implements FirebaseService {
         var title = messageSource.getMessage("message.sos.title", new Object[] { }, locale);
         var body = messageSource.getMessage("message.sos.body", new Object[] {device.name()}, locale);
 
-        var notification = Notification.builder().setTitle(title).setBody(body).build();
         var tokens = deviceRepository.getAllViewerTokens(device.platformId());
+        var notification = Notification.builder().setTitle(title).setBody(body).build();
         var data = buildData(device, location, body, "ACTION_SOS");
 
         message(tokens, notification, data);
@@ -52,12 +51,14 @@ public class FirebaseServiceImpl implements FirebaseService {
     @Override
     public BatchResponse message(List<String> tokens, Notification notification, Map<String, String> data) {
         try {
+            if (tokens == null) {
+                log.error("couldn't get any user");
+                return null;
+            }
+
             if (tokens.isEmpty()) {
-                tokens = List.of(
-                    "euMOCUPWbURrjXzAR0uh7b:APA91bEEhZCz8nDABGnQ8ar6tybZWMgdDzb2wrfJqRlUGAwa9TMCj3Fk9nKLEgSas"
-                        + "-otKgPYExeY9oWkDXTvzAYRL5nJ5TV8Ql8M6zGo2EQSUmXobsULDPhpSfF2YrxGu5nMklsCZW4a",
-                    "en7DxvC6SG-q-gEO3LQTeP:APA91bGZDQvHRMlZf84OsfQDMw658IS2D1tqHNO4u8XRKNssSIK-NAjSwhl_pqKrNik8WgzQY"
-                        + "-BSMfXmFaQFCLtP6BH9Y8FC610biJfi2s1gcc2fVrMGfWa6JJEIakdXCNhweMAIiEA6");
+                log.error("no watcher");
+                return null;
             }
 
             var response = fcm.sendMulticast(buildMulticastMessage(tokens, notification, data));

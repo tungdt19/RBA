@@ -1,6 +1,7 @@
 package com.viettel.vtag.api;
 
 import com.google.firebase.messaging.Notification;
+import com.viettel.vtag.model.response.ObjectResponse;
 import com.viettel.vtag.service.interfaces.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -16,10 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.ResultSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
@@ -82,12 +80,40 @@ public class TestController {
     }
 
     @GetMapping("/sql")
-    public List<ResultSet> query(@RequestBody String sql) {
-        return jdbc.query(sql, (rs, rowNum) -> rs);
+    public ObjectResponse query(@RequestBody String sql) {
+        try {
+            var result = jdbc.query(sql, rs -> {
+                var metadata = rs.getMetaData();
+                var columnCount = metadata.getColumnCount();
+
+                var list = new ArrayList<>();
+                while (rs.next()) {
+                    var row = new HashMap<String, Object>();
+                    for (int i = 1; i <= columnCount; i++) {
+                        row.put(metadata.getColumnName(i), rs.getObject(i));
+                    }
+                    list.add(row);
+                }
+                return list;
+            });
+
+            log.info("SQL\n\t{}\n  -> return {} row(s)", sql.replace("\n", "\n\t"), result.size());
+            return ObjectResponse.of(0, "OK!", result);
+        } catch (Exception e) {
+            log.error("SQL\n\t{}\n  -> {}", sql, e.getMessage());
+            return ObjectResponse.of(1, e.getMessage());
+        }
     }
 
     @PostMapping("/sql")
-    public int update(@RequestBody String sql) {
-        return jdbc.update(sql);
+    public ObjectResponse update(@RequestBody String sql) {
+        try {
+            var updated = jdbc.update(sql);
+            log.info("SQL\n\t{}\n  -> updated {} row(s)", sql.replace("\n", "\n\t"), updated);
+            return ObjectResponse.of(0, "Updated" + updated + " row(s)!");
+        } catch (Exception e) {
+            log.error("SQL\n\t{}\n  -> {}", sql, e.getMessage());
+            return ObjectResponse.of(1, e.getMessage());
+        }
     }
 }

@@ -4,7 +4,7 @@ import com.viettel.vtag.model.entity.OTP;
 
 public interface OtpRepository {
 
-    int save(OTP otp, String phone);
+    int save(String phone, OTP otp);
 
     void clearOldOtp();
 }

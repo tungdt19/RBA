@@ -2,8 +2,9 @@ package com.viettel.vtag.model.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRawValue;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
 @Data
@@ -11,7 +12,7 @@ import lombok.experimental.Accessors;
 @RequiredArgsConstructor
 @Accessors(fluent = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResponseJson {
+public class ObjectResponse {
 
     @JsonProperty
     private final int code;
@@ -19,14 +20,14 @@ public class ResponseJson {
     @JsonProperty
     private final String message;
 
-    @JsonRawValue
-    private String json;
+    @JsonProperty
+    private Object data;
 
-    public static ResponseJson of(int code, String message) {
-        return new ResponseJson(code, message);
+    public static ObjectResponse of(int code, String message) {
+        return new ObjectResponse(code, message);
     }
 
-    public static ResponseJson of(int code, String message, String data) {
-        return new ResponseJson(code, message, data);
+    public static ObjectResponse of(int code, String message, Object data) {
+        return new ObjectResponse(code, message, data);
     }
 }

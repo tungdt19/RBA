@@ -1,6 +1,7 @@
 package com.viettel.vtag.api;
 
-import com.viettel.vtag.model.response.ResponseBody;
+import com.viettel.vtag.model.response.JsonResponse;
+import com.viettel.vtag.model.response.ObjectResponse;
 import com.viettel.vtag.service.interfaces.AdminDeviceService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-import static com.viettel.vtag.model.response.ResponseBody.of;
+import static com.viettel.vtag.model.response.ObjectResponse.of;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.ResponseEntity.*;
 
@@ -25,7 +26,7 @@ public class AdminController {
     private final AdminDeviceService deviceService;
 
     @GetMapping("/devices")
-    public Mono<ResponseEntity<ResponseBody>> getAllDevices() {
+    public Mono<ResponseEntity<ObjectResponse>> getAllDevices() {
         return deviceService.getAllDevices()
             .doOnNext(list -> log.info("Get all {} devices", list.size()))
             .map(list -> ok(of(0, "Okie", list)))
@@ -33,8 +34,15 @@ public class AdminController {
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't get all devices")));
     }
 
+
+    @GetMapping(value = "/all", produces = "application/json;charset=UTF-8")
+    public Mono<ResponseEntity<JsonResponse>> getAllDeviceFromPlatform() {
+        return deviceService.getAllPlatformDevices()
+            .map(content -> ok(JsonResponse.of(0, "Okie dokie!", content)));
+    }
+
     @GetMapping("/history/{device-id}")
-    public Mono<ResponseEntity<ResponseBody>> getDeviceHistory(@PathVariable("device-id") String deviceId) {
+    public Mono<ResponseEntity<ObjectResponse>> getDeviceHistory(@PathVariable("device-id") String deviceId) {
         return Mono.justOrEmpty(UUID.fromString(deviceId))
             .flatMap(deviceService::getDeviceHistory)
             .doOnNext(list -> log.info("{}: his {} points", deviceId, list.size()))

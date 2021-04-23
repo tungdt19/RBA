@@ -123,12 +123,8 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<Integer> deleteGeofencing(User user, UUID deviceId) {
-        try {
-            return Mono.just(deviceRepository.deleteGeoFencing(user, deviceId));
-        } catch (Exception e) {
-            log.error("error deleting geo-fencing {}", e.getMessage());
-            return Mono.empty();
-        }
+        return Mono.just(deviceRepository.deleteGeoFencing(user, deviceId))
+            .doOnError(e -> log.error("error deleting geo-fencing {}", e.getMessage()));
     }
 
     @Override

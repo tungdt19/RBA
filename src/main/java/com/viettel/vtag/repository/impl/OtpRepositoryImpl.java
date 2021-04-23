@@ -13,7 +13,7 @@ public class OtpRepositoryImpl implements OtpRepository {
     private final JdbcTemplate jdbc;
 
     @Override
-    public int save(OTP otp, String phone) {
+    public int save(String phone, OTP otp) {
         var sql = "INSERT INTO otp(phone, otp, expired_instant) VALUES (?, ?, ?)";
         return jdbc.update(sql, phone, otp.content(), otp.expiredInstant());
     }

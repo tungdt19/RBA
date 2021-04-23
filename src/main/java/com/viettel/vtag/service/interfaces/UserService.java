@@ -19,11 +19,7 @@ public interface UserService {
 
     Mono<Integer> delete(User user);
 
-    default Mono<User> checkToken(ServerHttpRequest request) {
-        return Mono.justOrEmpty(checkUserToken(TokenUtils.getToken(request)));
-    }
-
-    User checkUserToken(String token);
+    Mono<User> checkToken(ServerHttpRequest request);
 
     Mono<Integer> updateNotificationToken(User user, FcmTokenUpdateRequest request);
 }

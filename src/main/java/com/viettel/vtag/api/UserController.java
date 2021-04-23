@@ -2,7 +2,7 @@ package com.viettel.vtag.api;
 
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
-import com.viettel.vtag.model.response.ResponseBody;
+import com.viettel.vtag.model.response.ObjectResponse;
 import com.viettel.vtag.service.impl.UserServiceImpl;
 import com.viettel.vtag.service.interfaces.OtpService;
 import com.viettel.vtag.service.interfaces.UserService;
@@ -14,9 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Locale;
-import java.util.Map;
 
-import static com.viettel.vtag.model.response.ResponseBody.of;
+import static com.viettel.vtag.model.response.ObjectResponse.of;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.ResponseEntity.*;
 
@@ -30,24 +29,17 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/otp/register")
-    public ResponseEntity<ResponseBody> registerOtp(@RequestBody OtpRequest request, Locale locale) {
-        try {
-            var otp = otpService.generateRegisterOtp(request);
-            if (otp == null) {
-                return status(CONFLICT).body(of(1, "User's already existed!"));
-            }
-
-            otpService.sendOtp(request, otp, locale);
-            return ok(of(0, "Created OTP successfully!", otp));
-        } catch (Exception e) {
-            var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP", detail));
-        }
+    public Mono<ResponseEntity<ObjectResponse>> registerOtp(@RequestBody OtpRequest request, Locale locale) {
+        return otpService.sendRegisterOtp(request, locale)
+            .map(otp -> ok(of(0, "Created OTP successfully!", otp)))
+            .defaultIfEmpty(status(CONFLICT).body(of(1, "User's already existed!")))
+            .doOnError(e -> log.error("Couldn't send OTP: {}", e.getMessage()))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP")));
     }
 
     /** {@link UserServiceImpl#register} */
     @PostMapping("/register")
-    public Mono<ResponseEntity<ResponseBody>> register(@RequestBody RegisterRequest request) {
+    public Mono<ResponseEntity<ObjectResponse>> register(@RequestBody RegisterRequest request) {
         return userService.register(request)
             .map(registered -> {
                 switch (registered) {
@@ -61,27 +53,19 @@ public class UserController {
     }
 
     @PostMapping("/otp/reset")
-    public ResponseEntity<ResponseBody> resetOtp(@RequestBody OtpRequest request, Locale locale) {
-        try {
-            var otp = otpService.generateResetOtp(request);
-            if (otp == null) {
-                return status(NOT_FOUND).body(of(1, "User does not exist!"));
-            }
-
-            otpService.sendOtp(request, otp, locale);
-            var data = Map.of("otp", otp.content(), "expire", otp.expiredInstant());
-            return ok(of(0, "Created OTP successfully!", data));
-        } catch (Exception e) {
-            var detail = Map.of("detail", String.valueOf(e.getMessage()));
-            return status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP", detail));
-        }
+    public Mono<ResponseEntity<ObjectResponse>> resetOtp(@RequestBody OtpRequest request, Locale locale) {
+        return otpService.sendResetOtp(request, locale)
+            .map(otp -> ok(of(0, "Created OTP successfully!", otp)))
+            .defaultIfEmpty(status(NOT_FOUND).body(of(1, "User does not exist!")))
+            .doOnError(e -> log.error("Couldn't send OTP: {}", e.getMessage()))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP")));
     }
 
     /**
      * {@link UserServiceImpl#createToken}
      */
     @PostMapping("/token")
-    public Mono<ResponseEntity<ResponseBody>> getToken(@RequestBody TokenRequest request) {
+    public Mono<ResponseEntity<ObjectResponse>> getToken(@RequestBody TokenRequest request) {
         return userService.createToken(request)
             .map(token -> ok(of(0, "Get token successfully!", token)))
             .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Invalid phone number or password!")));
@@ -89,7 +73,7 @@ public class UserController {
 
     /** {@link UserServiceImpl#updateNotificationToken(User, FcmTokenUpdateRequest)} */
     @PostMapping("/notification")
-    public Mono<ResponseEntity<ResponseBody>> updateFcmToken(
+    public Mono<ResponseEntity<ObjectResponse>> updateFcmToken(
         @RequestBody FcmTokenUpdateRequest detail, ServerHttpRequest request
     ) {
         //@formatter:off
@@ -97,20 +81,20 @@ public class UserController {
             .flatMap(user -> userService.updateNotificationToken(user, detail))
             .map(updated -> updated > 0
                 ? ok(of(0, "Okie dokie!"))
-                : ok(of(0, "Couldn't update FCM token!")))
+                : ok(of(1, "Couldn't update FCM token!")))
             .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Invalid username or password!")));
         //@formatter:on
     }
 
     @GetMapping("/info")
-    public Mono<ResponseEntity<ResponseBody>> getUserInfo(ServerHttpRequest request) {
+    public Mono<ResponseEntity<ObjectResponse>> getUserInfo(ServerHttpRequest request) {
         return userService.checkToken(request)
             .map(user -> status(OK).body(of(0, "Okie dokie!", user)))
             .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Your user token is invalid!")));
     }
 
     @PostMapping("/password")
-    public Mono<ResponseEntity<ResponseBody>> changePassword(
+    public Mono<ResponseEntity<ObjectResponse>> changePassword(
         @RequestBody ChangePasswordRequest detail, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -125,7 +109,7 @@ public class UserController {
 
     /** {@see UserServiceImpl#resetPassword} */
     @PostMapping("/password/reset")
-    public Mono<ResponseEntity<ResponseBody>> resetPassword(@RequestBody ResetPasswordRequest detail) {
+    public Mono<ResponseEntity<ObjectResponse>> resetPassword(@RequestBody ResetPasswordRequest detail) {
         return userService.resetPassword(detail)
             .map(reset -> reset > 0
                 ? ok(of(0, "Changed password successfully!"))
@@ -135,12 +119,12 @@ public class UserController {
     }
 
     @DeleteMapping("/token")
-    public ResponseEntity<ResponseBody> signout(ServerHttpRequest request) {
+    public ResponseEntity<ObjectResponse> signout(ServerHttpRequest request) {
         return badRequest().body(of(1, "Couldn't delete token!"));
     }
 
     @DeleteMapping
-    public Mono<ResponseEntity<ResponseBody>> deleteUser(ServerHttpRequest request) {
+    public Mono<ResponseEntity<ObjectResponse>> deleteUser(ServerHttpRequest request) {
         //@formatter:off
         return userService.checkToken(request)
             .flatMap(userService::delete)

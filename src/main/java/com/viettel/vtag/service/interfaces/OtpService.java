@@ -1,15 +1,13 @@
 package com.viettel.vtag.service.interfaces;
 
-import com.viettel.vtag.model.entity.OTP;
 import com.viettel.vtag.model.request.OtpRequest;
+import reactor.core.publisher.Mono;
 
 import java.util.Locale;
 
 public interface OtpService {
 
-    OTP generateResetOtp(OtpRequest request);
+    Mono<Boolean> sendRegisterOtp(OtpRequest request, Locale locale);
 
-    OTP generateRegisterOtp(OtpRequest request);
-
-    void sendOtp(OtpRequest request, OTP otp, Locale locale);
+    Mono<Boolean> sendResetOtp(OtpRequest request, Locale locale);
 }

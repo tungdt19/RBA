@@ -9,9 +9,11 @@ import com.viettel.vtag.repository.interfaces.UserRepository;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
 import com.viettel.vtag.utils.PhoneUtils;
+import com.viettel.vtag.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -80,8 +82,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User checkUserToken(String token) {
-        return userRepository.findByToken(token);
+    public Mono<User> checkToken(ServerHttpRequest request) {
+        //@formatter:off
+        return Mono.justOrEmpty(TokenUtils.getToken(request))
+            .flatMap(token -> {
+                try {
+                    return Mono.just(UUID.fromString(token));
+                } catch (Exception e) {
+                    return Mono.empty();
+                }
+            })
+            .map(userRepository::findByToken);
+        //@formatter:on
     }
 
     @Override

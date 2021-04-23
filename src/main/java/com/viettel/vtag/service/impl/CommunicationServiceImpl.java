@@ -2,7 +2,6 @@ package com.viettel.vtag.service.impl;
 
 import com.viettel.vtag.model.request.OtpRequest;
 import com.viettel.vtag.service.interfaces.CommunicationService;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -24,26 +23,25 @@ public class CommunicationServiceImpl implements CommunicationService {
     }
 
     @Override
-    public void send(OtpRequest request, String content) {
+    public int send(OtpRequest request, String content) {
         switch (request.type()) {
             case "phone":
-                sendSms(request.value(), content);
-                break;
+                return sendSms(request.value(), content);
             case "email":
-                sendEmail(request.value(), content);
-                break;
+                return sendEmail(request.value(), content);
         }
+        return 0;
     }
 
     @Override
-    public void sendSms(String recipient, String content) {
+    public int sendSms(String recipient, String content) {
         var sql = "INSERT INTO sms (phone, content, sent) VALUES (?, ?, ?)";
-        jdbc.update(sql, recipient, content, 0);
+        return jdbc.update(sql, recipient, content, 0);
     }
 
     @Override
-    public void sendEmail(String recipient, String content) {
-
+    public int sendEmail(String recipient, String content) {
+        return 0;
     }
 
     private void sendSms(String[] recipients, String content) {

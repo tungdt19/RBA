@@ -31,7 +31,12 @@ public class Application {
         var ms = new ReloadableResourceBundleMessageSource();
         ms.setBasename("classpath:messages");
         ms.setDefaultEncoding("UTF-8");
-        ms.setDefaultLocale(Locale.ENGLISH);
+        ms.setDefaultLocale(defaultLocale());
         return ms;
+    }
+
+    @Bean
+    public Locale defaultLocale() {
+        return Locale.forLanguageTag("vi-VN");
     }
 }

@@ -2,8 +2,8 @@ package com.viettel.vtag.api;
 
 import com.viettel.vtag.model.entity.Fence;
 import com.viettel.vtag.model.request.*;
-import com.viettel.vtag.model.response.ResponseBody;
-import com.viettel.vtag.model.response.ResponseJson;
+import com.viettel.vtag.model.response.JsonResponse;
+import com.viettel.vtag.model.response.ObjectResponse;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
@@ -19,7 +19,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 
-import static com.viettel.vtag.model.response.ResponseBody.of;
+import static com.viettel.vtag.model.response.ObjectResponse.of;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.ResponseEntity.*;
 
@@ -34,7 +34,7 @@ public class DeviceController {
     private final IotPlatformService iotPlatformService;
 
     @PostMapping("/pair")
-    public Mono<ResponseEntity<ResponseBody>> pairDevice(
+    public Mono<ResponseEntity<ObjectResponse>> pairDevice(
         @RequestBody PairDeviceRequest detail, ServerHttpRequest request
     ) {
         var userMono = userService.checkToken(request);
@@ -51,7 +51,7 @@ public class DeviceController {
     }
 
     @GetMapping(value = "/list", produces = "application/json;charset=UTF-8")
-    public Mono<ResponseEntity<ResponseBody>> getDevices(ServerHttpRequest request) {
+    public Mono<ResponseEntity<ObjectResponse>> getDevices(ServerHttpRequest request) {
         return userService.checkToken(request)
             .flatMap(deviceService::getDeviceList)
             .map(devices -> ok(of(0, "Okie dokie!", devices)))
@@ -61,7 +61,7 @@ public class DeviceController {
     }
 
     @PostMapping("/viewer")
-    public Mono<ResponseEntity<ResponseBody>> addViewer(
+    public Mono<ResponseEntity<ObjectResponse>> addViewer(
         @RequestBody AddViewerRequest detail, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -73,7 +73,7 @@ public class DeviceController {
     }
 
     @DeleteMapping("/viewer")
-    public Mono<ResponseEntity<ResponseBody>> deleteViewer(
+    public Mono<ResponseEntity<ObjectResponse>> deleteViewer(
         @RequestBody RemoveViewerRequest detail, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -86,7 +86,7 @@ public class DeviceController {
     }
 
     @PutMapping("/name")
-    public Mono<ResponseEntity<ResponseBody>> updateName(
+    public Mono<ResponseEntity<ObjectResponse>> updateName(
         @RequestBody ChangeDeviceNameRequest detail, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -99,31 +99,27 @@ public class DeviceController {
     }
 
     @GetMapping("/history")
-    public Mono<ResponseEntity<ResponseBody>> history(
+    public Mono<ResponseEntity<ObjectResponse>> history(
         @RequestParam("device_id") String deviceId,
         @RequestParam String from,
         @RequestParam String to,
         ServerHttpRequest request
     ) {
-        try {
-            return userService.checkToken(request)
-                .zipWith(Mono.just(new LocationHistoryRequest().deviceId(UUID.fromString(deviceId))
-                    .from(LocalDateTime.parse(from))
-                    .to(LocalDateTime.parse(to))))
-                .flatMap(req -> deviceService.fetchHistory(req.getT1(), req.getT2()))
-                .map(history -> ok(of(0, "Okie dokie!", history)))
-                .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't find any history!")))
-                .doOnError(e -> log.error("Error fetching history", e))
-                .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
-        } catch (IllegalArgumentException e) {
-            return Mono.just(badRequest().body(of(1, "Invalid device id!")));
-        } catch (DateTimeParseException e) {
-            return Mono.just(badRequest().body(of(1, "Invalid date time format!")));
-        }
+        return userService.checkToken(request)
+            .zipWith(Mono.just(new LocationHistoryRequest().deviceId(UUID.fromString(deviceId))
+                .from(LocalDateTime.parse(from))
+                .to(LocalDateTime.parse(to))))
+            .flatMap(req -> deviceService.fetchHistory(req.getT1(), req.getT2()))
+            .map(history -> ok(of(0, "Okie dokie!", history)))
+            .defaultIfEmpty(status(NOT_FOUND).body(of(1, "Couldn't find any history!")))
+            .doOnError(e -> log.error("Error fetching history", e))
+            .onErrorReturn(IllegalArgumentException.class, badRequest().body(of(1, "Invalid device id!")))
+            .onErrorReturn(DateTimeParseException.class, badRequest().body(of(1, "Invalid date time format!")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
     }
 
     @PostMapping("/unpair")
-    public Mono<ResponseEntity<ResponseBody>> unpairDevice(
+    public Mono<ResponseEntity<ObjectResponse>> unpairDevice(
         @RequestBody PairDeviceRequest detail, ServerHttpRequest request
     ) {
         var userMono = userService.checkToken(request);
@@ -139,7 +135,7 @@ public class DeviceController {
     }
 
     @GetMapping("/messages")
-    public Mono<ResponseEntity<ResponseJson>> getMessages(
+    public Mono<ResponseEntity<JsonResponse>> getMessages(
         @RequestParam("device_id") String deviceId,
         @RequestParam("offset") int offset,
         @RequestParam("limit") int limit,
@@ -148,12 +144,12 @@ public class DeviceController {
         return userService.checkToken(request)
             .zipWith(Mono.fromCallable(() -> UUID.fromString(deviceId)))
             .flatMap(tuple -> deviceService.getDeviceMessages(tuple.getT1(), tuple.getT2(), offset, limit))
-            .map(content -> ok(ResponseJson.of(0, "Okie dokie!").json(content)))
-            .defaultIfEmpty(status(NO_CONTENT).body(ResponseJson.of(1, "Couldn't get any response")));
+            .map(content -> ok(JsonResponse.of(0, "Okie dokie!", content)))
+            .defaultIfEmpty(status(NO_CONTENT).body(JsonResponse.of(1, "Couldn't get any response")));
     }
 
     @GetMapping("/{device_id}")
-    public Mono<ResponseEntity<ResponseBody>> getDevice(
+    public Mono<ResponseEntity<ObjectResponse>> getDevice(
         @PathVariable("device_id") String deviceId, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -168,7 +164,7 @@ public class DeviceController {
     }
 
     @GetMapping(value = "/geo/{device_id}", produces = "application/json;charset=UTF-8")
-    public Mono<ResponseEntity<ResponseJson>> getGeoFencing(
+    public Mono<ResponseEntity<JsonResponse>> getGeoFencing(
         @PathVariable("device_id") String deviceId, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -176,14 +172,14 @@ public class DeviceController {
             .doOnNext(tuple -> log.info("update geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
             .flatMap(tuple -> deviceService.getGeoFencing(tuple.getT1(), tuple.getT2()))
             .doOnNext(updated -> log.info("{}: geo get {}", deviceId, updated))
-            .map(content -> ok(ResponseJson.of(0, "Okie dokie!", content)))
-            .defaultIfEmpty(badRequest().body(ResponseJson.of(1, "Couldn't get geo-fencing")))
+            .map(content -> ok(JsonResponse.of(0, "Okie dokie!", content)))
+            .defaultIfEmpty(badRequest().body(JsonResponse.of(1, "Couldn't get geo-fencing")))
             .doOnError(e -> log.error("{}: geo get {}", deviceId, e.getMessage(), e))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't get geo-fencing")));
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(JsonResponse.of(1, "Couldn't get geo-fencing")));
     }
 
     @PutMapping(value = "/geo/{device_id}", produces = "application/json;charset=UTF-8")
-    public Mono<ResponseEntity<ResponseJson>> updateGeoFencingList(
+    public Mono<ResponseEntity<JsonResponse>> updateGeoFencingList(
         @PathVariable("device_id") String deviceId, @RequestBody List<Fence> fences, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -192,13 +188,13 @@ public class DeviceController {
             .flatMap(tuple -> deviceService.updateGeofencing(tuple.getT1(), tuple.getT2(), fences))
             .doOnNext(updated -> log.info("{}: geo updated {}", deviceId, updated))
             .filter(updated -> updated > 0)
-            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
-            .defaultIfEmpty(badRequest().body(ResponseJson.of(1, "Couldn't update geo-fencing")))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't update geo-fencing")));
+            .map(content -> ok(JsonResponse.of(0, "Okie dokie!")))
+            .defaultIfEmpty(badRequest().body(JsonResponse.of(1, "Couldn't update geo-fencing")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(JsonResponse.of(1, "Couldn't update geo-fencing")));
     }
 
     @DeleteMapping("/geo/{device_id}")
-    public Mono<ResponseEntity<ResponseJson>> deleteGeoFencing(
+    public Mono<ResponseEntity<JsonResponse>> deleteGeoFencing(
         @PathVariable("device_id") String deviceId, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -206,34 +202,26 @@ public class DeviceController {
             .doOnNext(tuple -> log.info("delete geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
             .flatMap(tuple -> deviceService.deleteGeofencing(tuple.getT1(), tuple.getT2()))
             .filter(updated -> updated > 0)
-            .map(content -> ok(ResponseJson.of(0, "Okie dokie!")))
-            .defaultIfEmpty(badRequest().body(ResponseJson.of(1, "Couldn't delete geo-fencing")))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't delete geo-fencing")));
-    }
-
-    @GetMapping(value = "/all", produces = "application/json;charset=UTF-8")
-    public Mono<ResponseEntity<ResponseJson>> getAllDeviceFromPlatform() {
-        return iotPlatformService.get("/api/devices")
-            .doOnNext(response -> log.info("all devices {}", response.statusCode()))
-            .flatMap(response -> response.bodyToMono(String.class))
-            .map(content -> ok(ResponseJson.of(0, "Okie dokie!", content)));
+            .map(content -> ok(JsonResponse.of(0, "Okie dokie!")))
+            .defaultIfEmpty(badRequest().body(JsonResponse.of(1, "Couldn't delete geo-fencing")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(JsonResponse.of(1, "Couldn't delete geo-fencing")));
     }
 
     @GetMapping("/config/{device_id}")
-    public Mono<ResponseEntity<ResponseBody>> getDeviceConfig(
+    public Mono<ResponseEntity<ObjectResponse>> getDeviceConfig(
         @PathVariable("device_id") String deviceId, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
             .zipWith(Mono.fromCallable(() -> UUID.fromString(deviceId)))
             .doOnNext(tuple -> log.info("{}: cnf {}", deviceId, tuple.getT1().platformId()))
             .flatMap(tuple -> deviceService.getConfig(tuple.getT1(), tuple.getT2()))
-            .map(s -> ok(ResponseBody.of(0, "Okie dokie!", s)))
-            .defaultIfEmpty(badRequest().body(ResponseBody.of(1, "Couldn't get device config")))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseBody.of(1, "Couldn't get device config")));
+            .map(s -> ok(ObjectResponse.of(0, "Okie dokie!", s)))
+            .defaultIfEmpty(badRequest().body(ObjectResponse.of(1, "Couldn't get device config")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ObjectResponse.of(1, "Couldn't get device config")));
     }
 
     @PostMapping("/config/{device_id}")
-    public Mono<ResponseEntity<ResponseJson>> configDevice(
+    public Mono<ResponseEntity<JsonResponse>> configDevice(
         @PathVariable("device_id") String deviceId, @RequestBody DeviceConfig config, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
@@ -241,9 +229,9 @@ public class DeviceController {
             .doOnNext(tuple -> log.info("{}: cnf {}", deviceId, tuple.getT1().platformId()))
             .flatMap(tuple -> deviceService.updateConfig(tuple.getT1(), tuple.getT2(), config))
             .map(updated -> updated
-                ? ok(ResponseJson.of(0, "Okie dokie!"))
-                : badRequest().body(ResponseJson.of(1, "Couldn't apply config")))
-            .defaultIfEmpty(status(UNAUTHORIZED).body(ResponseJson.of(1, "Get lost, trespasser!")))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(ResponseJson.of(1, "Couldn't apply config")));
+                ? ok(JsonResponse.of(0, "Okie dokie!"))
+                : badRequest().body(JsonResponse.of(1, "Couldn't apply config")))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(JsonResponse.of(1, "Get lost, trespasser!")))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(JsonResponse.of(1, "Couldn't apply config")));
     }
 }

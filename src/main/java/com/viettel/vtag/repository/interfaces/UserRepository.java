@@ -4,6 +4,8 @@ import com.viettel.vtag.model.entity.Token;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.FcmTokenUpdateRequest;
 
+import java.util.UUID;
+
 public interface UserRepository {
 
     User find(String token);
@@ -24,5 +26,5 @@ public interface UserRepository {
 
     int updateNotificationToken(User user, FcmTokenUpdateRequest request);
 
-    User findByToken(String token);
+    User findByToken(UUID token);
 }
