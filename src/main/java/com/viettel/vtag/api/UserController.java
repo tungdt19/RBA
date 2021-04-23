@@ -32,7 +32,7 @@ public class UserController {
     public Mono<ResponseEntity<ObjectResponse>> registerOtp(@RequestBody OtpRequest request, Locale locale) {
         return otpService.sendRegisterOtp(request, locale)
             .map(otp -> ok(of(0, "Created OTP successfully!", otp)))
-            .defaultIfEmpty(status(CONFLICT).body(of(1, "User's already existed!")))
+            .defaultIfEmpty(badRequest().body(of(1, "Couldn't create OTP!")))
             .doOnError(e -> log.error("Couldn't send OTP: {}", e.getMessage()))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP")));
     }
@@ -56,7 +56,7 @@ public class UserController {
     public Mono<ResponseEntity<ObjectResponse>> resetOtp(@RequestBody OtpRequest request, Locale locale) {
         return otpService.sendResetOtp(request, locale)
             .map(otp -> ok(of(0, "Created OTP successfully!", otp)))
-            .defaultIfEmpty(status(NOT_FOUND).body(of(1, "User does not exist!")))
+            .defaultIfEmpty(badRequest().body(of(1, "Couldn't create OTP")))
             .doOnError(e -> log.error("Couldn't send OTP: {}", e.getMessage()))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP")));
     }

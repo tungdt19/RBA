@@ -122,14 +122,12 @@ public class MqttHandler implements MqttCallback {
     }
 
     private void updateConfig(UUID deviceId, byte[] payload) throws IOException {
-        var data = mapper.readValue(payload, ConfigMessage.class);
-        if (MSG_CONFIG_UPDATE.equals(data.type())) {
-            deviceService.updateConfig(deviceId, data)
+        Mono.fromCallable(() -> mapper.readValue(payload, ConfigMessage.class))
+            .filter(data -> MSG_CONFIG_UPDATE.equals(data.type()))
+            .doOnNext(data -> deviceService.updateConfig(deviceId, data)
                 .filter(updated -> updated > 0)
-                .subscribe(updated -> log.info("{}> CFG mode {}", deviceId, ConfigMessage.mode(data)));
-        } else {
-            log.info("{}> ignore {}", deviceId, data.type());
-        }
+                .subscribe(updated -> log.info("{}> CFG mode {}", deviceId, ConfigMessage.mode(data))))
+            .subscribe();
     }
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage message, byte[] payload) {

@@ -53,10 +53,10 @@ public class OtpServiceImpl implements OtpService {
     }
 
     @Override
-    public Mono<Boolean> sendRegisterOtp(OtpRequest request, Locale locale) {
+    public Mono<OTP> sendRegisterOtp(OtpRequest request, Locale locale) {
         return generateOtp(request, phone -> userRepository.findByPhone(phone) == null)
             .doOnNext(otp -> log.info("{} -> {}", request, otp))
-            .map(otp -> {
+            .filter(otp -> {
                 var params = new Object[] {otp.content(), otp.expiredInstant()};
                 var message = messageSource.getMessage("message.otp.register", params, locale);
                 return communicationService.send(request, message) > 0;
@@ -64,10 +64,10 @@ public class OtpServiceImpl implements OtpService {
     }
 
     @Override
-    public Mono<Boolean> sendResetOtp(OtpRequest request, Locale locale) {
+    public Mono<OTP> sendResetOtp(OtpRequest request, Locale locale) {
         return generateOtp(request, phone -> userRepository.findByPhone(phone) != null)
             .doOnNext(otp -> log.info("{} -> {}", request, otp))
-            .map(otp -> {
+            .filter(otp -> {
                 var params = new Object[] {otp.content(), otp.expiredInstant()};
                 var message = messageSource.getMessage("message.otp.reset", params, locale);
                 return communicationService.send(request, message) > 0;

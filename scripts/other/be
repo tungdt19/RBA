@@ -11,7 +11,7 @@ echo "--------------------------------------------------------------------------
 
 PORT="8080"
 PROFILE="production"
-FOLDER="/home/vht/be"
+FOLDER="/home/vht/be/vtag"
 BASE_NAME="iot-vtag"
 CONTAINER="vtag.be"
 IMAGE="vtag/be"
@@ -30,10 +30,10 @@ read -r _ VERSION <<< "${BASH_REMATCH[@]}"
 dockerfile() {
   echo "--> Create Dockerfile at '$FOLDER/$MODULE'"
   {
-    echo "FROM openjdk"
+    echo 'FROM openjdk'
     echo 'LABEL maintainer="duclm22@viettel.com.vn"'
     echo "COPY ./$BASE_NAME-$VERSION.jar /"
-    echo 'RUN echo "Asia/Ho_Chi_Minh" > /etc/timezone'
+    echo 'ENV TZ "Asia/Ho_Chi_Minh"'
     echo 'RUN echo "10.55.123.124 api.iotcloud.com.vn iotcloud.com.vn" > /etc/hosts'
     echo "CMD [\"java\", \"-jar\", \"/$BASE_NAME-$VERSION.jar\", \"-Dspring.profiles.active=$PROFILE\"]"
   } > "$FOLDER/$MODULE/Dockerfile"

@@ -87,7 +87,7 @@ CREATE TRIGGER update_device_location_trigger
     BEFORE INSERT OR UPDATE
     ON device FROM location_history INITIALLY DEFERRED --     [ FOR [ EACH ] { ROW | STATEMENT } ]
 --     [ WHEN ( condition ) ]
-EXECUTE PROCEDURE update_device_location_function(arguments)
+EXECUTE PROCEDURE update_device_location_function(arguments);
 
 
 ------------------------------------------------------------------------------------------------------------------------
