@@ -86,7 +86,8 @@ public class IotPlatformServiceImpl implements IotPlatformService {
             .map(platformToken::update)
             .doOnNext(token -> log.info("Platform token {}", platformToken))
             .doOnError(e -> log.error("Couldn't get token from platform!", e))
-            .switchIfEmpty(Mono.defer(this::fetchToken));
+            .switchIfEmpty(Mono.defer(this::fetchToken))
+            .onErrorResume(e -> Mono.defer(this::fetchToken));
     }
 
     @Override

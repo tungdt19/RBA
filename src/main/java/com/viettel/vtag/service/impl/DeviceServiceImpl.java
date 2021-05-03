@@ -2,6 +2,7 @@ package com.viettel.vtag.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.transfer.PlatformData;
@@ -21,6 +22,9 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static com.viettel.vtag.service.impl.GeoServiceImpl.distance;
 
 @Data
 @Slf4j
@@ -44,13 +48,9 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public Mono<Boolean> pairDevice(User user, PairDeviceRequest request) {
         var uuid = request.platformId();
-        var device = deviceRepository.get(uuid);
-        if (device != null) return Mono.empty();
-
-        var endpoint = "/api/devices/" + uuid + "/group/" + user.platformId();
-        return iotPlatformService.put(endpoint, request)
+        return iotPlatformService.put("/api/devices/" + uuid + "/group/" + user.platformId(), request)
+            .doOnNext(response -> log.info("{}: {} {}", uuid, "/group", response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
-            .doOnNext(response -> log.info("{}: {}", endpoint, response.statusCode()))
             .flatMap(ok -> iotPlatformService.post("/api/devices/" + uuid + "/active", Map.of("Type", "MAD")))
             .doOnNext(response -> log.info("{}: atv {}", uuid, response.statusCode()))
             .map(response -> response.statusCode().is2xxSuccessful());
@@ -83,12 +83,12 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Mono<List<Device>> getDeviceList(User user) {
-        return Mono.just(deviceRepository.getUserDevice(user));
+        return Mono.just(deviceRepository.getUserDevices(user));
     }
 
     @Override
     public Mono<Device> getDevice(User user, UUID deviceId) {
-        return Mono.justOrEmpty(deviceRepository.getUserDevice(user, deviceId));
+        return Mono.justOrEmpty(deviceRepository.getUserDevices(user, deviceId));
     }
 
     @Override
@@ -163,6 +163,16 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
+    public Mono<List<Device>> findLocaleDevices(ILocation location) {
+        return Mono.justOrEmpty(deviceRepository.getLocaleDevices(location))
+            .map(devices -> devices.stream()
+                .filter(
+                    device -> distance(device.latitude(), device.longitude(), location.latitude(), location.longitude())
+                        < 50)
+                .collect(Collectors.toList()));
+    }
+
+    @Override
     public Mono<Boolean> unpairDevice(User user, PairDeviceRequest request) {
         //@formatter:off
         var uuid = request.platformId();
@@ -187,7 +197,6 @@ public class DeviceServiceImpl implements DeviceService {
             .filter(unpaired -> unpaired);
         //@formatter:on
     }
-
 
     @Override
     public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {

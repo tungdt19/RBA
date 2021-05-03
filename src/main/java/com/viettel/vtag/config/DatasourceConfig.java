@@ -13,7 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
 
 @Configuration
-public class DatasourceConfiguration {
+public class DatasourceConfig {
 
     @Primary
     @Bean("primary-db")

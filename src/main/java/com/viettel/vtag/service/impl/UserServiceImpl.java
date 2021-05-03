@@ -89,6 +89,7 @@ public class UserServiceImpl implements UserService {
                 try {
                     return Mono.just(UUID.fromString(token));
                 } catch (Exception e) {
+                    log.error("Couldn't parse token {}: {}", token, e.getMessage());
                     return Mono.empty();
                 }
             })

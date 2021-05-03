@@ -74,20 +74,20 @@ CREATE TABLE IF NOT EXISTS device_history (
 );
 
 ------------------------------------------------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION update_device_location_function() RETURNS TRIGGER
-    LANGUAGE plpgsql AS
+CREATE OR REPLACE FUNCTION update_device_location() RETURNS TRIGGER AS
 $$
 BEGIN
-    INSERT INTO device(last_lat, last_lon, accuracy) VALUES (new.lat, new.lon, new.accuracy);
+    INSERT INTO location_history(device_id, latitude, longitude, accuracy)
+    VALUES (new.id, new.last_lat, new.last_lon, new.accuracy);
+
     RETURN new;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_device_location_trigger
-    BEFORE INSERT OR UPDATE
-    ON device FROM location_history INITIALLY DEFERRED --     [ FOR [ EACH ] { ROW | STATEMENT } ]
---     [ WHEN ( condition ) ]
-EXECUTE PROCEDURE update_device_location_function(arguments);
+    BEFORE INSERT OR UPDATE OF last_lat, last_lon
+    ON device FROM location_history INITIALLY DEFERRED
+EXECUTE PROCEDURE update_device_location();
 
 
 ------------------------------------------------------------------------------------------------------------------------

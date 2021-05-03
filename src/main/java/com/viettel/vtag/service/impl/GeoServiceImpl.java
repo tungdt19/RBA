@@ -74,7 +74,7 @@ public class GeoServiceImpl implements GeoService {
         var check = new FenceCheck();
         for (var fence : fences) {
             var distance = distance(lat, lon, fence.latitude(), fence.longitude());
-            boolean inFence = distance <= fence.radius();
+            var inFence = distance <= fence.radius();
             if (fence.in() == null) {
                 fence.in(inFence);
                 continue;

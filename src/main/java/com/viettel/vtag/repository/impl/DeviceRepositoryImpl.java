@@ -2,6 +2,7 @@ package com.viettel.vtag.repository.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.repository.cache.DeviceCache;
@@ -88,22 +89,28 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
     }
 
     @Override
-    public List<UUID> fetchAllDevices() {
+    public List<UUID> getAllPlatformId() {
         var sql = "SELECT platform_device_id FROM device WHERE platform_device_id IS NOT NULL";
         return jdbc.query(sql, (rs, rowNum) -> rs.getObject("platform_device_id", UUID.class));
     }
 
     @Override
-    public List<Device> getUserDevice(User user) {
+    public List<Device> getUserDevices(User user) {
         var sql = "SELECT d.* FROM device d INNER JOIN user_role ur ON d.id = ur.device_id WHERE user_id = ?";
         return jdbc.query(sql, this, user.id());
     }
 
     @Override
-    public Device getUserDevice(User user, UUID deviceId) {
+    public Device getUserDevices(User user, UUID deviceId) {
         var sql = "SELECT d.* FROM device d INNER JOIN user_role ur ON d.id = ur.device_id WHERE user_id = ? "
             + "AND platform_device_id = ?";
         return jdbc.queryForObject(sql, this, user.id(), deviceId);
+    }
+
+    @Override
+    public List<Device> getLocaleDevices(ILocation location) {
+        var sql = "SELECT * FROM device d WHERE ABS(last_lat - ?) < 0.001 AND ABS(last_lon - ?) < 0.001";
+        return jdbc.query(sql, this, location.latitude(), location.longitude());
     }
 
     @Override

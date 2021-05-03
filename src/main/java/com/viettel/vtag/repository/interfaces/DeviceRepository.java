@@ -1,5 +1,6 @@
 package com.viettel.vtag.repository.interfaces;
 
+import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
 
@@ -24,11 +25,13 @@ public interface DeviceRepository {
 
     List<Device> getAllDevices();
 
-    List<UUID> fetchAllDevices();
+    List<UUID> getAllPlatformId();
 
-    List<Device> getUserDevice(User user);
+    List<Device> getUserDevices(User user);
 
-    Device getUserDevice(User user, UUID deviceId);
+    Device getUserDevices(User user, UUID deviceId);
+
+    List<Device> getLocaleDevices(ILocation location);
 
     String getGeoFencing(User user, UUID deviceId);
 

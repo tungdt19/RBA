@@ -135,10 +135,10 @@ public class MqttHandler implements MqttCallback {
             .doOnNext(location -> deviceService.updateLocation(deviceId, location))
             .map(location -> LocationMessage.fromLocation(location, message))
             .doOnNext(location -> publishLocation(deviceId, location))
-            .doOnNext(
-                location -> log.info("{}> {} bytes -> LOC {} ({}, {}, {})", deviceId, payload.length, message.type(),
-                    location.latitude(), location.longitude(), location.accuracy()))
-            .doOnError(e -> log.error("{}> Error converting: {}", deviceId, e.getMessage()));
+            .doOnNext(location -> log.info("{}> {} bytes ({}, {}) -> {} ({}, {}, {})", deviceId, payload.length,
+                message.cells().size(), message.aps().size(), message.type(), location.latitude(), location.longitude(),
+                location.accuracy()))
+            .doOnError(e -> log.error("{}> Error converting: {}\n\t{}", deviceId, e.getMessage(), payload));
     }
 
     private void publishLocation(UUID deviceId, LocationMessage location) {

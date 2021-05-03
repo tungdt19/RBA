@@ -5,7 +5,6 @@ import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.JsonResponse;
 import com.viettel.vtag.model.response.ObjectResponse;
 import com.viettel.vtag.service.interfaces.DeviceService;
-import com.viettel.vtag.service.interfaces.IotPlatformService;
 import com.viettel.vtag.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +30,6 @@ public class DeviceController {
 
     private final UserService userService;
     private final DeviceService deviceService;
-    private final IotPlatformService iotPlatformService;
 
     @PostMapping("/pair")
     public Mono<ResponseEntity<ObjectResponse>> pairDevice(
@@ -43,6 +41,7 @@ public class DeviceController {
             .zipWith(userMono)
             .doOnNext(t2 -> log.info("{}: paired to {}: {}", detail.platformId(), t2.getT2().phone(), t2.getT1()))
             .flatMap(t2 -> deviceService.saveUserDevice(t2.getT2(), detail))
+            .doOnNext(activated -> log.info("{}: pair {}", detail.platformId(), activated))
             .map(activated -> activated > 0
                 ? ok(of(0, "Paired device successfully!"))
                 : badRequest().body(of(1, "Couldn't pair device!")))
@@ -56,7 +55,7 @@ public class DeviceController {
             .flatMap(deviceService::getDeviceList)
             .map(devices -> ok(of(0, "Okie dokie!", devices)))
             .defaultIfEmpty(status(EXPECTATION_FAILED).body(of(1, "Couldn't get user's devices")))
-            .doOnError(throwable -> log.error("Couldn't get user's devices", throwable))
+            .doOnError(throwable -> log.error("Couldn't get user's devices: {}", throwable.getMessage()))
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't get user's devices")));
     }
 
@@ -186,7 +185,7 @@ public class DeviceController {
             .zipWith(Mono.fromCallable(() -> UUID.fromString(deviceId)))
             .doOnNext(tuple -> log.info("update geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
             .flatMap(tuple -> deviceService.updateGeofencing(tuple.getT1(), tuple.getT2(), fences))
-            .doOnNext(updated -> log.info("{}: geo updated {}", deviceId, updated))
+            .doOnNext(updated -> log.info("{}: geo ({}) updated {}", deviceId, fences.size(), updated))
             .filter(updated -> updated > 0)
             .map(content -> ok(JsonResponse.of(0, "Okie dokie!")))
             .defaultIfEmpty(badRequest().body(JsonResponse.of(1, "Couldn't update geo-fencing")))

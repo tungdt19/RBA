@@ -3,7 +3,9 @@ package com.viettel.vtag.api;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.ObjectResponse;
+import com.viettel.vtag.model.transfer.GpsMessage;
 import com.viettel.vtag.service.impl.UserServiceImpl;
+import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.OtpService;
 import com.viettel.vtag.service.interfaces.UserService;
 import lombok.AllArgsConstructor;
@@ -27,6 +29,7 @@ public class UserController {
 
     private final OtpService otpService;
     private final UserService userService;
+    private final DeviceService deviceService;
 
     @PostMapping("/otp/register")
     public Mono<ResponseEntity<ObjectResponse>> registerOtp(@RequestBody OtpRequest request, Locale locale) {
@@ -121,6 +124,15 @@ public class UserController {
     @DeleteMapping("/token")
     public ResponseEntity<ObjectResponse> signout(ServerHttpRequest request) {
         return badRequest().body(of(1, "Couldn't delete token!"));
+    }
+
+    @PostMapping("/location")
+    public Mono<ResponseEntity<ObjectResponse>> updateLocation(
+        @RequestBody GpsMessage detail, ServerHttpRequest request
+    ) {
+        return userService.checkToken(request)
+            .flatMap(user -> deviceService.findLocaleDevices(detail))
+            .map(user -> ok(of(0, "test")));
     }
 
     @DeleteMapping

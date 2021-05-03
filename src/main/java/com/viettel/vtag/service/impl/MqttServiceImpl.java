@@ -21,8 +21,8 @@ public class MqttServiceImpl implements MqttService {
     @PostConstruct
     public void subscribeExistedDevices() {
         //@formatter:off
-        var uuids = deviceRepository.fetchAllDevices();
-        log.info("Subscribing to topics: {}", uuids);
+        var uuids = deviceRepository.getAllPlatformId();
+        log.info("Subscribing to {} devices' topics", uuids.size());
         for (var uuid : uuids) {
             try {
                 subscriber.subscribe(new String[] {

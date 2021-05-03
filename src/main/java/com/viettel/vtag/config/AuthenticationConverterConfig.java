@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AuthenticationConverter implements ServerAuthenticationConverter {
+public class AuthenticationConverterConfig implements ServerAuthenticationConverter {
 
     private static final String BEARER = "Bearer ";
 

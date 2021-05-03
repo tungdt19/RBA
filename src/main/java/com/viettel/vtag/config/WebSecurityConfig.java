@@ -1,5 +1,6 @@
 package com.viettel.vtag.config;
 
+import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import lombok.Data;
@@ -21,7 +22,6 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.ProxyProvider;
-import reactor.netty.tcp.TcpClient;
 
 import javax.net.ssl.SSLException;
 import java.util.function.Consumer;
@@ -59,7 +59,7 @@ public class WebSecurityConfig {
     }
 
     private AuthenticationWebFilter deviceAuthenticationFilter() {
-        var filter = new AuthenticationWebFilter(new BearerTokenAuthenticationManager());
+        var filter = new AuthenticationWebFilter(new AuthenticationManagerConfig());
 
         filter.setServerAuthenticationConverter(authenticationConverter);
         filter.setRequiresAuthenticationMatcher(ServerWebExchangeMatchers.pathMatchers("/device/**"));
@@ -82,6 +82,7 @@ public class WebSecurityConfig {
     @Bean("insecure-httpclient")
     public HttpClient httpClient() throws SSLException {
         var sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-        return HttpClient.create().secure(t -> t.sslContext(sslContext));
+        return HttpClient.create().secure(t -> t.sslContext(sslContext))
+            .tcpConfiguration(tcpClient -> tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 100_000));
     }
 }
