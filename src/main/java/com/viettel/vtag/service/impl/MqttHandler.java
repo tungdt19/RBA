@@ -81,8 +81,9 @@ public class MqttHandler implements MqttCallback {
         var gps = mapper.readValue(payload, LocationMessage.class);
         if (MSG_POSITION.equals(gps.type())) {
             deviceService.updateLocation(deviceId, gps)
-                .subscribe(updated -> log.info("{}> {} bytes -> GPS ({}, {}) at {}: {}", deviceId, payload.length,
-                    gps.latitude(), gps.longitude(), gps.timestamp(), updated));
+                .subscribe(
+                    updated -> log.info("{}> {} bytes -> {} ({}, {}) at {}: {}", deviceId, payload.length, gps.type(),
+                        gps.latitude(), gps.longitude(), gps.timestamp(), updated));
         }
     }
 

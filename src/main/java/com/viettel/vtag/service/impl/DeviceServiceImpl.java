@@ -166,9 +166,7 @@ public class DeviceServiceImpl implements DeviceService {
     public Mono<List<Device>> findLocaleDevices(ILocation location) {
         return Mono.justOrEmpty(deviceRepository.getLocaleDevices(location))
             .map(devices -> devices.stream()
-                .filter(
-                    device -> distance(device.latitude(), device.longitude(), location.latitude(), location.longitude())
-                        < 50)
+                .filter(d -> distance(d.latitude(), d.longitude(), location.latitude(), location.longitude()) < 50)
                 .collect(Collectors.toList()));
     }
 

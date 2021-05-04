@@ -15,8 +15,6 @@ public class GpsMessage implements ILocation {
     @JsonProperty("lon")
     private double longitude;
 
-    @Override
-    public Integer accuracy() {
-        return null;
-    }
+    @JsonProperty
+    private Integer accuracy;
 }

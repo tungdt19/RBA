@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Locale;
+import java.util.Map;
 
 import static com.viettel.vtag.model.response.ObjectResponse.of;
 import static org.springframework.http.HttpStatus.*;
@@ -132,7 +133,7 @@ public class UserController {
     ) {
         return userService.checkToken(request)
             .flatMap(user -> deviceService.findLocaleDevices(detail))
-            .map(user -> ok(of(0, "test")));
+            .map(devices -> ok(of(0, "OK!", Map.of("device_count", devices.size()))));
     }
 
     @DeleteMapping

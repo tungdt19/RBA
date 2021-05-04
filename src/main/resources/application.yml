@@ -122,7 +122,7 @@ spring:
     username: postgres
     password: 1
   sms-datasource:
-    jdbcUrl: jdbc:mysql://10.60.19.18:3306/smssupport?useSSL=false
+    jdbcUrl: jdbc:mysql://10.60.19.18:3306/smssupport?useSSL=false&characterEncoding=UTF-8
     username: hrmuser
     password: 123456a@
 vtag:
@@ -138,5 +138,5 @@ vtag:
     subscriber-client-id: vtag_production_subscriber
     password: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MTc0MzUxODQsImlzcyI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInN1YiI6ImVlMjExNjkwLWQ0ZDktNGZjNS04MTgzLWQ0ZjQyY2Y4OWU2MyIsInR5cGUiOjJ9.NO8vjM_vdV2vFM93ktIGXMMLdy6WzK_eJrNkWvDNylc
   unwired:
-    token: "pk.468b938e3f35386bc28f6762138e929f"
-#    token: "pk.d8db6727cfb09c8bf807c36ed971577c"
+#    token: "pk.468b938e3f35386bc28f6762138e929f"
+    token: "pk.d8db6727cfb09c8bf807c36ed971577c"
