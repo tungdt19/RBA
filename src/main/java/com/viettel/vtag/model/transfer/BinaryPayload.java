@@ -3,33 +3,46 @@ package com.viettel.vtag.model.transfer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.Arrays;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 @Data
 @Accessors(fluent = true)
 public class BinaryPayload {
 
-    private final byte[] payload;
-    private final int length;
-    private int pointer;
+    private static final byte[] HEX = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+    public final ByteBuffer buffer;
 
     public BinaryPayload(byte[] payload) {
-        this.payload = payload;
-        this.length = payload.length;
-        this.pointer = 0;
+        this.buffer = ByteBuffer.wrap(payload);
     }
 
     public static void main(String[] args) {
-        var content = new byte[] {0x11, 0x63, 0x13, (byte) 0xCE, 0x11, 0x1D, (byte) 0xC1, 0x00, (byte) 0xC2, 0x03,
-            0x30, 0x34, (byte) 0xC5, (byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0xDD, (byte) 0xEE, (byte) 0xFF,
-            0x0F, (byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, 0x0F, (byte) 0xAA,
-            (byte) 0xBB, (byte) 0xCC, (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, 0x0F};
-        printBytes(content);
-        // var payload = new BinaryPayload(content);
+        // var content = new byte[] {(byte) 0x4C, (byte) 0x65, (byte) 0x20, (byte) 0x4D, (byte) 0x69, (byte) 0x6E,
+        //     (byte) 0x68, (byte) 0x20, (byte) 0x44, (byte) 0x75, (byte) 0x63};
+        var content = new byte[] {(byte) 0x11, (byte) 0x63, (byte) 0x13, (byte) 0x00, (byte) 0xCE, (byte) 0x11,
+            (byte) 0x1D, (byte) 0x1A, (byte) 0xC1, (byte) 0x03, (byte) 0x30, (byte) 0x34, (byte) 0xC5, (byte) 0xAA,
+            (byte) 0xBB, (byte) 0xCC, (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, (byte) 0x0F, (byte) 0xAA, (byte) 0xBB,
+            (byte) 0xCC, (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, (byte) 0x0F, (byte) 0xAA, (byte) 0xBB, (byte) 0xCC,
+            (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, (byte) 0x0F, (byte) 0x4C, (byte) 0x65, (byte) 0x20, (byte)
+           0x4D, (byte) 0x69, (byte) 0x6E,
+                    (byte) 0x68, (byte) 0x20, (byte) 0x44, (byte) 0x75, (byte) 0x63};
+        var payload = new BinaryPayload(content);
+        var s1 = payload.getString(34);
+        var string = payload.getString(11);
+        System.out.println(string);
+
+        printBytes("Le Minh Duc".getBytes(StandardCharsets.UTF_8));
+    }
+
+    public String getString(int length) {
+        var bytes = new byte[length];
+        buffer.get(bytes);
+        return new String(bytes);
     }
 
     public static void printBytes(byte[] bytes) {
-        System.out.println(bytes.length);
         for (int i = 0; i < bytes.length; i++) {
             System.out.format("%02X ", bytes[i]);
 
@@ -40,30 +53,39 @@ public class BinaryPayload {
                 System.out.println();
             }
         }
-    }
-
-    byte[] getBytes(int from, int to) {
-        var length = to - from + 1;
-        var bytes = new byte[length];
-        System.arraycopy(payload, from, bytes, 0, length);
-        return bytes;
+        System.out.println();
     }
 
     public String getMAC() {
-        return getMAC(pointer);
+        var sb = new byte[18];
+        var bytes = new byte[6];
+        this.buffer.get(bytes);
+        for (var i = 0; i < 6; i++) {
+            var b = bytes[i] & 0xFF;
+            sb[i * 3] = HEX[b >> 4];
+            sb[i * 3 + 1] = HEX[b & 0x0F];
+            sb[i * 3 + 2] = ':';
+        }
+        return new String(sb, 0, 17);
     }
 
-    public String getMAC(int from) {
-        return "";
+    public byte get() {
+        return buffer.get();
     }
 
-    public int getInt(int bitSize) {
-        var integer = getInt(pointer, bitSize);
-        pointer += bitSize;
-        return integer;
+    public char getChar() {
+        return buffer.getChar();
     }
 
-    public int getInt(int from, int bitSize) {
-        return 0;
+    public long getLong() {
+        return buffer.getLong();
+    }
+
+    public float getFloat() {
+        return buffer.getFloat();
+    }
+
+    public double getDouble() {
+        return buffer.getDouble();
     }
 }

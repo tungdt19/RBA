@@ -68,9 +68,15 @@ CREATE TABLE IF NOT EXISTS location_history (
 
 
 CREATE TABLE IF NOT EXISTS device_history (
-    device_id       INT,
-    platform_id     UUID,
-    trigger_instant TIMESTAMP
+    device_id          INT,
+    platform_device_id UUID,
+    platform_group_id  UUID,
+    trigger_instant    TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_history (
+    user_id INT,
+
 );
 
 ------------------------------------------------------------------------------------------------------------------------

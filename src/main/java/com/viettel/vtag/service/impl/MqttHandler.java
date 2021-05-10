@@ -10,7 +10,6 @@ import com.viettel.vtag.service.interfaces.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -37,7 +36,6 @@ public class MqttHandler implements MqttCallback {
     private final DeviceRepository deviceRepository;
     private final FirebaseService firebaseService;
     private final GeoService geoService;
-    private final MessageSource messageSource;
 
     /** @see MqttCallback#connectionLost(Throwable) */
     @Override
@@ -88,38 +86,41 @@ public class MqttHandler implements MqttCallback {
     }
 
     private void handleWifiCellMessage(UUID deviceId, byte[] payload) throws IOException {
-        var data = mapper.readValue(payload, WifiCellMessage.class);
-        var type = data.type();
-        var device = deviceRepository.get(deviceId);
-        switch (type) {
-            case MSG_SOS:
-                convertWifiCell(deviceId, data, payload).doOnNext(device::location)
-                    .subscribe(location -> firebaseService.sos(device, location));
-                break;
-            case MSG_WIFI_CELL:
-                convertWifiCell(deviceId, data, payload).doOnNext(device::location)
-                    .map(location -> geoService.checkFencing(device, location))
-                    .filter(FenceCheck::change)
-                    .subscribe(fence -> firebaseService.notifySafeZone(device, fence));
-                // fenceCheck.subscribe(fence -> {
-                //     var message = messageSource.getMessage(fence.message(), fence.args(), Locale.ENGLISH);
-                //     publisher.publish("messages/" + deviceId + "/data", message.getBytes(StandardCharsets.UTF_8));
-                // });
-                break;
-            case MSG_TIME_REQUEST:
-                log.info("{}> {} bytes -> DTIME", deviceId, payload.length);
-                publisher.publish("messages/" + deviceId + "/app/controls", TimeMessage.toBytes());
-                break;
-            default:
-                log.info("{}> {} bytes -> Don't handle '{}'", deviceId, payload.length, type);
-        }
+        Mono.fromCallable(() -> mapper.readValue(payload, WifiCellMessage.class))
+            .onErrorResume(e -> Mono.justOrEmpty(WifiCellMessage.fromBinary(payload)))
+            .subscribe(data -> {
+                var type = data.type();
+                var device = deviceRepository.get(deviceId);
+                switch (type) {
+                    case MSG_SOS:
+                        convertWifiCell(deviceId, data, payload).doOnNext(device::location)
+                            .subscribe(location -> firebaseService.sos(device, location));
+                        break;
+                    case MSG_WIFI_CELL:
+                        convertWifiCell(deviceId, data, payload).doOnNext(device::location)
+                            .map(location -> geoService.checkFencing(device, location))
+                            .filter(FenceCheck::change)
+                            .subscribe(fence -> firebaseService.notifySafeZone(device, fence));
+                        // fenceCheck.subscribe(fence -> {
+                        //     var message = messageSource.getMessage(fence.message(), fence.args(), Locale.ENGLISH);
+                        //     publisher.publish("messages/" + deviceId + "/data", message.getBytes(StandardCharsets.UTF_8));
+                        // });
+                        break;
+                    case MSG_TIME_REQUEST:
+                        log.info("{}> {} bytes -> DTIME", deviceId, payload.length);
+                        publisher.publish("messages/" + deviceId + "/app/controls", TimeMessage.toBytes());
+                        break;
+                    default:
+                        log.info("{}> {} bytes -> Don't handle '{}'", deviceId, payload.length, type);
+                }
+            });
     }
 
     private void updateBattery(UUID deviceId, byte[] payload) throws IOException {
         var data = mapper.readValue(payload, BatteryMessage.class);
         deviceService.updateBattery(deviceId, data)
             .filter(updated -> updated > 0)
-            .subscribe(updated -> log.info("{}> BTR {}%", deviceId, data.level()));
+            .subscribe(updated -> log.info("{}> {} bytes -> BTR {}%", payload.length, deviceId, data.level()));
     }
 
     private void updateConfig(UUID deviceId, byte[] payload) throws IOException {
@@ -127,18 +128,19 @@ public class MqttHandler implements MqttCallback {
             .filter(data -> MSG_CONFIG_UPDATE.equals(data.type()))
             .doOnNext(data -> deviceService.updateConfig(deviceId, data)
                 .filter(updated -> updated > 0)
-                .subscribe(updated -> log.info("{}> CFG mode {}", deviceId, ConfigMessage.mode(data))))
+                .subscribe(updated -> log.info("{}> {} bytes -> CFG mode {}", payload.length, deviceId,
+                    ConfigMessage.mode(data))))
             .subscribe();
     }
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage message, byte[] payload) {
         return geoService.convert(deviceId, message)
-            .doOnNext(location -> deviceService.updateLocation(deviceId, location))
+            .doOnNext(location -> deviceService.updateLocation(deviceId, location)
+                .subscribe(updated -> log.info("{}> {} bytes ({}, {}) -> {} ({}, {}, {}): {}", deviceId, payload.length,
+                    message.cells().size(), message.aps().size(), message.type(), location.latitude(),
+                    location.longitude(), location.accuracy(), updated)))
             .map(location -> LocationMessage.fromLocation(location, message))
             .doOnNext(location -> publishLocation(deviceId, location))
-            .doOnNext(location -> log.info("{}> {} bytes ({}, {}) -> {} ({}, {}, {})", deviceId, payload.length,
-                message.cells().size(), message.aps().size(), message.type(), location.latitude(), location.longitude(),
-                location.accuracy()))
             .doOnError(e -> log.error("{}> Error converting: {}\n\t{}", deviceId, e.getMessage(), payload));
     }
 

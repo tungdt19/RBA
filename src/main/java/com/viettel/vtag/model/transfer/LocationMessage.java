@@ -22,6 +22,9 @@ public class LocationMessage implements ILocation {
     @JsonProperty("Conn")
     private String connection;
 
+    @JsonProperty("Bat")
+    private int battery;
+
     @JsonProperty("Ver")
     private String version;
 
@@ -45,11 +48,6 @@ public class LocationMessage implements ILocation {
 
     private Map<String, Object> properties = new HashMap<>();
 
-    @JsonAnySetter
-    public void add(String key, Object value) {
-        properties.put(key, value);
-    }
-
     public static LocationMessage fromLocation(Location location, WifiCellMessage payload) {
         return new LocationMessage().type("C" + payload.type().substring(1))
             .connection(payload.connection())
@@ -59,5 +57,10 @@ public class LocationMessage implements ILocation {
             .accuracy(location.accuracy())
             .message(location.message())
             .address(location.address());
+    }
+
+    @JsonAnySetter
+    public void add(String key, Object value) {
+        properties.put(key, value);
     }
 }

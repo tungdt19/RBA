@@ -44,7 +44,7 @@ public class Device {
     private double longitude; // Double
 
     @JsonProperty
-    private int accuracy;
+    private Integer accuracy;
 
     @JsonRawValue
     @JsonProperty("geo-fencing")

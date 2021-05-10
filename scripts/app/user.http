@@ -23,8 +23,8 @@ POST http://{{host}}/vtag/user/token
 Content-Type: application/json
 
 {
-    "username": "84365731814",
-    "password": "Test1aA@"
+    "username": "0365819777",
+    "password": "123456aA@"
 }
 
 > {%
@@ -101,3 +101,16 @@ Content-Type: application/json
     "phone": "0365819777",
     "new_password": "new_password"
 }
+
+### --------------------------------------------------------------------------------------------------------------------
+POST http://{{host}}/vtag/user/location
+Authorization: Bearer {{vtag_token}}
+Content-Type: application/json
+
+{
+    "lat": 21.06758,
+    "lon": 105.811327,
+    "accuracy": 40
+}
+
+### {"code": 0, "message": "OK!", "data": {"device_count": 9}}

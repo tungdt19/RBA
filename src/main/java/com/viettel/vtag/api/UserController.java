@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Locale;
-import java.util.Map;
 
 import static com.viettel.vtag.model.response.ObjectResponse.of;
 import static org.springframework.http.HttpStatus.*;
@@ -128,12 +127,15 @@ public class UserController {
     }
 
     @PostMapping("/location")
-    public Mono<ResponseEntity<ObjectResponse>> updateLocation(
+    public Mono<ResponseEntity<ObjectResponse>> getLocaleDevices(
         @RequestBody GpsMessage detail, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
-            .flatMap(user -> deviceService.findLocaleDevices(detail))
-            .map(devices -> ok(of(0, "OK!", Map.of("device_count", devices.size()))));
+            .flatMap(user -> deviceService.findLocaleDevices(detail, 50))
+            .map(devices -> ok(of(0, "OK!", devices)))
+            .doOnError(e -> log.error("error on get locale devices {}", e.getMessage()))
+            .onErrorReturn(Exception.class, status(INTERNAL_SERVER_ERROR).body(of(1, "Sorry!")))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")));
     }
 
     @DeleteMapping

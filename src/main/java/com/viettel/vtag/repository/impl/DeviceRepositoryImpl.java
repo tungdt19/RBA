@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.model.transfer.LocaleDevice;
 import com.viettel.vtag.repository.cache.DeviceCache;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import lombok.RequiredArgsConstructor;
@@ -108,9 +109,17 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
     }
 
     @Override
-    public List<Device> getLocaleDevices(ILocation location) {
-        var sql = "SELECT * FROM device d WHERE ABS(last_lat - ?) < 0.001 AND ABS(last_lon - ?) < 0.001";
-        return jdbc.query(sql, this, location.latitude(), location.longitude());
+    public List<LocaleDevice> getLocaleDevices(ILocation location) {
+        var sql = "SELECT phone_no, platform_device_id, last_lat, last_lon, accuracy, update_instant FROM device d "
+            + "JOIN user_role ur ON d.id = ur.device_id JOIN end_user eu ON eu.id = ur.user_id "
+            + "WHERE ABS(last_lat - ?) < 0.001 AND ABS(last_lon - ?) < 0.001";
+        return jdbc.query(sql, new Object[] {location.latitude(), location.longitude()},
+            (rs, i) -> new LocaleDevice().platformId(rs.getObject("platform_device_id", UUID.class))
+                .phone(rs.getString("phone_no"))
+                .latitude(rs.getDouble("last_lat"))
+                .longitude(rs.getDouble("last_lon"))
+                .accuracy(rs.getInt("accuracy"))
+                .time(rs.getTimestamp("update_instant").toLocalDateTime()));
     }
 
     @Override

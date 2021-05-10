@@ -11,17 +11,12 @@ POST https://ap1.unwiredlabs.com/v2/process.php
 Content-Type: application/json
 
 {
-    "token": "pk.d8db6727cfb09c8bf807c36ed971577c",
-    "radio": "nb-iot",
-    "id": "6d3855b9-e53f-42de-9696-75c90be5963d",
-    "address": 1,
-    "mcc": 452,
-    "mnc": 4,
-    "cells": [{"cid": 75372054, "lac": 42900}],
+    "token": "pk.d8db6727cfb09c8bf807c36ed971577c", "id": "5a2f7b89-91fe-45a9-9ee2-cdb62e27e345",
+    "radio": "nb-iot", "address": 1, "mcc": 452, "mnc": 4, "cells": [{"cid": 152123669, "lac": 25004}],
     "wifi": [
-        {"bssid": "E0:46:E5:06:00:1D", "signal": -52},
-        {"bssid": "02:08:22:6C:FC:FB", "signal": -94},
-        {"bssid": "B0:95:75:4F:31:49", "signal": -94}
+        {"bssid": "50:D2:F5:FC:9B:9F", "signal": -82}, {"bssid": "00:AA:BB:01:23:46", "signal": -83},
+        {"bssid": "02:AA:BB:11:23:46", "signal": -84}, {"bssid": "02:AA:BB:31:23:46", "signal": -85},
+        {"bssid": "24:0B:2A:03:21:40", "signal": -93}
     ]
 }
 

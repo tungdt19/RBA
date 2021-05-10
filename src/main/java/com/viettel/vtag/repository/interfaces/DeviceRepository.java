@@ -3,6 +3,7 @@ package com.viettel.vtag.repository.interfaces;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.model.transfer.LocaleDevice;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public interface DeviceRepository {
 
     Device getUserDevices(User user, UUID deviceId);
 
-    List<Device> getLocaleDevices(ILocation location);
+    List<LocaleDevice> getLocaleDevices(ILocation location);
 
     String getGeoFencing(User user, UUID deviceId);
 

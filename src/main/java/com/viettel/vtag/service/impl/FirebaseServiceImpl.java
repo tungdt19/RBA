@@ -57,7 +57,7 @@ public class FirebaseServiceImpl implements FirebaseService {
             }
 
             if (tokens.isEmpty()) {
-                log.error("no watcher");
+                log.error("{}: no watcher", data.get("device_id"));
                 return null;
             }
 

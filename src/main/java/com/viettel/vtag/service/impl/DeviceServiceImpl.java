@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
+import com.viettel.vtag.model.transfer.LocaleDevice;
 import com.viettel.vtag.model.transfer.PlatformData;
 import com.viettel.vtag.repository.interfaces.DeviceRepository;
 import com.viettel.vtag.service.interfaces.DeviceService;
@@ -163,10 +164,10 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Mono<List<Device>> findLocaleDevices(ILocation location) {
+    public Mono<List<LocaleDevice>> findLocaleDevices(ILocation location, double radius) {
         return Mono.justOrEmpty(deviceRepository.getLocaleDevices(location))
             .map(devices -> devices.stream()
-                .filter(d -> distance(d.latitude(), d.longitude(), location.latitude(), location.longitude()) < 50)
+                .filter(d -> distance(d.latitude(), d.longitude(), location.latitude(), location.longitude()) < radius)
                 .collect(Collectors.toList()));
     }
 

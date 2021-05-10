@@ -13,10 +13,11 @@ WHERE platform_device_id = ?;
 
 
 
-SELECT ur.user_id, phone_no, platform_group_id, d.id, d.name, platform_device_id
+SELECT ur.user_id, phone_no, platform_group_id, fcm_token, d.id AS d_id, d.name, platform_device_id
 FROM user_role ur
          JOIN device d ON ur.device_id = d.id
-         JOIN end_user eu ON eu.id = ur.user_id;
+         JOIN end_user eu ON eu.id = ur.user_id
+WHERE platform_device_id = ?;
 
 
 
@@ -71,13 +72,18 @@ SELECT device_id, COUNT(1) AS c, DATE_TRUNC('minute', trigger_instant) AS t, STD
 FROM location_history
 GROUP BY t, device_id
 HAVING COUNT(1) > 1
-ORDER BY t;
+ORDER BY t DESC;
 
+SELECT COUNT(*)
+FROM location_history a
+         JOIN location_history b ON a.device_id = b.device_id AND a.trigger_instant < b.trigger_instant
+    AND DATE_TRUNC('minute', a.trigger_instant) = DATE_TRUNC('minute', b.trigger_instant);
 
 --- delete duplicated device message
 DELETE
 FROM location_history a USING location_history b
-WHERE a.trigger_instant < b.trigger_instant
+WHERE a.device_id = b.device_id
+  AND a.trigger_instant < b.trigger_instant
   AND DATE_TRUNC('minute', a.trigger_instant) = DATE_TRUNC('minute', b.trigger_instant);
 
 
@@ -105,7 +111,7 @@ WHERE platform_device_id = ?
 ORDER BY trigger_instant
 LIMIT 1 OFFSET 0;
 
--- uppdate
+-- update
 UPDATE device d
 SET
     geo_fencing = geo_fencing || ?::JSONB
@@ -125,3 +131,31 @@ ALTER TABLE user_role
 
 ALTER TABLE user_role
     ADD CONSTRAINT user_role_device_id_fkey FOREIGN KEY (device_id) REFERENCES device ON DELETE CASCADE;
+------------------------------------------------------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION test_partition_creation(DATE, DATE) RETURNS VOID AS
+$$
+DECLARE
+    create_query TEXT;
+    index_query  TEXT;
+BEGIN
+    FOR create_query, index_query IN SELECT 'create table test_' || TO_CHAR(d, 'YYYY_MM') || ' ( check( time >= date '''
+                                                || TO_CHAR(d, 'YYYY-MM-DD') || ''' and time < date '''
+                                                || TO_CHAR(d + INTERVAL '1 month', 'YYYY-MM-DD')
+                                                || ''' ) ) inherits ( test );',
+                                            'create index test_' || TO_CHAR(d, 'YYYY_MM') || '_time on test_'
+                                                || TO_CHAR(d, 'YYYY_MM') || ' ( time );'
+    FROM GENERATE_SERIES($1, $2, '1 month') AS d
+        LOOP
+            EXECUTE create_query;
+            EXECUTE index_query;
+        END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+select TO_CHAR(now(), 'YYYY_MM');
+
+SELECT device_id, COUNT(0) AS gps_count
+FROM location_history
+WHERE trigger_instant > '2021-05-05' AND trigger_instant < '2021-05-05 23:59:59.999999' AND accuracy IS NULL
+GROUP BY device_id
