@@ -103,7 +103,8 @@ public class MqttHandler implements MqttCallback {
                             .subscribe(fence -> firebaseService.notifySafeZone(device, fence));
                         // fenceCheck.subscribe(fence -> {
                         //     var message = messageSource.getMessage(fence.message(), fence.args(), Locale.ENGLISH);
-                        //     publisher.publish("messages/" + deviceId + "/data", message.getBytes(StandardCharsets.UTF_8));
+                        //     publisher.publish("messages/" + deviceId + "/data", message.getBytes(StandardCharsets
+                        //    .UTF_8));
                         // });
                         break;
                     case MSG_TIME_REQUEST:
@@ -120,7 +121,7 @@ public class MqttHandler implements MqttCallback {
         var data = mapper.readValue(payload, BatteryMessage.class);
         deviceService.updateBattery(deviceId, data)
             .filter(updated -> updated > 0)
-            .subscribe(updated -> log.info("{}> {} bytes -> BTR {}%", payload.length, deviceId, data.level()));
+            .subscribe(updated -> log.info("{}> {} bytes -> BTR {}%", deviceId, payload.length, data.level()));
     }
 
     private void updateConfig(UUID deviceId, byte[] payload) throws IOException {
@@ -128,17 +129,17 @@ public class MqttHandler implements MqttCallback {
             .filter(data -> MSG_CONFIG_UPDATE.equals(data.type()))
             .doOnNext(data -> deviceService.updateConfig(deviceId, data)
                 .filter(updated -> updated > 0)
-                .subscribe(updated -> log.info("{}> {} bytes -> CFG mode {}", payload.length, deviceId,
-                    ConfigMessage.mode(data))))
+                .subscribe(updated -> log.info("{}> {} bytes -> CFG mode {}: {}", payload.length, deviceId,
+                    ConfigMessage.mode(data), ConfigMessage.detail(data))))
             .subscribe();
     }
 
     private Mono<LocationMessage> convertWifiCell(UUID deviceId, WifiCellMessage message, byte[] payload) {
         return geoService.convert(deviceId, message)
             .doOnNext(location -> deviceService.updateLocation(deviceId, location)
-                .subscribe(updated -> log.info("{}> {} bytes ({}, {}) -> {} ({}, {}, {}): {}", deviceId, payload.length,
-                    message.cells().size(), message.aps().size(), message.type(), location.latitude(),
-                    location.longitude(), location.accuracy(), updated)))
+                .subscribe(updated -> log.info("{}> {} bytes -> {} ({}, {}, {}) ({}, {}): {}", deviceId, payload.length,
+                    message.type(), location.latitude(), location.longitude(), location.accuracy(),
+                    message.cells().size(), message.aps().size(), updated > 0)))
             .map(location -> LocationMessage.fromLocation(location, message))
             .doOnNext(location -> publishLocation(deviceId, location))
             .doOnError(e -> log.error("{}> Error converting: {}\n\t{}", deviceId, e.getMessage(), payload));

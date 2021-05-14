@@ -21,7 +21,7 @@ import static org.springframework.http.ResponseEntity.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/admin")
-public class AdminController {
+public class AdminDeviceController {
 
     private final AdminDeviceService deviceService;
 
@@ -34,11 +34,14 @@ public class AdminController {
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't get all devices")));
     }
 
+    @GetMapping(value = "/device/{device-id}", produces = "application/json;charset=UTF-8")
+    public Mono<ResponseEntity<JsonResponse>> getDevice(@PathVariable("device-id") UUID deviceId) {
+        return null;
+    }
 
     @GetMapping(value = "/all", produces = "application/json;charset=UTF-8")
     public Mono<ResponseEntity<JsonResponse>> getAllDeviceFromPlatform() {
-        return deviceService.getAllPlatformDevices()
-            .map(content -> ok(JsonResponse.of(0, "Okie dokie!", content)));
+        return deviceService.getAllPlatformDevices().map(content -> ok(JsonResponse.of(0, "Okie dokie!", content)));
     }
 
     @GetMapping("/history/{device-id}")

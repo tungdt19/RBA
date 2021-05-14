@@ -1,3 +1,4 @@
+-- GET ACTIVE TOKEN
 SELECT token, user_id, expired_instant, id, username, password, first_name, last_name, email, phone_no
 FROM token t
          LEFT JOIN end_user u ON t.user_id = u.id
@@ -139,16 +140,17 @@ DECLARE
     create_query TEXT;
     index_query  TEXT;
 BEGIN
-    FOR create_query, index_query IN SELECT 'create table test_' || TO_CHAR(d, 'YYYY_MM') || ' ( check( time >= date '''
-                                                || TO_CHAR(d, 'YYYY-MM-DD') || ''' and time < date '''
-                                                || TO_CHAR(d + INTERVAL '1 month', 'YYYY-MM-DD')
-                                                || ''' ) ) inherits ( test );',
-                                            'create index test_' || TO_CHAR(d, 'YYYY_MM') || '_time on test_'
-                                                || TO_CHAR(d, 'YYYY_MM') || ' ( time );'
+    -- @formatter:off
+    FOR create_query, index_query IN SELECT
+        'create table test_' || TO_CHAR(d, 'YYYY_MM') || ' (check(time >= date ''' || TO_CHAR(d, 'YYYY-MM-DD')
+            || ''' and time < date ''' || TO_CHAR(d + INTERVAL '1 month', 'YYYY-MM-DD') || ''' ) ) inherits (test);',
+        'create index test_' || TO_CHAR(d, 'YYYY_MM') || '_time on test_' || TO_CHAR(d, 'YYYY_MM') || ' (time);'
     FROM GENERATE_SERIES($1, $2, '1 month') AS d
         LOOP
-            EXECUTE create_query;
-            EXECUTE index_query;
+            raise notice 'Value: %', create_query;
+            raise notice 'Value: %', index_query;
+--             EXECUTE create_query;
+--             EXECUTE index_query;
         END LOOP;
 END;
 $$ LANGUAGE plpgsql;

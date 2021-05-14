@@ -49,37 +49,35 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public Mono<Boolean> pairDevice(User user, PairDeviceRequest request) {
         var uuid = request.platformId();
-        return iotPlatformService.put("/api/devices/" + uuid + "/group/" + user.platformId(), request)
+        return Mono.justOrEmpty(uuid)
+            .map(id -> deviceRepository.save(new Device().name("VTAG").platformId(id)))
+            .doOnNext(saved -> log.info("saved {}", saved))
+            .filter(saved -> saved > 0)
+
+            .flatMap(id -> iotPlatformService.put("/api/devices/" + uuid + "/group/" + user.platformId(), request))
             .doOnNext(response -> log.info("{}: {} {}", uuid, "/group", response.statusCode()))
             .filter(response -> response.statusCode().is2xxSuccessful())
+
             .flatMap(ok -> iotPlatformService.post("/api/devices/" + uuid + "/active", Map.of("Type", "MAD")))
             .doOnNext(response -> log.info("{}: atv {}", uuid, response.statusCode()))
-            .map(response -> response.statusCode().is2xxSuccessful());
-    }
+            .map(response -> response.statusCode().is2xxSuccessful())
 
-    @Override
-    public Mono<Integer> saveUserDevice(User user, PairDeviceRequest request) {
-        // @formatter:off
-        var device = request.platformId();
-        return Mono.justOrEmpty(device)
-            .map(uuid -> deviceRepository.save(new Device().name("VTAG").platformId(uuid)))
-            .doOnNext(saved -> log.info("saved {}", saved))
-            .filter(paired -> paired > 0)
-            .map(paired -> deviceRepository.setUserDevice(user, request))
-            .filter(paired -> paired > 0)
+            .map(paired -> deviceRepository.setUserDevice(user, request) > 0)
             .doOnNext(paired -> {
+                // @formatter:off
                 try {
                     subscriber.subscribe(new String[] {
-                        "messages/" + device + "/data",
-                        "messages/" + device + "/userdefined/battery",
-                        "messages/" + device + "/userdefined/wificell",
-                        "messages/" + device + "/userdefined/devconf"});
+                        "messages/" + uuid + "/data",
+                        "messages/" + uuid + "/userdefined/battery",
+                        "messages/" + uuid + "/userdefined/wificell",
+                        "messages/" + uuid + "/userdefined/devconf"
+                    });
                 } catch (MqttException e) {
-                    log.error("{}: couldn't subscribe {}", device, e.getMessage());
+                    log.error("{}: couldn't subscribe {}", uuid, e.getMessage());
                 }
+                // @formatter:on
             })
             .doOnError(e -> log.error("Error on pairing device", e));
-        // @formatter:on
     }
 
     @Override

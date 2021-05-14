@@ -44,6 +44,24 @@ public class ConfigMessage {
         return config.MMC == null ? 0 : config.MMC.mode;
     }
 
+    public static String detail(ConfigMessage config) {
+        var mmc = config.MMC;
+        var mode = mmc == null ? 0 : mmc.mode;
+        switch (mode) {
+            case 1:
+                var period = mmc.period;
+                return String.format("period %d%s", period.value(), period.unit());
+            case 2:
+                var day = config.day;
+                var night = config.night;
+                return String.format("day (%02d:%02d) %dm; night (%02d:%02d) %dm", day.hour, day.minute, day.period,
+                    night.hour, night.minute, night.period);
+            case 3:
+                return "on demand";
+        }
+        return "Invalid mode!";
+    }
+
     @JsonAnySetter
     public void add(String key, Object value) {
         properties.put(key, value);

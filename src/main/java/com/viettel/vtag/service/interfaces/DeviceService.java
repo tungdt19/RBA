@@ -16,8 +16,6 @@ public interface DeviceService {
 
     Mono<Boolean> pairDevice(User user, PairDeviceRequest request);
 
-    Mono<Integer> saveUserDevice(User user, PairDeviceRequest request);
-
     Mono<List<Device>> getDeviceList(User user);
 
     Mono<Device> getDevice(User user, UUID deviceId);

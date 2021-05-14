@@ -38,11 +38,8 @@ public class DeviceController {
         var userMono = userService.checkToken(request);
         return userMono.doOnNext(user -> log.info("{}: pairing to user {}", detail.platformId(), user.phone()))
             .flatMap(user -> deviceService.pairDevice(user, detail))
-            .zipWith(userMono)
-            .doOnNext(t2 -> log.info("{}: paired to {}: {}", detail.platformId(), t2.getT2().phone(), t2.getT1()))
-            .flatMap(t2 -> deviceService.saveUserDevice(t2.getT2(), detail))
             .doOnNext(activated -> log.info("{}: pair {}", detail.platformId(), activated))
-            .map(activated -> activated > 0
+            .map(activated -> activated
                 ? ok(of(0, "Paired device successfully!"))
                 : badRequest().body(of(1, "Couldn't pair device!")))
             .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")))
