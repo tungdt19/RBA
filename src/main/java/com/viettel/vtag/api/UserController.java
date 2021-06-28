@@ -3,7 +3,7 @@ package com.viettel.vtag.api;
 import com.viettel.vtag.model.entity.User;
 import com.viettel.vtag.model.request.*;
 import com.viettel.vtag.model.response.ObjectResponse;
-import com.viettel.vtag.model.transfer.GpsMessage;
+import com.viettel.vtag.model.transfer.UserGpsMessage;
 import com.viettel.vtag.service.impl.UserServiceImpl;
 import com.viettel.vtag.service.interfaces.DeviceService;
 import com.viettel.vtag.service.interfaces.OtpService;
@@ -35,9 +35,9 @@ public class UserController {
     public Mono<ResponseEntity<ObjectResponse>> registerOtp(@RequestBody OtpRequest request, Locale locale) {
         return otpService.sendRegisterOtp(request, locale)
             .map(otp -> ok(of(0, "Created OTP successfully!", otp)))
-            .defaultIfEmpty(badRequest().body(of(1, "Couldn't create OTP!")))
-            .doOnError(e -> log.error("Couldn't send OTP: {}", e.getMessage()))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP")));
+            .defaultIfEmpty(badRequest().body(of(1, "Couldn't create register OTP!")))
+            .doOnError(e -> log.error("Couldn't send register OTP to {}: {}", request.value(), e.getMessage()))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create register OTP")));
     }
 
     /** {@link UserServiceImpl#register} */
@@ -59,9 +59,9 @@ public class UserController {
     public Mono<ResponseEntity<ObjectResponse>> resetOtp(@RequestBody OtpRequest request, Locale locale) {
         return otpService.sendResetOtp(request, locale)
             .map(otp -> ok(of(0, "Created OTP successfully!", otp)))
-            .defaultIfEmpty(badRequest().body(of(1, "Couldn't create OTP")))
-            .doOnError(e -> log.error("Couldn't send OTP: {}", e.getMessage()))
-            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create OTP")));
+            .defaultIfEmpty(badRequest().body(of(1, "Couldn't create reset OTP")))
+            .doOnError(e -> log.error("Couldn't send reset OTP to {}: {}", request.value(), e.getMessage()))
+            .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't create reset OTP")));
     }
 
     /**
@@ -128,7 +128,7 @@ public class UserController {
 
     @PostMapping("/location")
     public Mono<ResponseEntity<ObjectResponse>> getLocaleDevices(
-        @RequestBody GpsMessage detail, ServerHttpRequest request
+        @RequestBody UserGpsMessage detail, ServerHttpRequest request
     ) {
         return userService.checkToken(request)
             .flatMap(user -> deviceService.findLocaleDevices(detail, 50))

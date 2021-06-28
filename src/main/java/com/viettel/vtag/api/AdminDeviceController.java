@@ -20,26 +20,26 @@ import static org.springframework.http.ResponseEntity.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin")
+@RequestMapping("/admin/device")
 public class AdminDeviceController {
 
     private final AdminDeviceService deviceService;
 
-    @GetMapping("/devices")
+    @GetMapping("/all")
     public Mono<ResponseEntity<ObjectResponse>> getAllDevices() {
         return deviceService.getAllDevices()
             .doOnNext(list -> log.info("Get all {} devices", list.size()))
             .map(list -> ok(of(0, "Okie", list)))
-            .defaultIfEmpty(notFound().build())
+            // .defaultIfEmpty(notFound().build())
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't get all devices")));
     }
 
-    @GetMapping(value = "/device/{device-id}", produces = "application/json;charset=UTF-8")
+    @GetMapping(value = "/{device-id}", produces = "application/json;charset=UTF-8")
     public Mono<ResponseEntity<JsonResponse>> getDevice(@PathVariable("device-id") UUID deviceId) {
         return null;
     }
 
-    @GetMapping(value = "/all", produces = "application/json;charset=UTF-8")
+    @GetMapping(value = "/platform/all", produces = "application/json;charset=UTF-8")
     public Mono<ResponseEntity<JsonResponse>> getAllDeviceFromPlatform() {
         return deviceService.getAllPlatformDevices().map(content -> ok(JsonResponse.of(0, "Okie dokie!", content)));
     }

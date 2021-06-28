@@ -11,8 +11,6 @@ import java.util.UUID;
 
 public interface GeoService {
 
-    Mono<Location> convert(WifiCellMessage json);
-
     Mono<Location> convert(UUID deviceId, WifiCellMessage json);
 
     FenceCheck checkFencing(Device deviceId, ILocation location);

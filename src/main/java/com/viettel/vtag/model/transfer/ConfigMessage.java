@@ -22,6 +22,9 @@ public class ConfigMessage {
     @JsonProperty("Bat")
     private int battery;
 
+    @JsonProperty("TS")
+    private long timestamp;
+
     @JsonAlias({"Conn"})
     @JsonProperty("Con") // "nbiot"
     private String connection;

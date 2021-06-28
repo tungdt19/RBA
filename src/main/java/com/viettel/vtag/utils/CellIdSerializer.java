@@ -28,9 +28,13 @@ public class CellIdSerializer extends JsonSerializer<WifiCellMessage> {
         json.writeObjectField("address", 1);
 
         var cells = value.cells();
-        var firstCell = cells.get(0);
-        json.writeObjectField("mcc", firstCell.mcc());
-        json.writeObjectField("mnc", firstCell.mnc());
+        if (cells.size() > 0) {
+            var firstCell = cells.get(0);
+            json.writeObjectField("mcc", firstCell.mcc());
+            json.writeObjectField("mnc", firstCell.mnc());
+        } else {
+            log.warn("{}> no cell info, {} wifi", deviceId, value.aps().size());
+        }
 
         json.writeArrayFieldStart("cells");
         for (var cell : cells) {

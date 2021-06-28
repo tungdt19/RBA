@@ -14,8 +14,7 @@ public class TimeMessage {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd,HH:mm:ss");
 
-    public static byte[] toBytes() {
-        var s = "{\"Type\":\"MTIME\",\"Time\":\"" + LocalDateTime.now().format(formatter) + "\"}}";
-        return s.getBytes(StandardCharsets.UTF_8);
+    public static String current() {
+        return "{\"Type\":\"MTIME\",\"Time\":\"" + LocalDateTime.now().format(formatter) + "\"}";
     }
 }

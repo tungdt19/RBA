@@ -7,7 +7,11 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(fluent = true)
-public class GpsMessage implements ILocation {
+public class UserGpsMessage implements ILocation {
+
+
+    @JsonProperty("TS")
+    private long timestamp;
 
     @JsonProperty("lat")
     private double latitude;

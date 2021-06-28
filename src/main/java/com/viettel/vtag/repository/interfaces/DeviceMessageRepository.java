@@ -12,5 +12,5 @@ public interface DeviceMessageRepository {
 
     int updateConfig(UUID platformDeviceId, ConfigMessage config);
 
-    int saveLocation(UUID platformDeviceId, ILocation location);
+    int saveLocation(UUID platformDeviceId, ILocation location, Integer battery, Long timestamp);
 }

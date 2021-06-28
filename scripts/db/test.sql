@@ -6,19 +6,21 @@ WHERE (expired_instant IS NULL OR expired_instant > CURRENT_TIMESTAMP) AND t.tok
 
 
 
-SELECT phone_no
+SELECT phone_no,
 FROM end_user
          JOIN user_role ur ON end_user.id = ur.user_id
          JOIN device d ON d.id = ur.device_id
-WHERE platform_device_id = ?;
+-- WHERE platform_device_id = ?
+;
 
 
 
-SELECT ur.user_id, phone_no, platform_group_id, fcm_token, d.id AS d_id, d.name, platform_device_id
+SELECT ur.user_id, phone_no, platform_group_id, d.id AS d_id, d.name, platform_device_id -- fcm_token
 FROM user_role ur
-         JOIN device d ON ur.device_id = d.id
-         JOIN end_user eu ON eu.id = ur.user_id
-WHERE platform_device_id = ?;
+         FULL OUTER JOIN device d ON ur.device_id = d.id
+         FULL OUTER JOIN end_user eu ON eu.id = ur.user_id
+-- WHERE platform_device_id = ?
+;
 
 
 
@@ -26,9 +28,10 @@ SELECT latitude, longitude, trigger_instant
 FROM location_history lh
          JOIN user_role ur ON lh.device_id = ur.device_id
          JOIN device d ON d.id = ur.device_id
-WHERE platform_device_id = ?
+     -- WHERE platform_device_id = ?
 ORDER BY trigger_instant
-LIMIT 1 OFFSET 0;
+-- LIMIT 1 OFFSET 0
+;
 
 
 
@@ -134,30 +137,54 @@ ALTER TABLE user_role
     ADD CONSTRAINT user_role_device_id_fkey FOREIGN KEY (device_id) REFERENCES device ON DELETE CASCADE;
 ------------------------------------------------------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION test_partition_creation(DATE, DATE) RETURNS VOID AS
-$$
-DECLARE
-    create_query TEXT;
-    index_query  TEXT;
-BEGIN
-    -- @formatter:off
-    FOR create_query, index_query IN SELECT
-        'create table test_' || TO_CHAR(d, 'YYYY_MM') || ' (check(time >= date ''' || TO_CHAR(d, 'YYYY-MM-DD')
-            || ''' and time < date ''' || TO_CHAR(d + INTERVAL '1 month', 'YYYY-MM-DD') || ''' ) ) inherits (test);',
-        'create index test_' || TO_CHAR(d, 'YYYY_MM') || '_time on test_' || TO_CHAR(d, 'YYYY_MM') || ' (time);'
-    FROM GENERATE_SERIES($1, $2, '1 month') AS d
-        LOOP
-            raise notice 'Value: %', create_query;
-            raise notice 'Value: %', index_query;
---             EXECUTE create_query;
---             EXECUTE index_query;
-        END LOOP;
-END;
-$$ LANGUAGE plpgsql;
-
-select TO_CHAR(now(), 'YYYY_MM');
+SELECT TO_CHAR(NOW(), 'YYYY_MM');
 
 SELECT device_id, COUNT(0) AS gps_count
 FROM location_history
 WHERE trigger_instant > '2021-05-05' AND trigger_instant < '2021-05-05 23:59:59.999999' AND accuracy IS NULL
-GROUP BY device_id
+GROUP BY device_id;
+
+
+INSERT INTO device (name, platform_device_id)
+VALUES
+    ('test', 'd7834a67-9e72-4d66-92e3-7ffc567165e1');
+
+DELETE
+FROM device
+WHERE platform_device_id = 'd7834a67-9e72-4d66-92e3-7ffc567165e1';
+
+-- CREATE TABLE IF NOT EXISTS test_partition_2021_03 PARTITION OF test_partition FOR VALUES FROM ('2021-03-01') TO ('2021-04-01');
+-- CREATE INDEX test_partition_2021_03_log_time ON test_partition_2021_03(log_time);
+
+
+-- @formatter:off
+DO $$
+DECLARE
+    _table CONSTANT VARCHAR = 'test_partition';
+    _index CONSTANT VARCHAR = 'id';
+    _field CONSTANT VARCHAR = 'log_time';
+    date_begin CONSTANT DATE = '2000-01-01';
+    date_end CONSTANT DATE = '2100-01-01';
+    create_query TEXT;
+    index_query  TEXT;
+BEGIN
+    FOR create_query, index_query IN SELECT
+        'CREATE TABLE IF NOT EXISTS ' || _table || '_' || TO_CHAR(d, 'YYYY_MM') || ' PARTITION OF ' || _table
+            || ' FOR VALUES FROM (''' || d || ''') TO (''' || d + INTERVAL '1 month' || ''');',
+        'CREATE INDEX IF NOT EXISTS ' || _table || '_' || TO_CHAR(d, 'YYYY_MM') || '_' || _field || ' ON ' || _table
+            || '_' || TO_CHAR(d, 'YYYY_MM') || '(' || _field || ' DESC, ' || _index || ' ASC);'
+    FROM GENERATE_SERIES(date_begin, date_end, INTERVAL '1 month') AS d
+        LOOP
+            RAISE NOTICE '%', create_query;
+            EXECUTE create_query;
+
+            RAISE NOTICE '%', index_query;
+            EXECUTE index_query;
+            RAISE NOTICE '--------------------------------------------------------------------------------';
+        END LOOP;
+END; $$ LANGUAGE plpgsql;
+-- @formatter:on
+
+SELECT *
+FROM device
+WHERE id NOT IN (300, 343, 294, 291, 355, 165, 166, 170, 325, 288, 322, 324, 342, 349, 319, 348)

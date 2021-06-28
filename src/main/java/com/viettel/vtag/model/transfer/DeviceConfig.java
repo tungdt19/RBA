@@ -15,6 +15,12 @@ public class DeviceConfig {
     @JsonProperty("Type")
     private String type;
 
+    @JsonProperty("Bat")
+    private int battery;
+
+    @JsonProperty("TS")
+    private long timestamp;
+
     @JsonProperty("Mod")
     private String mode;
 

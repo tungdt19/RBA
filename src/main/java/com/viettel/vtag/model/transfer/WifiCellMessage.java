@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 
 @Data
@@ -30,7 +29,10 @@ public class WifiCellMessage {
     private String connection;
 
     @JsonProperty("Bat")
-    private int battery;
+    private Integer battery;
+
+    @JsonProperty("T")
+    private Long timestamp;
 
     @JsonProperty("Cell")
     private List<Cell> cells;
@@ -43,19 +45,17 @@ public class WifiCellMessage {
 
     private Map<String, Object> properties = new HashMap<>();
 
-    @JsonAnySetter
-    public void add(String key, Object value) {
-        properties.put(key, value);
-    }
-
-    public static WifiCellMessage fromBinary(byte[] bytes) {
+    public static WifiCellMessage fromBinary(UUID deviceId, byte[] bytes) {
         var payload = new BinaryPayload(bytes);
         var headerType = payload.get();
         var type = (headerType >> 4) & 0xFF;
         var connection = (headerType) & 0x0F;
         var battery = payload.buffer.get();
 
-        System.out.format("type %d; connection %d; battery %d\n", type, connection, battery);
+        var message = new WifiCellMessage();
+        var sb = new StringBuilder();
+        message.type(String.valueOf(type)).connection(String.valueOf(connection)).battery((int) battery);
+        sb.append(String.format("type %d; connection %d; battery %d\n", type, connection, battery));
 
         var count = payload.buffer.get();
         var cellCount = (count >> 4) & 0xFF;
@@ -72,13 +72,24 @@ public class WifiCellMessage {
             var mcc = ((s2 & 0x0F) << 8) | (s3 & 0xFF);
             var sig = payload.buffer.get() & 0xFF;
 
-            System.out.format("cell %02X; lac %02X; mnc %02X; mcc %02X; sig -%02X\n", cell, lac, mnc, mcc, sig);
+            sb.append(String.format("cell %02X; lac %02X; mnc %02X; mcc %02X; sig -%02X\n", cell, lac, mnc, mcc, sig));
         }
 
+        var aps = new ArrayList<AP>(cellCount);
         for (var i = 0; i < wifiCount; i++) {
-            System.out.format("MAC: %s; SS: -%d\n", payload.getMAC(), payload.buffer.get());
+            var mac = payload.getMAC();
+            var sig = payload.buffer.get();
+            sb.append(String.format("MAC: %s; SS: -%d\n", mac, sig));
+            aps.add(new AP().mac(mac).ss(sig));
         }
-        return new WifiCellMessage();
+        message.aps(aps);
+        log.info("{} > WFC {}", deviceId, sb);
+        return message;
+    }
+
+    @JsonAnySetter
+    public void add(String key, Object value) {
+        properties.put(key, value);
     }
 
     @Override

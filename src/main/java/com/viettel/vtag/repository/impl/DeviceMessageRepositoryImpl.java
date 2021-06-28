@@ -38,21 +38,15 @@ public class DeviceMessageRepositoryImpl implements DeviceMessageRepository {
     }
 
     @Override
-    public int saveLocation(UUID platformDeviceId, ILocation location) {
+    public int saveLocation(UUID platformDeviceId, ILocation location, Integer battery, Long timestamp) {
         try {
-            var update = "UPDATE device SET last_lat = ?, last_lon = ?, accuracy = ?, update_instant = NOW() "
-                + "WHERE platform_device_id = ?";
-            var updated = jdbc.update(update, location.latitude(), location.longitude(), location.accuracy(),
+            var update = "UPDATE device SET last_lat = ?, last_lon = ?, accuracy = ?, update_instant = NOW(), "
+                + "battery = ? WHERE platform_device_id = ?";
+
+            return jdbc.update(update, location.latitude(), location.longitude(), location.accuracy(), battery,
                 platformDeviceId);
-
-            deviceCache.get(platformDeviceId)
-                .latitude(location.latitude())
-                .longitude(location.longitude())
-                .accuracy(location.accuracy());
-
-            return updated;
         } catch (Exception e) {
-            log.error("{}: save location", platformDeviceId, e);
+            log.error("{}: save location {}", platformDeviceId, location, e);
             return 0;
         }
     }

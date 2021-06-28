@@ -53,11 +53,6 @@ public class GeoServiceImpl implements GeoService {
     private String convertToken;
 
     @Override
-    public Mono<Location> convert(WifiCellMessage json) {
-        return null;
-    }
-
-    @Override
     public Mono<Location> convert(UUID deviceId, WifiCellMessage json) {
         return convert(deviceId, json.deviceId(deviceId), convertToken);
         // .switchIfEmpty(Mono.defer(() -> convert(deviceId, json.deviceId(deviceId), backupToken)));

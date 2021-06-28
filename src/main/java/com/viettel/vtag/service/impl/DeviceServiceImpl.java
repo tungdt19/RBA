@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -77,7 +78,41 @@ public class DeviceServiceImpl implements DeviceService {
                 }
                 // @formatter:on
             })
-            .doOnError(e -> log.error("Error on pairing device", e));
+            .doOnError(e -> log.error("Error on pairing device: {}", e.getMessage()));
+    }
+
+    @Override
+    public Mono<Boolean> unpairDevice(User user, PairDeviceRequest request) {
+        //@formatter:off
+        var uuid = request.platformId();
+        return Mono.justOrEmpty(uuid)
+
+            .map(id -> "/api/devices/" + id + "/deactive")
+            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
+            .doOnNext(response -> log.info("{}: dtv {}", uuid, response.statusCode()))
+            // .map(response -> response.statusCode().is2xxSuccessful())
+
+            .flatMap(endpoint -> iotPlatformService.delete("/api/devices/" + uuid + "/group/" + user.platformId()))
+            // .map(response -> response.statusCode().is2xxSuccessful())
+            // .filter(unpaired -> unpaired)
+
+            .map(unpaired -> deviceRepository.delete(user, request.platformId()))
+            .doOnNext(saved -> log.info("{}: del dvc: rs {}", request.platformId(), saved))
+            .map(deleted -> deleted > 0)
+
+            .doOnNext(response -> {
+                try {
+                    subscriber.unsubscribe(new String[] {
+                        "messages/" + uuid + "/data",
+                        "messages/" + uuid + "/userdefined/battery",
+                        "messages/" + uuid + "/userdefined/wificell",
+                        "messages/" + uuid + "/userdefined/devconf"});
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            })
+            .filter(deleted -> deleted);
+        //@formatter:on
     }
 
     @Override
@@ -132,16 +167,24 @@ public class DeviceServiceImpl implements DeviceService {
             "/api/messages/group/" + user.platformId() + "/selected_topic?deviceId=" + deviceId + "&topic=" + topics
                 + "&offset=" + offset + "&limit=" + limit;
         return iotPlatformService.getWithToken(endpoint)
-            .doOnNext(response -> log.info("{}: msg {}", deviceId, response.statusCode()))
+            .doOnNext(response -> {
+                if (!response.statusCode().is2xxSuccessful()) {
+                    log.info("{}: msg {}", deviceId, response.statusCode());
+                }
+            })
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(String.class));
     }
 
     @Override
     public Mono<DeviceConfig> getConfig(User user, UUID deviceId) {
-        var endpoint = "/messages/custom?deviceId=" + deviceId;
-        return iotPlatformService.get(endpoint)
-            .doOnNext(response -> log.info("{}: cfg {}", deviceId, response.statusCode()))
+        return iotPlatformService.get("/messages/custom?deviceId=" + deviceId)
+            .doOnNext(response -> {
+                var statusCode = response.statusCode();
+                if (statusCode.is2xxSuccessful()) {
+                    log.info("{}: cfg {}", deviceId, statusCode);
+                }
+            })
             .filter(response -> response.statusCode().is2xxSuccessful())
             .flatMap(response -> response.bodyToMono(PlatformData.class))
             .map(platformData -> platformData.data().get(0).payload())
@@ -167,38 +210,5 @@ public class DeviceServiceImpl implements DeviceService {
             .map(devices -> devices.stream()
                 .filter(d -> distance(d.latitude(), d.longitude(), location.latitude(), location.longitude()) < radius)
                 .collect(Collectors.toList()));
-    }
-
-    @Override
-    public Mono<Boolean> unpairDevice(User user, PairDeviceRequest request) {
-        //@formatter:off
-        var uuid = request.platformId();
-        return Mono.justOrEmpty(uuid)
-            .map(id -> "/api/devices/" + id + "/deactive")
-            .flatMap(endpoint -> iotPlatformService.post(endpoint, Map.of("Type", "DAM")))
-            .doOnNext(response -> log.info("{}: dtv {}", uuid, response.statusCode()))
-            .map(response -> response.statusCode().is2xxSuccessful())
-            .flatMap(endpoint -> iotPlatformService.delete("/api/devices/" + uuid + "/group/" + user.platformId()))
-            .map(response -> response.statusCode().is2xxSuccessful())
-            .doOnNext(response -> {
-                try {
-                    subscriber.unsubscribe(new String[] {
-                        "messages/" + uuid + "/data",
-                        "messages/" + uuid + "/userdefined/battery",
-                        "messages/" + uuid + "/userdefined/wificell",
-                        "messages/" + uuid + "/userdefined/devconf"});
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
-            })
-            .filter(unpaired -> unpaired);
-        //@formatter:on
-    }
-
-    @Override
-    public Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request) {
-        return Mono.just(deviceRepository.delete(user, request.platformId()))
-            .doOnNext(saved -> log.info("{}: del dvc: rs {}", request.platformId(), saved))
-            .map(deleted -> deleted > 0);
     }
 }

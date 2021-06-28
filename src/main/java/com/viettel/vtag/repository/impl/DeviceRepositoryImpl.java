@@ -64,9 +64,9 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
 
     @Override
     public int addViewer(User user, AddViewerRequest request) {
-        var sql = "INSERT INTO user_role(device_id, user_id, role_id) SELECT d.id, ?, ? FROM device d "
+        var sql = "INSERT INTO user_role(device_id, user_id, role_id) SELECT d.id, ?, 2 FROM device d "
             + "WHERE platform_device_id = ?";
-        return jdbc.update(sql, request.phone(), 2, request.deviceId());
+        return jdbc.update(sql, request.phone(), request.deviceId());
     }
 
     @Override
@@ -140,7 +140,6 @@ public class DeviceRepositoryImpl implements DeviceRepository, RowMapper<Device>
         try {
             var sql = "UPDATE device d SET geo_fencing = ?::JSONB, geo_length = ? FROM user_role ur "
                 + "WHERE ur.device_id = d.id AND ur.user_id = ? AND platform_device_id = ?";
-            cache.get(deviceId).fences(fences);
             return jdbc.update(sql, mapper.writeValueAsString(fences), fences.size(), user.id(), deviceId);
         } catch (JsonProcessingException e) {
             log.error("Error converting JSON format: {}", e.getMessage());

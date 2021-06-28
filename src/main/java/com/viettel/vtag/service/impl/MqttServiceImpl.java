@@ -31,6 +31,7 @@ public class MqttServiceImpl implements MqttService {
                     "messages/" + uuid + "/userdefined/wificell",
                     "messages/" + uuid + "/userdefined/devconf"
                 });
+                log.info("{}: subscribed", uuid);
             } catch (MqttException e) {
                 log.error("Cannot subscribe to uuid {}: {}", uuid, e.getMessage());
             }

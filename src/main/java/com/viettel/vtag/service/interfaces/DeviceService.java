@@ -3,10 +3,7 @@ package com.viettel.vtag.service.interfaces;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.*;
 import com.viettel.vtag.model.request.*;
-import com.viettel.vtag.model.response.JsonResponse;
-import com.viettel.vtag.model.transfer.GpsMessage;
 import com.viettel.vtag.model.transfer.LocaleDevice;
-import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -15,6 +12,8 @@ import java.util.UUID;
 public interface DeviceService {
 
     Mono<Boolean> pairDevice(User user, PairDeviceRequest request);
+
+    Mono<Boolean> unpairDevice(User user, PairDeviceRequest request);
 
     Mono<List<Device>> getDeviceList(User user);
 
@@ -45,8 +44,4 @@ public interface DeviceService {
     Mono<List<LocationHistory>> fetchHistory(User user, LocationHistoryRequest request);
 
     Mono<List<LocaleDevice>> findLocaleDevices(ILocation location, double radius);
-
-    Mono<Boolean> unpairDevice(User user, PairDeviceRequest request);
-
-    Mono<Boolean> removeUserDevice(User user, PairDeviceRequest request);
 }

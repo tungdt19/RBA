@@ -1,15 +1,17 @@
 package com.viettel.vtag.model.transfer;
 
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.viettel.vtag.model.ILocation;
 import com.viettel.vtag.model.entity.Location;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Data
 @Accessors(fluent = true)
@@ -19,11 +21,9 @@ public class LocationMessage implements ILocation {
     @JsonProperty("Type")
     private String type;
 
-    @JsonProperty("Conn")
+    @JsonAlias({"Conn"})
+    @JsonProperty("Con")
     private String connection;
-
-    @JsonProperty("Bat")
-    private int battery;
 
     @JsonProperty("Ver")
     private String version;
@@ -34,8 +34,14 @@ public class LocationMessage implements ILocation {
     @JsonProperty("Lon")
     private double longitude;
 
+    @JsonProperty("Bat")
+    private Integer battery;
+
     @JsonProperty("TS")
-    private String timestamp;
+    private String time;
+
+    @JsonProperty("T")
+    private Long timestamp;
 
     @JsonProperty
     private Integer accuracy;
@@ -50,6 +56,8 @@ public class LocationMessage implements ILocation {
 
     public static LocationMessage fromLocation(Location location, WifiCellMessage payload) {
         return new LocationMessage().type("C" + payload.type().substring(1))
+            .battery(payload.battery())
+            .timestamp(payload.timestamp())
             .connection(payload.connection())
             .version(payload.version())
             .latitude(location.latitude())
@@ -57,6 +65,20 @@ public class LocationMessage implements ILocation {
             .accuracy(location.accuracy())
             .message(location.message())
             .address(location.address());
+    }
+
+    public Long timestamp() {
+        if (timestamp == null) {
+            try {
+                return LocalDateTime.parse(time, DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss"))
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .getEpochSecond();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return timestamp;
     }
 
     @JsonAnySetter

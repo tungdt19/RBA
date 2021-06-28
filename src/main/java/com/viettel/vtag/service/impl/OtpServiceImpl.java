@@ -30,8 +30,6 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class OtpServiceImpl implements OtpService {
 
-    private final Exception ERR_NOT_CREATED = new RuntimeException("Couldn't create OTP");
-
     private final MessageSource messageSource;
     private final OtpRepository otpRepository;
     private final UserRepository userRepository;
@@ -82,7 +80,7 @@ public class OtpServiceImpl implements OtpService {
             .zipWith(generateOtp())
             .filter(tuple -> otpRepository.save(tuple.getT1(), tuple.getT2()) > 0)
             .map(Tuple2::getT2)
-            .switchIfEmpty(Mono.error(ERR_NOT_CREATED));
+            .switchIfEmpty(Mono.error(new RuntimeException("Couldn't create OTP")));
     }
 
     private Mono<OTP> generateOtp() {

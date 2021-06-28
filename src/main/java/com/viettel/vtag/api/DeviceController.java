@@ -46,6 +46,20 @@ public class DeviceController {
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't pair device!")));
     }
 
+    @PostMapping("/unpair")
+    public Mono<ResponseEntity<ObjectResponse>> unpairDevice(
+        @RequestBody PairDeviceRequest detail, ServerHttpRequest request
+    ) {
+        var userMono = userService.checkToken(request);
+        return userMono.doOnNext(user -> log.info("{}: unpair from user {}", detail.platformId(), user.phone()))
+            .flatMap(user -> deviceService.unpairDevice(user, detail))
+            .map(unpaired -> unpaired
+                ? ok(of(0, "Unpaired device successfully!"))
+                : status(BAD_GATEWAY).body(of(1, "Couldn't unpair device!")))
+            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")))
+            .doOnError(e -> log.error("{}: Upr ERROR", detail.platformId(), e));
+    }
+
     @GetMapping(value = "/list", produces = "application/json;charset=UTF-8")
     public Mono<ResponseEntity<ObjectResponse>> getDevices(ServerHttpRequest request) {
         return userService.checkToken(request)
@@ -114,22 +128,6 @@ public class DeviceController {
             .onErrorReturn(status(INTERNAL_SERVER_ERROR).body(of(1, "Couldn't fetch history!")));
     }
 
-    @PostMapping("/unpair")
-    public Mono<ResponseEntity<ObjectResponse>> unpairDevice(
-        @RequestBody PairDeviceRequest detail, ServerHttpRequest request
-    ) {
-        var userMono = userService.checkToken(request);
-        return userMono.doOnNext(user -> log.info("{}: unpair from user {}", detail.platformId(), user.phone()))
-            .flatMap(user -> deviceService.unpairDevice(user, detail))
-            .zipWith(userMono)
-            .flatMap(tuple -> tuple.getT1() ? deviceService.removeUserDevice(tuple.getT2(), detail) : Mono.just(false))
-            .map(unpaired -> unpaired
-                ? ok(of(0, "Unpaired device successfully!"))
-                : status(BAD_GATEWAY).body(of(1, "Couldn't unpair device!")))
-            .defaultIfEmpty(status(UNAUTHORIZED).body(of(1, "Get lost, trespasser!")))
-            .doOnError(e -> log.error("{}: Upr ERROR", detail.platformId(), e));
-    }
-
     @GetMapping("/messages")
     public Mono<ResponseEntity<JsonResponse>> getMessages(
         @RequestParam("device_id") String deviceId,
@@ -150,7 +148,6 @@ public class DeviceController {
     ) {
         return userService.checkToken(request)
             .zipWith(Mono.fromCallable(() -> UUID.fromString(deviceId)))
-            .doOnNext(tuple -> log.info("update geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
             .flatMap(tuple -> deviceService.getDevice(tuple.getT1(), tuple.getT2()))
             .doOnNext(updated -> log.info("{}: geo get {}", deviceId, updated))
             .map(content -> ok(of(0, "Okie dokie!", content)))
@@ -165,7 +162,6 @@ public class DeviceController {
     ) {
         return userService.checkToken(request)
             .zipWith(Mono.fromCallable(() -> UUID.fromString(deviceId)))
-            .doOnNext(tuple -> log.info("update geo-fencing user {}: device {}", tuple.getT1().platformId(), deviceId))
             .flatMap(tuple -> deviceService.getGeoFencing(tuple.getT1(), tuple.getT2()))
             .doOnNext(updated -> log.info("{}: geo get {}", deviceId, updated))
             .map(content -> ok(JsonResponse.of(0, "Okie dokie!", content)))

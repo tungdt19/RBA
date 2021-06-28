@@ -25,9 +25,8 @@ public class BinaryPayload {
             (byte) 0x1D, (byte) 0x1A, (byte) 0xC1, (byte) 0x03, (byte) 0x30, (byte) 0x34, (byte) 0xC5, (byte) 0xAA,
             (byte) 0xBB, (byte) 0xCC, (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, (byte) 0x0F, (byte) 0xAA, (byte) 0xBB,
             (byte) 0xCC, (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, (byte) 0x0F, (byte) 0xAA, (byte) 0xBB, (byte) 0xCC,
-            (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, (byte) 0x0F, (byte) 0x4C, (byte) 0x65, (byte) 0x20, (byte)
-           0x4D, (byte) 0x69, (byte) 0x6E,
-                    (byte) 0x68, (byte) 0x20, (byte) 0x44, (byte) 0x75, (byte) 0x63};
+            (byte) 0xDD, (byte) 0xEE, (byte) 0xFF, (byte) 0x0F, (byte) 0x4C, (byte) 0x65, (byte) 0x20, (byte) 0x4D,
+            (byte) 0x69, (byte) 0x6E, (byte) 0x68, (byte) 0x20, (byte) 0x44, (byte) 0x75, (byte) 0x63};
         var payload = new BinaryPayload(content);
         var s1 = payload.getString(34);
         var string = payload.getString(11);
@@ -54,6 +53,14 @@ public class BinaryPayload {
             }
         }
         System.out.println();
+    }
+
+    public static String toString(byte[] bytes) {
+        var sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
     }
 
     public String getMAC() {
